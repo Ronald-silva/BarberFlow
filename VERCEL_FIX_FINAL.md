@@ -7,11 +7,13 @@ O Vercel estava tentando usar Vite 7.1.10 (que não existe) em vez da versão co
 ## ✅ **Mudanças Aplicadas:**
 
 ### **1. Versão Fixa do Vite**
+
 ```json
 "vite": "6.3.6"  // Sem ^ para versão exata
 ```
 
 ### **2. Configuração Vercel Simplificada**
+
 ```json
 {
   "version": 2,
@@ -30,11 +32,13 @@ O Vercel estava tentando usar Vite 7.1.10 (que não existe) em vez da versão co
 ```
 
 ### **3. Config JavaScript (não TypeScript)**
+
 - ✅ `vite.config.js` criado
 - ❌ `vite.config.ts` removido
 - **Motivo**: Evita problemas de importação ESM
 
 ### **4. Script Vercel Específico**
+
 ```json
 "vercel-build": "npx vite build"
 ```
@@ -42,6 +46,7 @@ O Vercel estava tentando usar Vite 7.1.10 (que não existe) em vez da versão co
 ## 🚀 **Como Fazer o Deploy:**
 
 ### **Opção 1: Git Deploy (Recomendado)**
+
 ```bash
 git add .
 git commit -m "fix: configuração definitiva para Vercel"
@@ -49,6 +54,7 @@ git push origin main
 ```
 
 ### **Opção 2: Deploy Manual**
+
 ```bash
 npx vercel --prod
 ```
