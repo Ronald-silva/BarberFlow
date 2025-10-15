@@ -266,7 +266,7 @@ const MainContent = styled.main`
   
   @media (max-width: ${props => props.theme.breakpoints.lg}) {
     padding-top: 80px; /* Space for mobile header */
-    padding-bottom: 80px; /* Space for mobile bottom nav */
+    padding-bottom: 70px; /* Space for mobile bottom nav */
   }
   
   /* Custom scrollbar */
