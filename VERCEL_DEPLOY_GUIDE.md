@@ -21,10 +21,10 @@
 ```
 
 #### **2. Configuração Vercel Otimizada**
-- ✅ `vercel.json` com versão 2
-- ✅ Runtime Node.js 18.x especificado
+- ✅ `vercel.json` simplificado (sem functions desnecessárias)
 - ✅ Framework Vite configurado
 - ✅ Rewrites para SPA
+- ✅ Headers de cache otimizados
 
 #### **3. Arquivos de Configuração**
 - ✅ `.nvmrc` - Força Node.js 18
