@@ -20,11 +20,17 @@
 }
 ```
 
-#### **2. Configuração Vercel Otimizada**
-- ✅ `vercel.json` simplificado (sem functions desnecessárias)
-- ✅ Framework Vite configurado
-- ✅ Rewrites para SPA
+#### **2. Configuração Vercel Robusta**
+- ✅ `buildCommand`: `npm ci && npm run build` (instalação + build)
+- ✅ `installCommand`: `npm ci` (instalação exata)
+- ✅ `framework`: `null` (sem detecção automática)
+- ✅ Vite config simplificado
 - ✅ Headers de cache otimizados
+
+#### **3. Dependências Atualizadas**
+- ✅ Vite atualizado para v6.3.6
+- ✅ Config simplificado sem importações problemáticas
+- ✅ Package-lock.json atualizado
 
 #### **3. Arquivos de Configuração**
 - ✅ `.nvmrc` - Força Node.js 18

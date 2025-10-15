@@ -3,19 +3,24 @@ set -e
 
 echo "🔧 Iniciando build do BarberFlow..."
 
-# Verificar se o Node.js está disponível
-echo "📋 Versão do Node.js:"
-node --version
+# Verificar versões
+echo "📋 Node.js: $(node --version)"
+echo "📋 npm: $(npm --version)"
 
-echo "📋 Versão do npm:"
-npm --version
+# Limpar cache npm se necessário
+echo "🧹 Limpando cache..."
+npm cache clean --force
 
-# Instalar dependências se necessário
+# Instalar dependências exatas
 echo "📦 Instalando dependências..."
 npm ci
+
+# Verificar se vite está disponível
+echo "🔍 Verificando Vite..."
+npx vite --version
 
 # Executar build
 echo "🏗️ Executando build..."
 npx vite build
 
-echo "✅ Build concluído com sucesso!"
+echo "✅ Build concluído!"
