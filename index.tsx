@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// import './index.css'; // Comentado - usando CDN
+import './index.css'; // Importando CSS com Tailwind
 import App from './App';
 
 const rootElement = document.getElementById('root');

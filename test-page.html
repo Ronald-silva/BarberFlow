@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste do Banco BarberFlow</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #d4af37;
+        text-align: center;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border-left: 4px solid #d4af37;
+        background-color: #f9f9f9;
+      }
+      .success {
+        color: #28a745;
+      }
+      .error {
+        color: #dc3545;
+      }
+      .loading {
+        color: #007bff;
+      }
+      button {
+        background: #d4af37;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #b8941f;
+      }
+      #results {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        white-space: pre-wrap;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Teste do Banco BarberFlow</h1>
+
+      <div class="test-section">
+        <h3>Testes Disponíveis:</h3>
+        <button onclick="testConnection()">1. Testar Conexão</button>
+        <button onclick="testTables()">2. Verificar Tabelas</button>
+        <button onclick="testServices()">3. Testar Serviços</button>
+        <button onclick="testProfessionals()">4. Testar Profissionais</button>
+        <button onclick="testClients()">5. Testar Clientes</button>
+        <button onclick="testBarbershop()">6. Testar Barbearia</button>
+        <button onclick="runAllTests()">🚀 Executar Todos</button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // Configuração do Supabase
+      const supabaseUrl = "https://jrggwhlbvsyvcqvywrmy.supabase.co";
+      const supabaseKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZ2d3aGxidnN5dmNxdnl3cm15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTg4MTEsImV4cCI6MjA3NjAzNDgxMX0.Y4bUnGmgGgPnwO1SVFbq6k2yZJN7wcY01JxKBAImQKk";
+
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+      let barbershopId = null;
+
+      function log(message, type = "info") {
+        const results = document.getElementById("results");
+        const timestamp = new Date().toLocaleTimeString();
+        const className =
+          type === "success"
+            ? "success"
+            : type === "error"
+            ? "error"
+            : "loading";
+        results.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+        results.scrollTop = results.scrollHeight;
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+      }
+
+      async function testConnection() {
+        clearResults();
+        log("🔌 Testando conexão com Supabase...", "loading");
+
+        try {
+          const { data, error } = await supabase
+            .from("barbershops")
+            .select("count")
+            .limit(1);
+
+          if (error) {
+            log(`❌ Erro de conexão: ${error.message}`, "error");
+          } else {
+            log("✅ Conexão estabelecida com sucesso!", "success");
+          }
+        } catch (err) {
+          log(`❌ Erro: ${err.message}`, "error");
+        }
+      }
+
+      async function testTables() {
+        clearResults();
+        log("📋 Verificando estrutura das tabelas...", "loading");
+
+        const tables = [
+          "barbershops",
+          "users",
+          "services",
+          "clients",
+          "appointments",
+        ];
+
+        for (const table of tables) {
+          try {
+            const { data, error } = await supabase
+              .from(table)
+              .select("*")
+              .limit(1);
+            if (error) {
+              log(`❌ Tabela ${table}: ${error.message}`, "error");
+            } else {
+              log(`✅ Tabela ${table}: OK`, "success");
+            }
+          } catch (err) {
+            log(`❌ Tabela ${table}: ${err.message}`, "error");
+          }
+        }
+      }
+
+      async function getBarbershopId() {
+        if (barbershopId) return barbershopId;
+
+        const { data, error } = await supabase
+          .from("barbershops")
+          .select("id")
+          .eq("slug", "navalha-dourada")
+          .single();
+
+        if (error) {
+          log(`❌ Erro ao buscar barbearia: ${error.message}`, "error");
+          return null;
+        }
+
+        barbershopId = data.id;
+        return barbershopId;
+      }
+
+      async function testServices() {
+        clearResults();
+        log("✂️ Testando CRUD de Serviços...", "loading");
+
+        const bId = await getBarbershopId();
+        if (!bId) return;
+
+        try {
+          // Criar
+          log("Criando serviço de teste...", "loading");
+          const { data: newService, error: createError } = await supabase
+            .from("services")
+            .insert({
+              name: "Teste Serviço",
+              price: 25.0,
+              duration: 30,
+              barbershop_id: bId,
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            log(`❌ Erro ao criar: ${createError.message}`, "error");
+            return;
+          }
+          log(`✅ Serviço criado: ${newService.name}`, "success");
+
+          // Atualizar
+          log("Atualizando serviço...", "loading");
+          const { data: updatedService, error: updateError } = await supabase
+            .from("services")
+            .update({ name: "Teste Atualizado", price: 30.0 })
+            .eq("id", newService.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            log(`❌ Erro ao atualizar: ${updateError.message}`, "error");
+          } else {
+            log(`✅ Serviço atualizado: ${updatedService.name}`, "success");
+          }
+
+          // Deletar
+          log("Deletando serviço...", "loading");
+          const { error: deleteError } = await supabase
+            .from("services")
+            .delete()
+            .eq("id", newService.id);
+
+          if (deleteError) {
+            log(`❌ Erro ao deletar: ${deleteError.message}`, "error");
+          } else {
+            log("✅ Serviço deletado com sucesso", "success");
+          }
+        } catch (err) {
+          log(`❌ Erro geral: ${err.message}`, "error");
+        }
+      }
+
+      async function testProfessionals() {
+        clearResults();
+        log("👨‍💼 Testando CRUD de Profissionais...", "loading");
+
+        const bId = await getBarbershopId();
+        if (!bId) return;
+
+        try {
+          // Criar
+          log("Criando profissional de teste...", "loading");
+          const { data: newProfessional, error: createError } = await supabase
+            .from("users")
+            .insert({
+              name: "Teste Profissional",
+              email: `teste${Date.now()}@teste.com`,
+              role: "member",
+              barbershop_id: bId,
+              work_hours: [],
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            log(`❌ Erro ao criar: ${createError.message}`, "error");
+            return;
+          }
+          log(`✅ Profissional criado: ${newProfessional.name}`, "success");
+
+          // Atualizar
+          log("Atualizando profissional...", "loading");
+          const { data: updatedProfessional, error: updateError } =
+            await supabase
+              .from("users")
+              .update({ name: "Teste Profissional Atualizado" })
+              .eq("id", newProfessional.id)
+              .select()
+              .single();
+
+          if (updateError) {
+            log(`❌ Erro ao atualizar: ${updateError.message}`, "error");
+          } else {
+            log(
+              `✅ Profissional atualizado: ${updatedProfessional.name}`,
+              "success"
+            );
+          }
+
+          // Deletar
+          log("Deletando profissional...", "loading");
+          const { error: deleteError } = await supabase
+            .from("users")
+            .delete()
+            .eq("id", newProfessional.id);
+
+          if (deleteError) {
+            log(`❌ Erro ao deletar: ${deleteError.message}`, "error");
+          } else {
+            log("✅ Profissional deletado com sucesso", "success");
+          }
+        } catch (err) {
+          log(`❌ Erro geral: ${err.message}`, "error");
+        }
+      }
+
+      async function testClients() {
+        clearResults();
+        log("👥 Testando CRUD de Clientes...", "loading");
+
+        const bId = await getBarbershopId();
+        if (!bId) return;
+
+        try {
+          // Criar
+          log("Criando cliente de teste...", "loading");
+          const { data: newClient, error: createError } = await supabase
+            .from("clients")
+            .insert({
+              name: "Teste Cliente",
+              whatsapp: `119${Date.now().toString().slice(-8)}`,
+              barbershop_id: bId,
+              last_visit: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            log(`❌ Erro ao criar: ${createError.message}`, "error");
+            return;
+          }
+          log(`✅ Cliente criado: ${newClient.name}`, "success");
+
+          // Atualizar
+          log("Atualizando cliente...", "loading");
+          const { data: updatedClient, error: updateError } = await supabase
+            .from("clients")
+            .update({ name: "Teste Cliente Atualizado" })
+            .eq("id", newClient.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            log(`❌ Erro ao atualizar: ${updateError.message}`, "error");
+          } else {
+            log(`✅ Cliente atualizado: ${updatedClient.name}`, "success");
+          }
+
+          // Deletar
+          log("Deletando cliente...", "loading");
+          const { error: deleteError } = await supabase
+            .from("clients")
+            .delete()
+            .eq("id", newClient.id);
+
+          if (deleteError) {
+            log(`❌ Erro ao deletar: ${deleteError.message}`, "error");
+          } else {
+            log("✅ Cliente deletado com sucesso", "success");
+          }
+        } catch (err) {
+          log(`❌ Erro geral: ${err.message}`, "error");
+        }
+      }
+
+      async function testBarbershop() {
+        clearResults();
+        log("🏪 Testando atualização da barbearia...", "loading");
+
+        const bId = await getBarbershopId();
+        if (!bId) return;
+
+        try {
+          // Verificar dados atuais
+          log("Verificando dados atuais...", "loading");
+          const { data: currentData, error: selectError } = await supabase
+            .from("barbershops")
+            .select("*")
+            .eq("id", bId)
+            .single();
+
+          if (selectError) {
+            log(`❌ Erro ao buscar: ${selectError.message}`, "error");
+            return;
+          }
+
+          log(`📋 Dados atuais:`, "info");
+          log(`   Nome: ${currentData.name}`, "info");
+          log(`   Telefone: ${currentData.phone || "Não definido"}`, "info");
+          log(`   Email: ${currentData.email || "Não definido"}`, "info");
+
+          // Atualizar
+          log("Atualizando dados...", "loading");
+          const { data: updatedData, error: updateError } = await supabase
+            .from("barbershops")
+            .update({
+              phone: "(11) 98765-4321",
+              email: "teste@navalhadorada.com",
+            })
+            .eq("id", bId)
+            .select()
+            .single();
+
+          if (updateError) {
+            log(`❌ Erro ao atualizar: ${updateError.message}`, "error");
+          } else {
+            log("✅ Barbearia atualizada com sucesso!", "success");
+            log(`📞 Novo telefone: ${updatedData.phone}`, "success");
+            log(`📧 Novo email: ${updatedData.email}`, "success");
+          }
+        } catch (err) {
+          log(`❌ Erro geral: ${err.message}`, "error");
+        }
+      }
+
+      async function runAllTests() {
+        clearResults();
+        log("🚀 Executando todos os testes...", "loading");
+
+        await testConnection();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await testTables();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await testServices();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await testProfessionals();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await testClients();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        await testBarbershop();
+
+        log("\n🎉 Todos os testes concluídos!", "success");
+      }
+    </script>
+  </body>
+</html>

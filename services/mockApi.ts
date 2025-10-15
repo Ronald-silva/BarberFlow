@@ -1,6 +1,6 @@
 import { User, UserRole, Barbershop, Service, Client, Appointment, AppointmentStatus } from '../types';
-// Fix: Removed `parseISO` as it's not found in the module. Replaced with `new Date()` for ISO strings.
 import { addMinutes, format } from 'date-fns';
+import { supabase } from './supabase';
 
 // --- MOCK DATABASE ---
 

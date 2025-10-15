@@ -6,22 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "pre-deploy": "node scripts/pre-deploy-check.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "@types/styled-components": "^5.1.34",
     "date-fns": "3.6.0",
     "react": "^19.2.0",
     "react-calendar": "5.0.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "6.22.0"
+    "react-router-dom": "6.22.0",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

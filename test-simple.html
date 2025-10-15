@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simples - BarberFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #D4AF37;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #D4AF37;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #d1ecf1; color: #0c5460; }
+        .info { background: #f8f9fa; color: #495057; }
+        button {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8941F 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        #results {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Simples BarberFlow</h1>
+        
+        <button onclick="testBasicConnection()">🔌 Testar Conexão Básica</button>
+        <button onclick="testDataRetrieval()">📊 Testar Busca de Dados</button>
+        <button onclick="testCRUDOperations()">⚙️ Testar Operações CRUD</button>
+        <button onclick="clearResults()">🧹 Limpar Resultados</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://jrggwhlbvsyvcqvywrmy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZ2d3aGxidnN5dmNxdnl3cm15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTg4MTEsImV4cCI6MjA3NjAzNDgxMX0.Y4bUnGmgGgPnwO1SVFbq6k2yZJN7wcY01JxKBAImQKk';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-item ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testBasicConnection() {
+            clearResults();
+            addResult('🔌 Testando conexão com Supabase...', 'loading');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('barbershops')
+                    .select('name, slug')
+                    .limit(1);
+                
+                if (error) {
+                    addResult(`❌ Erro de conexão: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Conexão estabelecida com sucesso!', 'success');
+                    if (data && data.length > 0) {
+                        addResult(`📋 Barbearia encontrada: ${data[0].name}`, 'success');
+                    }
+                }
+            } catch (err) {
+                addResult(`❌ Erro: ${err.message}`, 'error');
+            }
+        }
+
+        async function testDataRetrieval() {
+            clearResults();
+            addResult('📊 Testando busca de dados...', 'loading');
+            
+            try {
+                // Buscar barbearia
+                const { data: barbershop, error: barbershopError } = await supabase
+                    .from('barbershops')
+                    .select('*')
+                    .eq('slug', 'navalha-dourada')
+                    .single();
+
+                if (barbershopError) {
+                    addResult(`❌ Erro ao buscar barbearia: ${barbershopError.message}`, 'error');
+                    return;
+                }
+
+                addResult(`✅ Barbearia: ${barbershop.name}`, 'success');
+                addResult(`📍 Endereço: ${barbershop.address || 'Não informado'}`, 'info');
+                addResult(`📞 Telefone: ${barbershop.phone || 'Não informado'}`, 'info');
+                addResult(`📧 Email: ${barbershop.email || 'Não informado'}`, 'info');
+
+                // Buscar serviços
+                const { data: services, error: servicesError } = await supabase
+                    .from('services')
+                    .select('*')
+                    .eq('barbershop_id', barbershop.id);
+
+                if (servicesError) {
+                    addResult(`❌ Erro ao buscar serviços: ${servicesError.message}`, 'error');
+                } else {
+                    addResult(`✅ ${services.length} serviços encontrados`, 'success');
+                    services.forEach(service => {
+                        addResult(`   • ${service.name}: R$ ${service.price} (${service.duration}min)`, 'info');
+                    });
+                }
+
+                // Buscar profissionais
+                const { data: professionals, error: professionalsError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('barbershop_id', barbershop.id);
+
+                if (professionalsError) {
+                    addResult(`❌ Erro ao buscar profissionais: ${professionalsError.message}`, 'error');
+                } else {
+                    addResult(`✅ ${professionals.length} profissionais encontrados`, 'success');
+                    professionals.forEach(prof => {
+                        addResult(`   • ${prof.name} (${prof.role})`, 'info');
+                    });
+                }
+
+                // Buscar clientes
+                const { data: clients, error: clientsError } = await supabase
+                    .from('clients')
+                    .select('*')
+                    .eq('barbershop_id', barbershop.id)
+                    .limit(5);
+
+                if (clientsError) {
+                    addResult(`❌ Erro ao buscar clientes: ${clientsError.message}`, 'error');
+                } else {
+                    addResult(`✅ ${clients.length} clientes encontrados (primeiros 5)`, 'success');
+                    clients.forEach(client => {
+                        addResult(`   • ${client.name} (${client.whatsapp})`, 'info');
+                    });
+                }
+
+            } catch (err) {
+                addResult(`❌ Erro geral: ${err.message}`, 'error');
+            }
+        }
+
+        async function testCRUDOperations() {
+            clearResults();
+            addResult('⚙️ Testando operações CRUD...', 'loading');
+            
+            try {
+                // Buscar barbearia primeiro
+                const { data: barbershop } = await supabase
+                    .from('barbershops')
+                    .select('id')
+                    .eq('slug', 'navalha-dourada')
+                    .single();
+
+                if (!barbershop) {
+                    addResult('❌ Barbearia não encontrada', 'error');
+                    return;
+                }
+
+                // Teste 1: Criar serviço
+                addResult('1️⃣ Testando criação de serviço...', 'loading');
+                const { data: newService, error: createError } = await supabase
+                    .from('services')
+                    .insert({
+                        name: 'Teste CRUD',
+                        price: 15.00,
+                        duration: 20,
+                        barbershop_id: barbershop.id
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    addResult(`❌ Erro ao criar serviço: ${createError.message}`, 'error');
+                    return;
+                }
+                addResult(`✅ Serviço criado: ${newService.name}`, 'success');
+
+                // Teste 2: Atualizar serviço
+                addResult('2️⃣ Testando atualização de serviço...', 'loading');
+                const { data: updatedService, error: updateError } = await supabase
+                    .from('services')
+                    .update({ name: 'Teste CRUD Atualizado', price: 20.00 })
+                    .eq('id', newService.id)
+                    .select()
+                    .single();
+
+                if (updateError) {
+                    addResult(`❌ Erro ao atualizar: ${updateError.message}`, 'error');
+                } else {
+                    addResult(`✅ Serviço atualizado: ${updatedService.name} - R$ ${updatedService.price}`, 'success');
+                }
+
+                // Teste 3: Deletar serviço
+                addResult('3️⃣ Testando exclusão de serviço...', 'loading');
+                const { error: deleteError } = await supabase
+                    .from('services')
+                    .delete()
+                    .eq('id', newService.id);
+
+                if (deleteError) {
+                    addResult(`❌ Erro ao deletar: ${deleteError.message}`, 'error');
+                } else {
+                    addResult('✅ Serviço deletado com sucesso', 'success');
+                }
+
+                // Teste 4: Atualizar barbearia
+                addResult('4️⃣ Testando atualização da barbearia...', 'loading');
+                const { data: updatedBarbershop, error: updateBarbershopError } = await supabase
+                    .from('barbershops')
+                    .update({
+                        phone: '(11) 99999-8888',
+                        email: 'teste@barberflow.com'
+                    })
+                    .eq('id', barbershop.id)
+                    .select()
+                    .single();
+
+                if (updateBarbershopError) {
+                    addResult(`❌ Erro ao atualizar barbearia: ${updateBarbershopError.message}`, 'error');
+                } else {
+                    addResult('✅ Barbearia atualizada com sucesso', 'success');
+                    addResult(`📞 Novo telefone: ${updatedBarbershop.phone}`, 'info');
+                    addResult(`📧 Novo email: ${updatedBarbershop.email}`, 'info');
+                }
+
+                addResult('🎉 Todos os testes CRUD concluídos com sucesso!', 'success');
+
+            } catch (err) {
+                addResult(`❌ Erro geral: ${err.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

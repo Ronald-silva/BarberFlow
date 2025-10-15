@@ -1,72 +1,197 @@
 
 import React, { useState } from 'react';
+import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
+
+// Styled Components
+const LoginContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, ${props => props.theme.colors.background.primary} 0%, ${props => props.theme.colors.background.secondary} 100%);
+  padding: ${props => props.theme.spacing[4]};
+`;
+
+const LoginCard = styled.div`
+  width: 100%;
+  max-width: 420px;
+  background: ${props => props.theme.colors.background.elevated};
+  border-radius: ${props => props.theme.radii['2xl']};
+  box-shadow: ${props => props.theme.shadows['2xl']};
+  border: 1px solid ${props => props.theme.colors.border.primary};
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-out;
+`;
+
+const LoginHeader = styled.div`
+  padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[8]} ${props => props.theme.spacing[6]};
+  text-align: center;
+  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+`;
+
+const Logo = styled.h1`
+  font-size: ${props => props.theme.typography.fontSizes['4xl']};
+  font-weight: ${props => props.theme.typography.fontWeights.extrabold};
+  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: ${props => props.theme.spacing[2]};
+  letter-spacing: -0.02em;
+`;
+
+const Subtitle = styled.p`
+  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${props => props.theme.typography.fontSizes.base};
+  font-weight: ${props => props.theme.typography.fontWeights.medium};
+`;
+
+const LoginForm = styled.form`
+  padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[8]} ${props => props.theme.spacing[8]};
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[6]};
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[4]};
+`;
+
+const InputField = styled.div`
+  position: relative;
+`;
+
+const Label = styled.label`
+  display: block;
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  font-weight: ${props => props.theme.typography.fontWeights.medium};
+  color: ${props => props.theme.colors.text.secondary};
+  margin-bottom: ${props => props.theme.spacing[2]};
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: ${props => props.theme.spacing[4]};
+  background-color: ${props => props.theme.colors.background.secondary};
+  border: 1px solid ${props => props.theme.colors.border.primary};
+  border-radius: ${props => props.theme.radii.lg};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: ${props => props.theme.typography.fontSizes.base};
+  font-weight: ${props => props.theme.typography.fontWeights.medium};
+  transition: ${props => props.theme.transitions.base};
+  
+  &::placeholder {
+    color: ${props => props.theme.colors.text.tertiary};
+  }
+  
+  &:focus {
+    border-color: ${props => props.theme.colors.border.focus};
+    box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
+    background-color: ${props => props.theme.colors.background.tertiary};
+  }
+  
+  &:hover:not(:focus) {
+    border-color: ${props => props.theme.colors.border.secondary};
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: ${props => props.theme.colors.error};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  font-weight: ${props => props.theme.typography.fontWeights.medium};
+  text-align: center;
+  padding: ${props => props.theme.spacing[3]};
+  background-color: ${props => props.theme.colors.errorLight};
+  border-radius: ${props => props.theme.radii.md};
+  border: 1px solid ${props => props.theme.colors.error}40;
+`;
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('admin@barber.com');
     const [password, setPassword] = useState('123456');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const success = await login(email, password);
-        if (success) {
-            navigate('/dashboard');
-        } else {
-            setError('Credenciais inválidas. Tente novamente.');
+        setLoading(true);
+        
+        try {
+            const success = await login(email, password);
+            if (success) {
+                navigate('/dashboard');
+            } else {
+                setError('Credenciais inválidas. Verifique seu email e senha.');
+            }
+        } catch (err) {
+            setError('Erro ao fazer login. Tente novamente.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-brand-dark text-brand-text">
-            <div className="w-full max-w-md p-8 space-y-8 bg-brand-secondary rounded-lg shadow-lg">
-                <div className="text-center">
-                    <h1 className="text-4xl font-bold text-brand-primary tracking-wider">BarberFlow</h1>
-                    <p className="mt-2 text-gray-400">Acesse seu painel</p>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <input
-                                id="email-address"
+        <LoginContainer>
+            <LoginCard className="fade-in">
+                <LoginHeader>
+                    <Logo>BarberFlow</Logo>
+                    <Subtitle>Acesse seu painel administrativo</Subtitle>
+                </LoginHeader>
+                
+                <LoginForm onSubmit={handleSubmit}>
+                    <InputGroup>
+                        <InputField>
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
                                 name="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                placeholder="seu@email.com"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-800 text-brand-text placeholder-gray-500 rounded-t-md focus:outline-none focus:ring-brand-primary focus:border-brand-primary focus:z-10 sm:text-sm"
-                                placeholder="Email"
+                                disabled={loading}
                             />
-                        </div>
-                        <div>
-                            <input
+                        </InputField>
+                        
+                        <InputField>
+                            <Label htmlFor="password">Senha</Label>
+                            <Input
                                 id="password"
                                 name="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-800 text-brand-text placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-brand-primary focus:border-brand-primary focus:z-10 sm:text-sm"
-                                placeholder="Senha"
+                                disabled={loading}
                             />
-                        </div>
-                    </div>
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                    <div>
-                        <button
-                            type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-brand-secondary bg-brand-primary hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-brand-primary"
-                        >
-                            Entrar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        </InputField>
+                    </InputGroup>
+                    
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    
+                    <Button
+                        type="submit"
+                        $variant="primary"
+                        $size="lg"
+                        $fullWidth
+                        disabled={loading}
+                        $loading={loading}
+                    >
+                        {loading ? 'Entrando...' : 'Entrar'}
+                    </Button>
+                </LoginForm>
+            </LoginCard>
+        </LoginContainer>
     );
 };
 
