@@ -124,3 +124,52 @@ export const DashboardIcon: React.FC<IconProps> = ({ size = 24, className }) => 
     <path d="M4 20l14 0" />
   </svg>
 );
+
+export const PixIcon: React.FC<IconProps> = ({ size = 24, className }) => (
+  <svg 
+    {...defaultIconProps} 
+    width={size} 
+    height={size} 
+    className={className} 
+    viewBox="0 0 24 24"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <rect x="3" y="5" width="18" height="14" rx="3" />
+    <path d="M7 15l4 -4l4 4" />
+    <path d="M7 9l4 4l4 -4" />
+  </svg>
+);
+
+export const BitcoinIcon: React.FC<IconProps> = ({ size = 24, className }) => (
+  <svg 
+    {...defaultIconProps} 
+    width={size} 
+    height={size} 
+    className={className} 
+    viewBox="0 0 24 24"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9 8h4.09c1.055 0 1.91 .895 1.91 2s-.855 2 -1.91 2c1.055 0 1.91 .895 1.91 2s-.855 2 -1.91 2h-4.09" />
+    <path d="M10 12h4" />
+    <path d="M10 7v10v-9" />
+    <path d="M13 7v1" />
+    <path d="M13 16v1" />
+  </svg>
+);
+
+export const PaymentIcon: React.FC<IconProps> = ({ size = 24, className }) => (
+  <svg 
+    {...defaultIconProps} 
+    width={size} 
+    height={size} 
+    className={className} 
+    viewBox="0 0 24 24"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <rect x="3" y="5" width="18" height="14" rx="3" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+    <line x1="7" y1="15" x2="7.01" y2="15" />
+    <line x1="11" y1="15" x2="13" y2="15" />
+  </svg>
+);

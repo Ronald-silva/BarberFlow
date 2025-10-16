@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, Heading, Text, Flex, Grid } from '../components/ui/Container';
-import { CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, DashboardIcon } from '../components/icons';
+import { CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, DashboardIcon, PixIcon, BitcoinIcon, PaymentIcon } from '../components/icons';
 
 const LandingContainer = styled.div`
   min-height: 100vh;
@@ -132,6 +132,83 @@ const Price = styled.div`
   margin: ${props => props.theme.spacing[4]} 0;
 `;
 
+const PaymentSection = styled.section`
+  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[4]};
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  text-align: center;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: ${props => props.theme.spacing[16]} ${props => props.theme.spacing[6]};
+  }
+`;
+
+const PaymentGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 3rem auto 0;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: 1fr 1fr;
+  }
+`;
+
+const PaymentCard = styled(Card)`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const PaymentMethodIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+  
+  &.pix {
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    color: white;
+  }
+  
+  &.bitcoin {
+    background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%);
+    color: white;
+  }
+`;
+
+const BenefitList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  text-align: left;
+  
+  li {
+    padding: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    &::before {
+      content: '✅';
+      font-size: 1rem;
+    }
+  }
+`;
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -140,6 +217,11 @@ const LandingPage: React.FC = () => {
       icon: <CalendarIcon size={32} />,
       title: 'Agendamento Online',
       description: 'Sistema completo de agendamentos com calendário intuitivo e notificações automáticas.'
+    },
+    {
+      icon: <PaymentIcon size={32} />,
+      title: 'Pagamentos Modernos',
+      description: 'PIX instantâneo e Bitcoin aceitos. Zero taxas no PIX, atraia clientes tech com crypto.'
     },
     {
       icon: <UsersIcon size={32} />,
@@ -160,11 +242,6 @@ const LandingPage: React.FC = () => {
       icon: <DashboardIcon size={32} />,
       title: 'Relatórios Detalhados',
       description: 'Acompanhe faturamento, agendamentos e performance da sua barbearia.'
-    },
-    {
-      icon: <SettingsIcon size={32} />,
-      title: 'Configuração Flexível',
-      description: 'Personalize horários, serviços e configurações conforme sua necessidade.'
     }
   ];
 
@@ -190,7 +267,7 @@ const LandingPage: React.FC = () => {
         </HeroTitle>
         <HeroSubtitle $size="lg" $color="secondary">
           Gerencie agendamentos, clientes e equipe em uma plataforma moderna e intuitiva. 
-          Aumente sua produtividade e ofereça uma experiência excepcional aos seus clientes.
+          Aceite PIX e Bitcoin, reduza custos e atraia mais clientes com pagamentos do futuro.
         </HeroSubtitle>
         <Flex $justify="center" $gap="1rem" $responsive>
           <Button size="lg" onClick={() => navigate('/register')}>
@@ -227,6 +304,66 @@ const LandingPage: React.FC = () => {
           ))}
         </Grid>
       </FeaturesSection>
+
+      <PaymentSection>
+        <Heading $level={2} style={{ color: 'white', marginBottom: '1rem' }}>
+          Pagamentos do Futuro, Disponíveis Hoje
+        </Heading>
+        <Text $size="lg" style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '2rem' }}>
+          Seja pioneiro! Aceite PIX e Bitcoin e ofereça a seus clientes as formas de pagamento mais modernas e econômicas do mercado.
+        </Text>
+        
+        <PaymentGrid>
+          <PaymentCard $variant="elevated">
+            <CardContent>
+              <PaymentMethodIcon className="pix">
+                PIX
+              </PaymentMethodIcon>
+              <Heading $level={3} style={{ color: 'white', marginBottom: '1rem' }}>
+                PIX Instantâneo
+              </Heading>
+              <Text style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+                O método de pagamento preferido dos brasileiros, agora integrado ao seu sistema.
+              </Text>
+              <BenefitList>
+                <li>Zero taxas para você</li>
+                <li>Recebimento instantâneo</li>
+                <li>Disponível 24/7</li>
+                <li>QR Code automático</li>
+                <li>Todos os bancos aceitam</li>
+              </BenefitList>
+            </CardContent>
+          </PaymentCard>
+
+          <PaymentCard $variant="elevated">
+            <CardContent>
+              <PaymentMethodIcon className="bitcoin">
+                ₿
+              </PaymentMethodIcon>
+              <Heading $level={3} style={{ color: 'white', marginBottom: '1rem' }}>
+                Bitcoin Aceito
+              </Heading>
+              <Text style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+                Seja a primeira barbearia da região a aceitar Bitcoin. Atraia clientes tech-savvy e diferenciados.
+              </Text>
+              <BenefitList>
+                <li>Taxas ultra baixas</li>
+                <li>Clientes tech-savvy</li>
+                <li>Marketing diferenciado</li>
+                <li>Pagamento global</li>
+                <li>Futuro dos pagamentos</li>
+              </BenefitList>
+            </CardContent>
+          </PaymentCard>
+        </PaymentGrid>
+
+        <div style={{ marginTop: '3rem' }}>
+          <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.9rem' }}>
+            💡 <strong>Dica de Marketing:</strong> "Primeira barbearia da região a aceitar Bitcoin" - 
+            Use isso na sua comunicação e redes sociais para se destacar da concorrência!
+          </Text>
+        </div>
+      </PaymentSection>
 
       <CTASection>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>

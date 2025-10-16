@@ -8,6 +8,8 @@ import { ptBR } from 'date-fns/locale/pt-BR';
 import { Button } from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
 import { Text } from '../components/ui/Container';
+import { PaymentModal } from '../components/PaymentModal';
+import { PaymentData } from '../services/paymentService';
 import {
   BookingContainer,
   BookingCard,
@@ -62,6 +64,11 @@ const BookingPage: React.FC = () => {
     
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    
+    // Payment states
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [appointmentId, setAppointmentId] = useState<string | null>(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -114,19 +121,43 @@ const BookingPage: React.FC = () => {
             
             const professionalToBook = selectedProfessional === 'any' ? professionals[0].id : selectedProfessional;
 
-            await api.createAppointment({
+            // Create appointment with pending payment status
+            const appointment = await api.createAppointment({
                 client: { name: clientName, whatsapp: clientWhatsapp },
                 barbershopId: barbershop.id,
                 professionalId: professionalToBook,
                 serviceIds: selectedServices,
                 startDateTime: bookingDateTime.toISOString(),
+                paymentRequired: true,
+                paymentStatus: 'pending'
             });
 
-            setStep(5);
+            setAppointmentId(appointment.id);
+            setShowPaymentModal(true);
         } catch (error) {
             console.error('Erro ao criar agendamento:', error);
+            alert('Erro ao criar agendamento. Tente novamente.');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handlePaymentSuccess = (paymentId: string) => {
+        setPaymentCompleted(true);
+        setShowPaymentModal(false);
+        setStep(5);
+    };
+
+    const handlePaymentClose = () => {
+        if (paymentCompleted) {
+            setShowPaymentModal(false);
+            setStep(5);
+        } else {
+            // Ask for confirmation before closing
+            if (window.confirm('Tem certeza que deseja cancelar o pagamento? O agendamento será cancelado.')) {
+                setShowPaymentModal(false);
+                // Optionally cancel the appointment here
+            }
         }
     };
 
@@ -419,6 +450,25 @@ const BookingPage: React.FC = () => {
                     )}
                 </BookingContent>
             </BookingCard>
+
+            {/* Payment Modal */}
+            {showPaymentModal && appointmentId && (
+                <PaymentModal
+                    isOpen={showPaymentModal}
+                    onClose={handlePaymentClose}
+                    paymentData={{
+                        appointmentId,
+                        amount: totalPrice,
+                        clientName,
+                        clientEmail: '', // Add email field if needed
+                        clientPhone: clientWhatsapp,
+                        description: `Agendamento - ${selectedServices.map(id => 
+                            services.find(s => s.id === id)?.name
+                        ).join(', ')}`
+                    }}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
         </BookingContainer>
     );
 };
