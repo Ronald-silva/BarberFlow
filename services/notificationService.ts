@@ -21,8 +21,8 @@ class NotificationService {
   private whatsappPhoneId: string;
 
   constructor() {
-    this.whatsappToken = process.env.REACT_APP_WHATSAPP_TOKEN || '';
-    this.whatsappPhoneId = process.env.REACT_APP_WHATSAPP_PHONE_ID || '';
+    this.whatsappToken = import.meta.env.VITE_WHATSAPP_TOKEN || '';
+    this.whatsappPhoneId = import.meta.env.VITE_WHATSAPP_PHONE_ID || '';
   }
 
   // Templates de mensagens

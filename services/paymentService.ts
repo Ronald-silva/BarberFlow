@@ -30,9 +30,9 @@ class PaymentService {
   private bitcoinApiKey: string;
 
   constructor() {
-    this.pixKey = process.env.REACT_APP_PIX_KEY || '';
-    this.bitcoinAddress = process.env.REACT_APP_BITCOIN_ADDRESS || '';
-    this.bitcoinApiKey = process.env.REACT_APP_BLOCKCHAIN_API_KEY || '';
+    this.pixKey = import.meta.env.VITE_PIX_KEY || '';
+    this.bitcoinAddress = import.meta.env.VITE_BITCOIN_ADDRESS || '';
+    this.bitcoinApiKey = import.meta.env.VITE_BLOCKCHAIN_API_KEY || '';
   }
 
   // Criar pagamento PIX

@@ -250,6 +250,7 @@ const SettingsPage: React.FC = () => {
     address: "Rua das Tesouras, 123",
     phone: "(11) 99999-9999",
     email: "contato@navalhadorada.com",
+    slug: "",
   });
 
   const [workingHours, setWorkingHours] = useState([
@@ -279,6 +280,7 @@ const SettingsPage: React.FC = () => {
               address: barbershop.address || "",
               phone: "",
               email: "",
+              slug: barbershop.slug || barbershop.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
             });
           }
         } catch (error) {
@@ -457,6 +459,86 @@ const SettingsPage: React.FC = () => {
 
               <ErrorMessage show={!!error}>✗ {error}</ErrorMessage>
             </SettingsForm>
+          </SectionContent>
+        </SettingsSection>
+
+        {/* Link de Agendamento */}
+        <SettingsSection
+          $variant="elevated"
+          className="slide-in"
+          style={{ animationDelay: "0.05s" }}
+        >
+          <SectionHeader>
+            <SectionTitle>Link de Agendamento</SectionTitle>
+            <SectionDescription>
+              Compartilhe este link para que seus clientes façam agendamentos online
+            </SectionDescription>
+          </SectionHeader>
+          <SectionContent>
+            <div style={{ padding: "1.5rem" }}>
+              <FormGroup>
+                <Label>Seu Link de Agendamento</Label>
+                <div style={{ 
+                  display: "flex", 
+                  gap: "0.75rem", 
+                  alignItems: "center",
+                  marginTop: "0.5rem"
+                }}>
+                  <Input
+                    type="text"
+                    value={`${window.location.origin}/#/book/${barbershopData.slug}`}
+                    readOnly
+                    style={{ 
+                      flex: 1,
+                      backgroundColor: "var(--color-background-secondary)",
+                      color: "var(--color-text-primary)",
+                      cursor: "text",
+                      border: "1px solid var(--color-border-primary)"
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    $variant="secondary"
+                    onClick={() => {
+                      const link = `${window.location.origin}/#/book/${barbershopData.slug}`;
+                      navigator.clipboard.writeText(link);
+                      alert('Link copiado para a área de transferência!');
+                    }}
+                    style={{ minWidth: "100px" }}
+                  >
+                    📋 Copiar
+                  </Button>
+                </div>
+              </FormGroup>
+              
+              <div style={{ 
+                marginTop: "1.5rem",
+                padding: "1rem",
+                backgroundColor: "#e8f5e8",
+                borderRadius: "8px",
+                border: "1px solid #4ade80"
+              }}>
+                <Text style={{ 
+                  fontSize: "0.875rem",
+                  color: "#166534",
+                  fontWeight: "500",
+                  marginBottom: "0.5rem"
+                }}>
+                  💡 Como usar seu link:
+                </Text>
+                <ul style={{ 
+                  margin: 0,
+                  paddingLeft: "1.25rem",
+                  fontSize: "0.875rem",
+                  color: "#166534"
+                }}>
+                  <li>Compartilhe nas suas redes sociais</li>
+                  <li>Adicione no seu WhatsApp Business</li>
+                  <li>Coloque no Google Meu Negócio</li>
+                  <li>Use em cartões de visita digitais</li>
+                </ul>
+              </div>
+            </div>
           </SectionContent>
         </SettingsSection>
 
