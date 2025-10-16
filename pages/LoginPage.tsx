@@ -190,6 +190,30 @@ const LoginPage: React.FC = () => {
                         {loading ? 'Entrando...' : 'Entrar'}
                     </Button>
                 </LoginForm>
+                
+                <div style={{ 
+                    padding: '0 2rem 2rem', 
+                    textAlign: 'center',
+                    borderTop: '1px solid #374151',
+                    marginTop: '1rem',
+                    paddingTop: '1.5rem'
+                }}>
+                    <p style={{ 
+                        color: '#9CA3AF', 
+                        fontSize: '0.875rem',
+                        marginBottom: '1rem'
+                    }}>
+                        Ainda não tem uma barbearia cadastrada?
+                    </p>
+                    <Button
+                        variant="outline"
+                        size="md"
+                        onClick={() => navigate('/register')}
+                        style={{ width: '100%' }}
+                    >
+                        Cadastrar Nova Barbearia
+                    </Button>
+                </div>
             </LoginCard>
         </LoginContainer>
     );

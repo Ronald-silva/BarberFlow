@@ -1,103 +1,275 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent, Heading, Text, Flex, Grid } from '../components/ui/Container';
+import { CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, DashboardIcon } from '../components/icons';
+
+const LandingContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, ${props => props.theme.colors.background.primary} 0%, ${props => props.theme.colors.background.secondary} 100%);
+`;
+
+const Header = styled.header`
+  padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[4]};
+  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+  border-bottom: 1px solid ${props => props.theme.colors.border.primary};
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[6]};
+  }
+`;
+
+const Nav = styled.nav`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const Logo = styled.h1`
+  font-size: ${props => props.theme.typography.fontSizes['2xl']};
+  font-weight: ${props => props.theme.typography.fontWeights.bold};
+  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.typography.fontSizes['3xl']};
+  }
+`;
+
+const HeroSection = styled.section`
+  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[4]};
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: ${props => props.theme.spacing[16]} ${props => props.theme.spacing[6]};
+  }
+`;
+
+const HeroTitle = styled(Heading)`
+  margin-bottom: ${props => props.theme.spacing[6]};
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
+const HeroSubtitle = styled(Text)`
+  margin-bottom: ${props => props.theme.spacing[8]};
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
+const FeaturesSection = styled.section`
+  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[4]};
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: ${props => props.theme.spacing[16]} ${props => props.theme.spacing[6]};
+  }
+`;
+
+const FeatureCard = styled(Card)`
+  text-align: center;
+  height: 100%;
+  transition: ${props => props.theme.transitions.base};
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${props => props.theme.shadows.xl};
+  }
+`;
+
+const FeatureIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+  border-radius: ${props => props.theme.radii.full};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto ${props => props.theme.spacing[4]};
+  color: ${props => props.theme.colors.text.inverse};
+`;
+
+const CTASection = styled.section`
+  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[4]};
+  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+  text-align: center;
+  
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: ${props => props.theme.spacing[16]} ${props => props.theme.spacing[6]};
+  }
+`;
+
+const PricingCard = styled(Card)`
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+  }
+`;
+
+const Price = styled.div`
+  font-size: ${props => props.theme.typography.fontSizes['4xl']};
+  font-weight: ${props => props.theme.typography.fontWeights.bold};
+  color: ${props => props.theme.colors.primary};
+  margin: ${props => props.theme.spacing[4]} 0;
+`;
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const features = [
+    {
+      icon: <CalendarIcon size={32} />,
+      title: 'Agendamento Online',
+      description: 'Sistema completo de agendamentos com calendário intuitivo e notificações automáticas.'
+    },
+    {
+      icon: <UsersIcon size={32} />,
+      title: 'Gestão de Clientes',
+      description: 'Cadastro completo de clientes com histórico de serviços e preferências.'
+    },
+    {
+      icon: <ScissorsIcon size={32} />,
+      title: 'Catálogo de Serviços',
+      description: 'Configure seus serviços, preços e duração de forma simples e organizada.'
+    },
+    {
+      icon: <TeamIcon size={32} />,
+      title: 'Equipe Completa',
+      description: 'Gerencie profissionais, horários de trabalho e permissões de acesso.'
+    },
+    {
+      icon: <DashboardIcon size={32} />,
+      title: 'Relatórios Detalhados',
+      description: 'Acompanhe faturamento, agendamentos e performance da sua barbearia.'
+    },
+    {
+      icon: <SettingsIcon size={32} />,
+      title: 'Configuração Flexível',
+      description: 'Personalize horários, serviços e configurações conforme sua necessidade.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-brand-dark text-brand-text">
-      {/* Header */}
-      <header className="bg-brand-secondary shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="text-2xl font-bold text-brand-primary">BarberFlow</div>
-            <Link 
-              to="/login" 
-              className="bg-brand-primary text-brand-secondary px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-            >
+    <LandingContainer>
+      <Header>
+        <Nav>
+          <Logo>BarberFlow</Logo>
+          <Flex $gap="1rem">
+            <Button $variant="secondary" onClick={() => navigate('/login')}>
               Entrar
-            </Link>
-          </div>
-        </div>
-      </header>
+            </Button>
+            <Button onClick={() => navigate('/register')}>
+              Cadastrar Barbearia
+            </Button>
+          </Flex>
+        </Nav>
+      </Header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Sistema Inteligente de <span className="text-brand-primary">Agendamento</span> para Barbearias
-          </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Reduza o trabalho manual, diminua o no-show e aumente seu faturamento com nossa plataforma completa de gestão.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/book/navalha-dourada" 
-              className="bg-brand-primary text-brand-secondary px-8 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-            >
-              Ver Demo do Agendamento
-            </Link>
-            <Link 
-              to="/login" 
-              className="border border-brand-primary text-brand-primary px-8 py-3 rounded-lg font-semibold hover:bg-brand-primary hover:text-brand-secondary transition-colors"
-            >
-              Acessar Dashboard
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSection>
+        <HeroTitle $level={1} $gradient>
+          O Sistema Completo para Sua Barbearia
+        </HeroTitle>
+        <HeroSubtitle $size="lg" $color="secondary">
+          Gerencie agendamentos, clientes e equipe em uma plataforma moderna e intuitiva. 
+          Aumente sua produtividade e ofereça uma experiência excepcional aos seus clientes.
+        </HeroSubtitle>
+        <Flex $justify="center" $gap="1rem" $responsive>
+          <Button size="lg" onClick={() => navigate('/register')}>
+            Começar Gratuitamente
+          </Button>
+        </Flex>
+      </HeroSection>
 
-      {/* Features */}
-      <section className="py-16 px-4 bg-brand-secondary">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-brand-primary">Por que escolher o BarberFlow?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-brand-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📅</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Agendamento Online</h3>
-              <p className="text-gray-400">Seus clientes agendam 24/7 pelo celular, sem precisar ligar.</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-brand-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💬</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Lembretes Automáticos</h3>
-              <p className="text-gray-400">WhatsApp automático reduz no-show em até 80%.</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-brand-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📊</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Relatórios Completos</h3>
-              <p className="text-gray-400">Acompanhe faturamento e recupere clientes inativos.</p>
-            </div>
-          </div>
+      <FeaturesSection>
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <Heading $level={2} $color="primary">
+            Tudo que Sua Barbearia Precisa
+          </Heading>
+          <Text $size="lg" $color="tertiary" style={{ marginTop: '1rem' }}>
+            Funcionalidades completas para modernizar seu negócio
+          </Text>
         </div>
-      </section>
 
-      {/* CTA */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Pronto para revolucionar sua barbearia?</h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Teste grátis por 30 dias. Sem compromisso.
-          </p>
-          <Link 
-            to="/login" 
-            className="bg-brand-primary text-brand-secondary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-yellow-600 transition-colors"
-          >
-            Começar Agora - Grátis
-          </Link>
-        </div>
-      </section>
+        <Grid $columns={3} $gap="2rem" $responsive>
+          {features.map((feature, index) => (
+            <FeatureCard key={index} $variant="elevated">
+              <CardContent>
+                <FeatureIcon>
+                  {feature.icon}
+                </FeatureIcon>
+                <Heading $level={4} $color="primary" style={{ marginBottom: '1rem' }}>
+                  {feature.title}
+                </Heading>
+                <Text $color="secondary">
+                  {feature.description}
+                </Text>
+              </CardContent>
+            </FeatureCard>
+          ))}
+        </Grid>
+      </FeaturesSection>
 
-      {/* Footer */}
-      <footer className="bg-brand-secondary py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center text-gray-400">
-          <p>&copy; 2024 BarberFlow. Todos os direitos reservados.</p>
+      <CTASection>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <Heading $level={2} $gradient style={{ marginBottom: '2rem' }}>
+            Pronto para Modernizar Sua Barbearia?
+          </Heading>
+          
+          <PricingCard $variant="elevated" style={{ maxWidth: '400px', margin: '2rem auto' }}>
+            <CardContent>
+              <Heading $level={3} $color="primary">
+                Plano Completo
+              </Heading>
+              <Price>
+                Gratuito
+                <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#9CA3AF' }}>
+                  para sempre
+                </div>
+              </Price>
+              <ul style={{ 
+                textAlign: 'left', 
+                listStyle: 'none', 
+                padding: 0,
+                margin: '2rem 0'
+              }}>
+                <li style={{ padding: '0.5rem 0', color: '#E5E7EB' }}>✅ Agendamentos ilimitados</li>
+                <li style={{ padding: '0.5rem 0', color: '#E5E7EB' }}>✅ Clientes ilimitados</li>
+                <li style={{ padding: '0.5rem 0', color: '#E5E7EB' }}>✅ Equipe completa</li>
+                <li style={{ padding: '0.5rem 0', color: '#E5E7EB' }}>✅ Relatórios detalhados</li>
+                <li style={{ padding: '0.5rem 0', color: '#E5E7EB' }}>✅ Suporte técnico</li>
+              </ul>
+            </CardContent>
+          </PricingCard>
+
+          <Text $size="lg" $color="secondary" style={{ marginBottom: '2rem' }}>
+            Cadastre sua barbearia em menos de 2 minutos e comece a usar hoje mesmo.
+          </Text>
+          
+          <Button size="lg" onClick={() => navigate('/register')}>
+            Cadastrar Minha Barbearia
+          </Button>
         </div>
-      </footer>
-    </div>
+      </CTASection>
+    </LandingContainer>
   );
 };
 

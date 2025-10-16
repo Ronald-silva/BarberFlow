@@ -14,8 +14,8 @@ DECLARE
     service4_id UUID;
 BEGIN
     -- Inserir barbearia e capturar o ID
-    INSERT INTO barbershops (name, slug, logo_url, address) 
-    VALUES ('Navalha Dourada', 'navalha-dourada', 'https://picsum.photos/seed/logo1/100/100', 'Rua das Tesouras, 123')
+    INSERT INTO barbershops (name, slug, logo_url, address, phone, email) 
+    VALUES ('Navalha Dourada', 'navalha-dourada', 'https://picsum.photos/seed/logo1/100/100', 'Rua das Tesouras, 123', '(11) 99999-9999', 'contato@navalhadourada.com')
     RETURNING id INTO barbershop_id;
 
     -- Inserir usuários/profissionais

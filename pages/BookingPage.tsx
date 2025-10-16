@@ -148,7 +148,12 @@ const BookingPage: React.FC = () => {
             <BookingContainer>
                 <LoadingContainer>
                     <Text $color="primary" $size="lg">Barbearia não encontrada</Text>
-                    <Text $color="tertiary">Verifique o link e tente novamente</Text>
+                    <Text $color="tertiary">
+                        A barbearia "{barbershopSlug}" não existe ou não está disponível para agendamentos online.
+                    </Text>
+                    <Text $color="tertiary" $size="sm" style={{ marginTop: '1rem' }}>
+                        Verifique o link ou entre em contato com a barbearia.
+                    </Text>
                 </LoadingContainer>
             </BookingContainer>
         );
@@ -214,7 +219,7 @@ const BookingPage: React.FC = () => {
                             <StepNavigation>
                                 <div></div>
                                 <Button 
-                                    variant="primary" 
+                                    $variant="primary" 
                                     onClick={() => setStep(2)} 
                                     disabled={selectedServices.length === 0}
                                 >
@@ -252,10 +257,10 @@ const BookingPage: React.FC = () => {
                             </ProfessionalGrid>
                             
                             <StepNavigation>
-                                <Button variant="secondary" onClick={() => setStep(1)}>
+                                <Button $variant="secondary" onClick={() => setStep(1)}>
                                     Voltar
                                 </Button>
-                                <Button variant="primary" onClick={() => setStep(3)}>
+                                <Button $variant="primary" onClick={() => setStep(3)}>
                                     Continuar
                                 </Button>
                             </StepNavigation>
@@ -302,8 +307,8 @@ const BookingPage: React.FC = () => {
                                             return (
                                                 <TimeSlotButton
                                                     key={time}
-                                                    variant={selectedTime === time ? "primary" : "ghost"}
-                                                    size="sm"
+                                                    $variant={selectedTime === time ? "primary" : "ghost"}
+                                                    $size="sm"
                                                     onClick={() => setSelectedTime(time)}
                                                     disabled={isDisabled}
                                                     selected={selectedTime === time}
@@ -317,11 +322,11 @@ const BookingPage: React.FC = () => {
                             </DateTimeContainer>
                             
                             <StepNavigation>
-                                <Button variant="secondary" onClick={() => setStep(2)}>
+                                <Button $variant="secondary" onClick={() => setStep(2)}>
                                     Voltar
                                 </Button>
                                 <Button 
-                                    variant="primary" 
+                                    $variant="primary" 
                                     onClick={() => setStep(4)} 
                                     disabled={!selectedTime}
                                 >
@@ -366,14 +371,14 @@ const BookingPage: React.FC = () => {
                             </ClientForm>
                             
                             <StepNavigation>
-                                <Button variant="secondary" onClick={() => setStep(3)} disabled={submitting}>
+                                <Button $variant="secondary" onClick={() => setStep(3)} disabled={submitting}>
                                     Voltar
                                 </Button>
                                 <Button 
-                                    variant="primary" 
+                                    $variant="primary" 
                                     onClick={handleConfirmBooking} 
                                     disabled={!clientName || !clientWhatsapp || submitting}
-                                    loading={submitting}
+                                    $loading={submitting}
                                 >
                                     {submitting ? 'Confirmando...' : 'Confirmar Agendamento'}
                                 </Button>

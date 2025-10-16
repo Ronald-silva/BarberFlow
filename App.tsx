@@ -17,6 +17,8 @@ const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 const ProfessionalsPage = lazy(() => import('./pages/ProfessionalsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const BarbershopRegistrationPage = lazy(() => import('./pages/BarbershopRegistrationPage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 
 const App: React.FC = () => {
   return (
@@ -26,7 +28,9 @@ const App: React.FC = () => {
         <AuthProvider>
           <LazyLoad>
             <Routes>
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<BarbershopRegistrationPage />} />
               <Route path="/book/:barbershopSlug" element={<BookingPage />} />
               
               <Route 
@@ -45,8 +49,6 @@ const App: React.FC = () => {
                 <Route path="professionals" element={<AdminRoute><ProfessionalsPage /></AdminRoute>} />
                 <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
               </Route>
-
-              <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
           </LazyLoad>
         </AuthProvider>

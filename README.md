@@ -89,7 +89,7 @@ npm run dev
 
 ## 📱 Guia de Uso
 
-### Para Demonstrar aos Clientes
+### Para Apresentar aos Clientes
 
 #### 1. Agendamento Público (Cliente Final)
 1. Acesse: `/#/book/navalha-dourada`
@@ -114,7 +114,7 @@ npm run dev
 2. Veja apenas sua agenda e clientes
 3. Acesso limitado conforme permissões
 
-## 🎯 Funcionalidades Demonstráveis
+## 🎯 Funcionalidades Principais
 
 ### ✅ Totalmente Funcionais
 - ✅ Agendamento público completo
@@ -147,7 +147,7 @@ O sistema vem com dados pré-populados:
 
 ## 🚀 Status do Projeto
 
-**✅ PROJETO 100% FUNCIONAL PARA DEMONSTRAÇÃO**
+**✅ PROJETO 100% FUNCIONAL PARA PRODUÇÃO**
 
 Todas as funcionalidades críticas estão implementadas e testadas. O sistema está pronto para ser apresentado aos clientes como uma solução completa de agendamento para barbearias.
 
