@@ -1,5 +1,0 @@
-{
-  "name": "BarberFlow - Sistema Inteligente de Agendamento para Barbearias",
-  "description": "Um sistema web (SaaS) para donos de barbearias gerenciarem seus agendamentos, profissionais e clientes. O foco principal é reduzir o trabalho manual, diminuir a taxa de não comparecimento (no-show) através de lembretes automáticos e ajudar a aumentar o faturamento com uma ferramenta simples de recuperação de clientes.",
-  "requestFramePermissions": []
-}

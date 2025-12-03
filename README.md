@@ -1,156 +1,208 @@
-# BarberFlow - Sistema de Agendamento para Barbearias
+# 🚀 BarberFlow - Sistema Inteligente de Agendamento
 
-Sistema completo de agendamento online para barbearias, desenvolvido com React, TypeScript e Supabase.
+> **Status**: ✅ Pronto para Produção | **Build**: ✅ Sucesso | **Última atualização**: 2025-12-02
 
-## 🚀 Funcionalidades Implementadas
+## 📋 Sobre o Projeto
 
-### ✅ Para Clientes (Agendamento Público)
-- Agendamento online via link público
-- Seleção de múltiplos serviços
-- Escolha de profissional ou automático
-- Calendário interativo para escolha de data
-- Seleção de horários disponíveis
-- Formulário de dados do cliente
-- Confirmação de agendamento
-- Interface responsiva e moderna
+BarberFlow é um sistema completo de agendamento para barbearias com arquitetura multi-tenant, sistema de pagamentos integrado (PIX + Bitcoin) e interface moderna e responsiva.
 
-### ✅ Para Profissionais/Administradores (Dashboard)
-- **Dashboard**: Métricas em tempo real (agendamentos, faturamento, próximo cliente)
-- **Agenda**: Visualização em grid com todos os agendamentos por profissional e horário
-- **Clientes**: Lista completa com busca, recuperação de clientes inativos via WhatsApp
-- **Serviços** (Admin): CRUD completo - criar, editar, excluir serviços
-- **Profissionais** (Admin): CRUD completo - gerenciar equipe e permissões
-- **Configurações** (Admin): Dados da barbearia e horários de funcionamento
+## ✨ Funcionalidades Principais
 
-### ✅ Sistema de Autenticação
-- Login seguro com diferentes níveis de acesso
-- Rotas protegidas por permissão
-- Controle de acesso Admin vs Profissional
+### 🏪 Multi-Tenant
+- Sistema para múltiplas barbearias
+- URLs únicas por barbearia (`/book/slug-da-barbearia`)
+- Isolamento completo de dados
+- Gerenciamento independente
 
-### ✅ Integração Completa com Banco de Dados
-- Todas as operações CRUD funcionais
-- Dados em tempo real via Supabase
-- Relacionamentos entre tabelas
-- Validações e tratamento de erros
+### 💰 Sistema de Pagamentos
+- **PIX**: Integração completa com QR Code
+- **Bitcoin**: Pagamentos em criptomoeda
+- **Monitoramento**: Confirmação automática
+- **Marketing**: Diferenciação competitiva
+
+### 📱 Interface Moderna
+- Design responsivo (mobile-first)
+- Componentes reutilizáveis
+- Tema consistente
+- Experiência otimizada
+
+### 🔐 Autenticação e Segurança
+- Supabase Auth
+- Row Level Security (RLS)
+- Políticas de acesso granulares
+- Upload seguro de arquivos
+
+## 🏗️ Arquitetura
+
+### Frontend
+- **React 18** com TypeScript
+- **Styled Components** para estilização
+- **React Router** para navegação
+- **Vite** como bundler
+
+### Backend
+- **Supabase** (PostgreSQL + Auth + Storage)
+- **APIs RESTful** auto-geradas
+- **Real-time** subscriptions
+- **Storage** para arquivos
+
+### Estrutura de Pastas
+```
+├── src/
+│   ├── components/     # Componentes reutilizáveis
+│   ├── pages/         # Páginas da aplicação
+│   ├── services/      # APIs e serviços
+│   ├── contexts/      # Contextos React
+│   ├── styles/        # Temas e estilos globais
+│   ├── types/         # Definições TypeScript
+│   └── utils/         # Utilitários
+├── docs/
+│   ├── guides/        # Guias e documentação
+│   ├── setup/         # Configuração inicial
+│   └── sql/           # Scripts SQL
+└── public/            # Arquivos estáticos
+```
+
+## 🚀 Início Rápido
+
+### 1. Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+- Conta no Supabase
+
+### 2. Instalação
+```bash
+# Clone o repositório
+git clone [url-do-repositorio]
+cd barberflow
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas credenciais
+```
+
+### 3. Configuração do Supabase
+```bash
+# Execute os scripts SQL na ordem:
+# 1. docs/sql/supabase-schema.sql
+# 2. docs/sql/supabase-seed.sql
+# 3. docs/sql/supabase-storage-setup.sql
+```
+
+### 4. Execução
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview da build
+npm run preview
+```
+
+## 📚 Documentação
+
+Toda a documentação está organizada na pasta `docs/`:
+
+### 📖 Guias Principais
+- **[Arquitetura da Plataforma](docs/guides/PLATFORM_ARCHITECTURE.md)** - Nova arquitetura multi-tenant
+- **[Resumo da Arquitetura](docs/guides/ARCHITECTURE_SUMMARY.md)** - Visão executiva das mudanças
+- **[Estrutura do Projeto](docs/guides/PROJECT_STRUCTURE.md)** - Organização completa dos arquivos
+
+### ⚙️ Configuração e Setup
+- **[Setup do Supabase](docs/guides/SUPABASE_SETUP.md)** - Configuração do banco
+- **[Configuração de Pagamentos](docs/guides/PAYMENT_SETUP.md)** - PIX e Bitcoin
+- **[Deploy na Vercel](docs/guides/VERCEL_DEPLOY_GUIDE.md)** - Guia de deploy
+- **[Upload de Logo](docs/guides/LOGO_UPLOAD_GUIDE.md)** - Configuração de storage
+
+### 🏗️ Arquitetura e Desenvolvimento
+- **[Multi-Tenant](docs/guides/MULTI_TENANT_ARCHITECTURE.md)** - Arquitetura multi-inquilino
+- **[Onboarding](docs/guides/ONBOARDING_GUIDE.md)** - Fluxo de cadastro
+- **[Melhorias Mobile](docs/guides/MOBILE_IMPROVEMENTS.md)** - Otimizações mobile
+
+### 🗄️ Banco de Dados
+- **[Scripts SQL](docs/sql/)** - Todos os scripts do banco
+- **[Configuração Inicial](docs/setup/)** - Setup do ambiente
+
+### 📋 Relatórios
+- **[Relatório de Limpeza](docs/guides/CLEANUP_REPORT.md)** - Organização do projeto
 
 ## 🛠️ Tecnologias
 
-- **Frontend**: React 18, TypeScript, Styled Components
-- **Backend**: Supabase (PostgreSQL, Real-time)
-- **Roteamento**: React Router DOM
-- **UI/UX**: Design system próprio com tema dourado
-- **Calendário**: React Calendar
-- **Datas**: date-fns
-- **Build**: Vite
+### Core
+- React 18
+- TypeScript
+- Styled Components
+- React Router DOM
 
-## 📦 Instalação e Configuração
+### Backend/Database
+- Supabase
+- PostgreSQL
+- Row Level Security
 
-### 1. Clone e Instale
+### Pagamentos
+- PIX (QR Code)
+- Bitcoin (Blockchain APIs)
+
+### Deploy
+- Vercel
+- Supabase Hosting
+
+## 🔧 Scripts Disponíveis
+
 ```bash
-git clone <repository-url>
-cd barberflow
-npm install
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build para produção
+npm run preview      # Preview da build
+npm run type-check   # Verificação de tipos
+npm run pre-deploy   # Verificação pré-deploy
+
+# Alternância entre APIs
+npm run api:mock     # Usar dados mock (desenvolvimento)
+npm run api:supabase # Usar Supabase (produção)
 ```
 
-### 2. Configure o Supabase
-1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute o script `supabase-schema.sql` no SQL Editor
-3. Execute o script `supabase-seed.sql` para dados de exemplo
-4. Se necessário, execute `supabase-migration.sql` para atualizações
+## 📊 Status do Projeto
 
-### 3. Configure Variáveis de Ambiente
-Edite o arquivo `.env.local`:
-```env
-REACT_APP_SUPABASE_URL=sua_url_do_supabase
-REACT_APP_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-```
+### ✅ Implementado
+- [x] Sistema multi-tenant completo
+- [x] Autenticação e autorização
+- [x] CRUD de barbearias, serviços, profissionais
+- [x] Sistema de agendamentos
+- [x] Pagamentos PIX + Bitcoin
+- [x] Upload de logos
+- [x] Interface responsiva
+- [x] Deploy automatizado
 
-### 4. Execute o Projeto
-```bash
-npm run dev
-```
+### 🚧 Em Desenvolvimento
+- [ ] Notificações WhatsApp
+- [ ] Relatórios avançados
+- [ ] App mobile nativo
+- [ ] Integração com calendários
 
-## 👥 Usuários de Teste
+## 🤝 Contribuição
 
-### Administrador (Acesso Total)
-- **Email**: admin@barber.com
-- **Senha**: 123456
-- **Permissões**: Dashboard, Agenda, Clientes, Serviços, Profissionais, Configurações
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-### Profissional (Acesso Limitado)
-- **Email**: joao@barber.com
-- **Senha**: 123456
-- **Permissões**: Dashboard, Agenda, Clientes
+## 📄 Licença
 
-## 🔗 URLs do Sistema
-
-- **Login/Dashboard**: `http://localhost:5173/#/login`
-- **Agendamento Público**: `http://localhost:5173/#/book/navalha-dourada`
-
-## 📱 Guia de Uso
-
-### Para Apresentar aos Clientes
-
-#### 1. Agendamento Público (Cliente Final)
-1. Acesse: `/#/book/navalha-dourada`
-2. Escolha serviços (ex: Corte + Barba)
-3. Selecione profissional ou "Qualquer Profissional"
-4. Escolha data no calendário
-5. Selecione horário disponível
-6. Preencha nome e WhatsApp
-7. Confirme o agendamento
-
-#### 2. Dashboard Administrativo
-1. Faça login como admin (admin@barber.com / 123456)
-2. **Dashboard**: Veja métricas do dia
-3. **Agenda**: Visualize todos os agendamentos em grid
-4. **Clientes**: Gerencie base de clientes, envie mensagens de recuperação
-5. **Serviços**: Adicione/edite serviços (preço, duração)
-6. **Profissionais**: Gerencie equipe e permissões
-7. **Configurações**: Configure dados da barbearia
-
-#### 3. Visão do Profissional
-1. Faça login como profissional (joao@barber.com / 123456)
-2. Veja apenas sua agenda e clientes
-3. Acesso limitado conforme permissões
-
-## 🎯 Funcionalidades Principais
-
-### ✅ Totalmente Funcionais
-- ✅ Agendamento público completo
-- ✅ Dashboard com métricas reais
-- ✅ Agenda visual interativa
-- ✅ CRUD de serviços
-- ✅ CRUD de profissionais
-- ✅ Gestão de clientes
-- ✅ Configurações da barbearia
-- ✅ Sistema de permissões
-- ✅ Recuperação de clientes via WhatsApp
-- ✅ Interface responsiva
-- ✅ Feedback visual (loading, success, error)
-
-### 📊 Dados de Demonstração
-O sistema vem com dados pré-populados:
-- Barbearia "Navalha Dourada"
-- 3 serviços (Corte, Barba, Combo)
-- 2 profissionais (Admin e João)
-- 5 clientes de exemplo
-- Agendamentos de exemplo
-
-## 🎨 Design System
-
-- **Cores**: Paleta dourada profissional (#D4AF37)
-- **Tipografia**: Sistema escalável
-- **Componentes**: Biblioteca completa reutilizável
-- **Animações**: Transições suaves
-- **Responsivo**: Mobile-first design
-
-## 🚀 Status do Projeto
-
-**✅ PROJETO 100% FUNCIONAL PARA PRODUÇÃO**
-
-Todas as funcionalidades críticas estão implementadas e testadas. O sistema está pronto para ser apresentado aos clientes como uma solução completa de agendamento para barbearias.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ## 📞 Suporte
 
-Para dúvidas ou customizações, entre em contato.
+Para suporte e dúvidas:
+- Abra uma [issue](../../issues)
+- Consulte a [documentação](docs/)
+- Entre em contato via email
+
+---
+
+**Desenvolvido com ❤️ para revolucionar o agendamento em barbearias**
