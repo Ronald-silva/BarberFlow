@@ -1,6 +1,6 @@
 // Componente Toast para exibir mensagens de feedback
 import React, { useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { Toast as ToastType } from '../hooks/useToast';
 
 interface ToastProps {
@@ -115,7 +115,9 @@ const ToastWrapper = styled.div<{ type: ToastType['type'] }>`
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: ${slideIn} 0.3s ease-out;
+  ${css`
+    animation: ${slideIn} 0.3s ease-out;
+  `}
   min-width: 300px;
 
   @media (max-width: 768px) {

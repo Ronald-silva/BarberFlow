@@ -159,11 +159,11 @@ export const BitcoinIcon: React.FC<IconProps> = ({ size = 24, className }) => (
 );
 
 export const PaymentIcon: React.FC<IconProps> = ({ size = 24, className }) => (
-  <svg 
-    {...defaultIconProps} 
-    width={size} 
-    height={size} 
-    className={className} 
+  <svg
+    {...defaultIconProps}
+    width={size}
+    height={size}
+    className={className}
     viewBox="0 0 24 24"
   >
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -173,3 +173,6 @@ export const PaymentIcon: React.FC<IconProps> = ({ size = 24, className }) => (
     <line x1="11" y1="15" x2="13" y2="15" />
   </svg>
 );
+
+// Export PIX Image component
+export { PixImage } from './icons/PixImage';

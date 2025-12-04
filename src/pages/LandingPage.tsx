@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, Heading, Text, Flex, Grid } from '../components/ui/Container';
-import { CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, DashboardIcon, PixIcon, BitcoinIcon, PaymentIcon } from '../components/icons';
+import { CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, DashboardIcon, PixIcon, BitcoinIcon, PaymentIcon, PixImage } from '../components/icons';
 
 const LandingContainer = styled.div`
   min-height: 100vh;
@@ -11,12 +11,12 @@ const LandingContainer = styled.div`
 `;
 
 const Header = styled.header`
-  padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[4]};
   background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
   border-bottom: 1px solid ${props => props.theme.colors.border.primary};
-  
+
   @media (min-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[6]};
+    padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[6]};
   }
 `;
 
@@ -26,53 +26,89 @@ const Nav = styled.nav`
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+  gap: ${props => props.theme.spacing[2]};
+`;
+
+const NavButtons = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing[2]};
+  align-items: center;
+
+  /* Responsividade para mobile */
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    gap: ${props => props.theme.spacing[2]};
+  }
 `;
 
 const Logo = styled.h1`
-  font-size: ${props => props.theme.typography.fontSizes['2xl']};
+  font-size: ${props => props.theme.typography.fontSizes.xl};
   font-weight: ${props => props.theme.typography.fontWeights.bold};
   background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  
+  margin: 0;
+  white-space: nowrap;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.typography.fontSizes['2xl']};
+  }
+
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     font-size: ${props => props.theme.typography.fontSizes['3xl']};
   }
 `;
 
 const HeroSection = styled.section`
-  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[4]};
   text-align: center;
   max-width: 1200px;
   margin: 0 auto;
-  
+
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     padding: ${props => props.theme.spacing[16]} ${props => props.theme.spacing[6]};
   }
 `;
 
 const HeroTitle = styled(Heading)`
-  margin-bottom: ${props => props.theme.spacing[6]};
+  margin-bottom: ${props => props.theme.spacing[4]};
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.2;
+  font-size: 1.75rem;
+  padding: 0 ${props => props.theme.spacing[2]};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: 2.25rem;
+    margin-bottom: ${props => props.theme.spacing[5]};
+  }
 
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     font-size: 3.5rem;
+    margin-bottom: ${props => props.theme.spacing[6]};
+    padding: 0;
   }
 `;
 
 const HeroSubtitle = styled(Text)`
-  margin-bottom: ${props => props.theme.spacing[8]};
+  margin-bottom: ${props => props.theme.spacing[6]};
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+  font-size: 0.95rem;
+  padding: 0 ${props => props.theme.spacing[2]};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: 1.05rem;
+    margin-bottom: ${props => props.theme.spacing[7]};
+  }
 
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     font-size: 1.25rem;
+    margin-bottom: ${props => props.theme.spacing[8]};
+    padding: 0;
   }
 `;
 
@@ -81,11 +117,84 @@ const HeroBadge = styled.div`
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: ${props => props.theme.radii.full};
-  padding: 0.5rem 1.5rem;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
+  padding: 0.4rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: ${props => props.theme.colors.primary};
+  max-width: 90%;
+  text-align: center;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0.5rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    max-width: none;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const HeroCTAContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[3]};
+  width: 100%;
+  max-width: 100%;
+  padding: 0 ${props => props.theme.spacing[2]};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: row;
+    justify-content: center;
+    max-width: none;
+    padding: 0;
+    gap: ${props => props.theme.spacing[4]};
+  }
+`;
+
+const HeroCTAButton = styled(Button)`
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  min-height: 52px;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
+  overflow: visible;
+  word-break: keep-all;
+  hyphens: auto;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    width: auto;
+    white-space: normal;
+    min-height: 56px;
+    font-size: 1rem;
+    padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[6]};
+    min-width: 200px;
+  }
+`;
+
+const NavButton = styled(Button)`
+  font-size: 0.8rem;
+  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
+  min-height: 36px;
+  white-space: normal;
+  word-break: keep-all;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: 0.9rem;
+    padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
+    min-height: 44px;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.typography.fontSizes.base};
+    padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[5]};
+    min-height: 48px;
+  }
 `;
 
 const FeaturesSection = styled.section`
@@ -273,8 +382,8 @@ const PaymentCard = styled(Card)`
 `;
 
 const PaymentMethodIcon = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -282,15 +391,20 @@ const PaymentMethodIcon = styled.div`
   margin: 0 auto 1.5rem;
   font-size: 2rem;
   font-weight: bold;
-  
-  &.pix {
-    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
-    color: white;
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 184, 148, 0.15) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 212, 170, 0.3);
+  transition: all 0.4s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border-color: rgba(0, 212, 170, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 212, 170, 0.3);
   }
-  
-  &.bitcoin {
-    background: linear-gradient(135deg, #f7931a 0%, #ff9500 100%);
-    color: white;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    width: 120px;
+    height: 120px;
   }
 `;
 
@@ -316,6 +430,13 @@ const BenefitList = styled.ul`
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const handleScrollToPricing = () => {
+    const element = document.querySelector('[data-section="pricing"]');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const features = [
     {
@@ -355,14 +476,14 @@ const LandingPage: React.FC = () => {
       <Header>
         <Nav>
           <Logo>BarberFlow</Logo>
-          <Flex $gap="1rem">
-            <Button $variant="secondary" onClick={() => navigate('/login')}>
+          <NavButtons>
+            <NavButton $variant="secondary" onClick={() => navigate('/login')}>
               Entrar
-            </Button>
-            <Button onClick={() => navigate('/register')}>
-              Cadastrar Barbearia
-            </Button>
-          </Flex>
+            </NavButton>
+            <NavButton onClick={() => navigate('/register')}>
+              Cadastrar
+            </NavButton>
+          </NavButtons>
         </Nav>
       </Header>
 
@@ -377,15 +498,15 @@ const LandingPage: React.FC = () => {
           Sistema completo de gestão com agendamento inteligente, pagamentos modernos (PIX instantâneo)
           e relatórios em tempo real. Tudo que você precisa para escalar seu negócio.
         </HeroSubtitle>
-        <Flex $justify="center" $gap="1rem" $responsive>
-          <Button size="lg" onClick={() => navigate('/register')}>
-            Começar Teste Grátis de 14 Dias
-          </Button>
-          <Button size="lg" $variant="secondary" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+        <HeroCTAContainer>
+          <HeroCTAButton onClick={() => navigate('/register')} translate="no">
+            Começar Teste Grátis
+          </HeroCTAButton>
+          <HeroCTAButton $variant="secondary" onClick={handleScrollToPricing} translate="no">
             Ver Planos
-          </Button>
-        </Flex>
-        <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
+          </HeroCTAButton>
+        </HeroCTAContainer>
+        <Text $size="sm" $color="tertiary" style={{ marginTop: '1.5rem', padding: '0 1rem' }}>
           ✓ Sem cartão de crédito • ✓ Cancele quando quiser • ✓ Suporte em português
         </Text>
       </HeroSection>
@@ -431,8 +552,8 @@ const LandingPage: React.FC = () => {
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <PaymentCard $variant="elevated">
             <CardContent>
-              <PaymentMethodIcon className="pix">
-                PIX
+              <PaymentMethodIcon>
+                <PixImage size={80} animate />
               </PaymentMethodIcon>
               <Heading $level={3} style={{ color: 'white', marginBottom: '1rem' }}>
                 PIX Integrado
@@ -460,7 +581,7 @@ const LandingPage: React.FC = () => {
         </div>
       </PaymentSection>
 
-      <CTASection id="pricing">
+      <CTASection data-section="pricing">
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <Heading $level={2} $gradient style={{ marginBottom: '1rem' }}>
             Escolha o Plano Ideal para Seu Negócio
@@ -492,6 +613,7 @@ const LandingPage: React.FC = () => {
                   $variant="secondary"
                   onClick={() => navigate('/register')}
                   style={{ marginTop: 'auto' }}
+                  translate="no"
                 >
                   Começar Teste Grátis
                 </Button>
@@ -521,6 +643,7 @@ const LandingPage: React.FC = () => {
                   $fullWidth
                   onClick={() => navigate('/register')}
                   style={{ marginTop: 'auto' }}
+                  translate="no"
                 >
                   Começar Teste Grátis
                 </Button>
@@ -551,6 +674,7 @@ const LandingPage: React.FC = () => {
                   $variant="secondary"
                   onClick={() => navigate('/register')}
                   style={{ marginTop: 'auto' }}
+                  translate="no"
                 >
                   Começar Teste Grátis
                 </Button>
