@@ -192,6 +192,53 @@ npm run api:supabase # Usar Supabase (produção)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
+## 🚨 Troubleshooting
+
+### ❌ Erro: "placeholder.supabase.co" após Deploy
+
+Se após fazer deploy você vê este erro no console:
+```
+POST https://placeholder.supabase.co/auth/v1/token net::ERR_NAME_NOT_RESOLVED
+⚠️ ERRO: Variáveis de ambiente do Supabase não configuradas!
+```
+
+**Causa:** As variáveis de ambiente do arquivo `.env` **não são enviadas** automaticamente no deploy.
+
+**Solução Rápida:**
+1. Acesse o [Vercel Dashboard](https://vercel.com/dashboard)
+2. Vá em **Settings → Environment Variables**
+3. Adicione:
+   - `VITE_SUPABASE_URL` = `https://jrggwhlbvsyvcqvywrmy.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = (sua chave do .env)
+4. Marque: Production ✓ Preview ✓ Development ✓
+5. Clique em **Redeploy** na aba Deployments
+
+**Documentação Completa:** Veja [DEPLOY_VERCEL.md](DEPLOY_VERCEL.md)
+
+**Script Automático (Windows):**
+```bash
+setup-vercel-env.bat
+```
+
+**Script Automático (Linux/Mac):**
+```bash
+chmod +x setup-vercel-env.sh
+./setup-vercel-env.sh
+```
+
+### ❌ Login/Cadastro não funcionam
+
+1. **Verifique as variáveis de ambiente** (ver acima)
+2. **Configure o Supabase Auth:**
+   - Vá em [Supabase Dashboard](https://app.supabase.com)
+   - Authentication → Settings
+   - **DESABILITE** "Enable email confirmations" (desenvolvimento)
+3. **Configure URLs permitidas:**
+   - Authentication → URL Configuration
+   - Adicione suas URLs de produção e desenvolvimento
+
+**Documentação Completa:** Veja [CONFIGURACAO_SUPABASE_AUTH.md](CONFIGURACAO_SUPABASE_AUTH.md)
+
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
