@@ -30,6 +30,11 @@ const RegistrationCard = styled(Card)`
   width: 100%;
   max-width: 500px;
   box-shadow: ${(props) => props.theme.shadows.xl};
+
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    max-width: 100%;
+    margin: 0;
+  }
 `;
 
 const StepIndicator = styled.div<{ $active: boolean }>`
@@ -371,6 +376,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Nome da Barbearia"
                     placeholder="Ex: Navalha Dourada"
+                    autoComplete="organization"
                     value={barbershopData.name}
                     onChange={(e) =>
                       handleBarbershopChange("name", e.target.value)
@@ -392,6 +398,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Endereço Completo"
                     placeholder="Rua das Tesouras, 123 - Centro"
+                    autoComplete="street-address"
                     value={barbershopData.address}
                     onChange={(e) =>
                       handleBarbershopChange("address", e.target.value)
@@ -402,6 +409,8 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Telefone"
                     placeholder="(11) 99999-9999"
+                    type="tel"
+                    autoComplete="tel"
                     value={barbershopData.phone}
                     onChange={(e) =>
                       handleBarbershopChange("phone", e.target.value)
@@ -412,6 +421,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Email da Barbearia"
                     type="email"
+                    autoComplete="email"
                     placeholder="contato@navalhadourada.com"
                     value={barbershopData.email}
                     onChange={(e) =>
@@ -449,6 +459,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Nome Completo"
                     placeholder="João Silva"
+                    autoComplete="name"
                     value={adminData.name}
                     onChange={(e) => handleAdminChange("name", e.target.value)}
                     required
@@ -457,6 +468,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Email de Login"
                     type="email"
+                    autoComplete="email"
                     placeholder="joao@navalhadourada.com"
                     value={adminData.email}
                     onChange={(e) => handleAdminChange("email", e.target.value)}
@@ -467,6 +479,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                   <InputField
                     label="Senha"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Mínimo 6 caracteres"
                     value={adminData.password}
                     onChange={(e) =>

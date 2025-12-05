@@ -10,40 +10,40 @@ const inputVariants = {
   default: css`
     background-color: ${props => props.theme.colors.background.secondary};
     border: 1px solid ${props => props.theme.colors.border.primary};
-    
+
     &:hover:not(:focus):not(:disabled) {
       border-color: ${props => props.theme.colors.border.secondary};
     }
-    
+
     &:focus {
       border-color: ${props => props.theme.colors.border.focus};
       box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
       background-color: ${props => props.theme.colors.background.tertiary};
     }
   `,
-  
+
   filled: css`
     background-color: ${props => props.theme.colors.background.tertiary};
     border: 1px solid transparent;
-    
+
     &:hover:not(:focus):not(:disabled) {
       background-color: ${props => props.theme.colors.background.elevated};
     }
-    
+
     &:focus {
       border-color: ${props => props.theme.colors.border.focus};
       box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
     }
   `,
-  
+
   outlined: css`
     background-color: transparent;
     border: 2px solid ${props => props.theme.colors.border.primary};
-    
+
     &:hover:not(:focus):not(:disabled) {
       border-color: ${props => props.theme.colors.border.secondary};
     }
-    
+
     &:focus {
       border-color: ${props => props.theme.colors.border.focus};
       box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
@@ -55,31 +55,31 @@ const inputSizes = {
   sm: css`
     padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
     font-size: ${props => props.theme.typography.fontSizes.base};
-    min-height: 44px;
-    
+    min-height: 48px; /* Adequado para toque mobile */
+
     @media (min-width: ${props => props.theme.breakpoints.sm}) {
       padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
       font-size: ${props => props.theme.typography.fontSizes.sm};
-      min-height: 36px;
+      min-height: 40px;
     }
   `,
   md: css`
     padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[4]};
     font-size: ${props => props.theme.typography.fontSizes.base};
-    min-height: 48px;
-    
+    min-height: 52px; /* Adequado para toque mobile */
+
     @media (min-width: ${props => props.theme.breakpoints.sm}) {
       padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
-      min-height: 44px;
+      min-height: 48px;
     }
   `,
   lg: css`
     padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[5]};
     font-size: ${props => props.theme.typography.fontSizes.lg};
     min-height: 56px;
-    
+
     @media (min-width: ${props => props.theme.breakpoints.sm}) {
-      min-height: 52px;
+      min-height: 56px;
     }
   `,
 };
@@ -90,23 +90,23 @@ export const Input = styled.input<InputProps>`
   color: ${props => props.theme.colors.text.primary};
   font-weight: ${props => props.theme.typography.fontWeights.medium};
   transition: ${props => props.theme.transitions.base};
-  
+
   ${props => inputVariants[props.$variant || 'default']}
   ${props => inputSizes[props.$size || 'md']}
-  
+
   &::placeholder {
     color: ${props => props.theme.colors.text.tertiary};
     font-weight: ${props => props.theme.typography.fontWeights.normal};
   }
-  
+
   ${props => props.$error && css`
     border-color: ${props => props.theme.colors.error} !important;
-    
+
     &:focus {
       box-shadow: 0 0 0 3px ${props => props.theme.colors.errorLight};
     }
   `}
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -121,7 +121,7 @@ export const Label = styled.label<{ $required?: boolean; $error?: boolean }>`
   font-weight: ${props => props.theme.typography.fontWeights.medium};
   color: ${props => props.$error ? props.theme.colors.error : props.theme.colors.text.secondary};
   margin-bottom: ${props => props.theme.spacing[2]};
-  
+
   ${props => props.$required && css`
     &::after {
       content: ' *';
@@ -140,11 +140,11 @@ export const FormRow = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: ${props => props.theme.spacing[4]};
-  
+
   @media (min-width: ${props => props.theme.breakpoints.sm}) {
     gap: ${props => props.theme.spacing[5]};
   }
-  
+
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     grid-template-columns: 1fr 1fr;
     gap: ${props => props.theme.spacing[6]};

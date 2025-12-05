@@ -30,6 +30,10 @@ const LoginHeader = styled.div`
   padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[8]} ${props => props.theme.spacing[6]};
   text-align: center;
   background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[6]} ${props => props.theme.spacing[5]};
+  }
 `;
 
 const Logo = styled.h1`
@@ -41,6 +45,10 @@ const Logo = styled.h1`
   background-clip: text;
   margin-bottom: ${props => props.theme.spacing[2]};
   letter-spacing: -0.02em;
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.typography.fontSizes['3xl']};
+  }
 `;
 
 const Subtitle = styled.p`
@@ -54,6 +62,11 @@ const LoginForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing[6]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: ${props => props.theme.spacing[5]} ${props => props.theme.spacing[6]} ${props => props.theme.spacing[6]};
+    gap: ${props => props.theme.spacing[5]};
+  }
 `;
 
 const InputGroup = styled.div`
@@ -111,6 +124,25 @@ const ErrorMessage = styled.p`
   border: 1px solid ${props => props.theme.colors.error}40;
 `;
 
+const LoginFooter = styled.div`
+  padding: 0 ${props => props.theme.spacing[8]} ${props => props.theme.spacing[8]};
+  text-align: center;
+  border-top: 1px solid ${props => props.theme.colors.border.primary};
+  margin-top: ${props => props.theme.spacing[4]};
+  padding-top: ${props => props.theme.spacing[6]};
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0 ${props => props.theme.spacing[6]} ${props => props.theme.spacing[6]};
+    padding-top: ${props => props.theme.spacing[5]};
+  }
+`;
+
+const FooterText = styled.p`
+  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  margin-bottom: ${props => props.theme.spacing[4]};
+`;
+
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('admin@barber.com');
     const [password, setPassword] = useState('123456');
@@ -160,6 +192,7 @@ const LoginPage: React.FC = () => {
                                 id="email"
                                 name="email"
                                 type="email"
+                                autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="seu@email.com"
@@ -174,6 +207,7 @@ const LoginPage: React.FC = () => {
                                 id="password"
                                 name="password"
                                 type="password"
+                                autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
@@ -197,29 +231,19 @@ const LoginPage: React.FC = () => {
                     </Button>
                 </LoginForm>
                 
-                <div style={{ 
-                    padding: '0 2rem 2rem', 
-                    textAlign: 'center',
-                    borderTop: '1px solid #374151',
-                    marginTop: '1rem',
-                    paddingTop: '1.5rem'
-                }}>
-                    <p style={{ 
-                        color: '#9CA3AF', 
-                        fontSize: '0.875rem',
-                        marginBottom: '1rem'
-                    }}>
+                <LoginFooter>
+                    <FooterText>
                         Ainda não tem uma barbearia cadastrada?
-                    </p>
+                    </FooterText>
                     <Button
-                        $variant="outline"
+                        $variant="secondary"
                         $size="md"
                         onClick={() => navigate('/register')}
-                        style={{ width: '100%' }}
+                        $fullWidth
                     >
                         Cadastrar Nova Barbearia
                     </Button>
-                </div>
+                </LoginFooter>
             </LoginCard>
         </LoginContainer>
     );
