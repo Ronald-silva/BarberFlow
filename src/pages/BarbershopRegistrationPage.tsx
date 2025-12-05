@@ -244,6 +244,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         email: adminData.email,
         password: adminData.password,
         options: {
+          emailRedirectTo: window.location.origin + '/login',
           data: {
             name: adminData.name,
             barbershop_id: barbershop.id,
@@ -252,7 +253,14 @@ const BarbershopRegistrationPage: React.FC = () => {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Erro ao criar usuário no Supabase Auth:', authError);
+        throw authError;
+      }
+
+      if (!authUser.user) {
+        throw new Error('Usuário não foi criado no Supabase Auth');
+      }
 
       // 3. Create user record in users table
       const { error: userError } = await supabase.from("users").insert([
@@ -300,23 +308,25 @@ const BarbershopRegistrationPage: React.FC = () => {
         },
       });
     } catch (err: any) {
-      console.error("Registration error:", err);
+      console.error("Erro no cadastro:", err);
+
+      // Mensagens de erro mais específicas
       if (err.code === "23505") {
         if (err.message.includes("slug")) {
-          setError(
-            "Esta URL já está em uso. Escolha outra URL para sua barbearia."
-          );
+          setError("Esta URL já está em uso. Escolha outra URL para sua barbearia.");
         } else if (err.message.includes("email")) {
-          setError(
-            "Este email já está cadastrado. Use outro email para sua barbearia."
-          );
+          setError("Este email já está cadastrado. Use outro email.");
         } else {
-          setError(
-            "Dados duplicados. Verifique se a barbearia já não está cadastrada."
-          );
+          setError("Dados duplicados. Verifique se a barbearia já não está cadastrada.");
         }
+      } else if (err.message?.includes("User already registered")) {
+        setError("Este email já possui cadastro. Faça login ou use outro email.");
+      } else if (err.message?.includes("Email")) {
+        setError("Erro no email: " + err.message);
+      } else if (err.message?.includes("Password")) {
+        setError("A senha deve ter pelo menos 6 caracteres.");
       } else {
-        setError(err.message || "Erro ao criar barbearia. Tente novamente.");
+        setError(err.message || "Erro ao criar barbearia. Verifique os dados e tente novamente.");
       }
     } finally {
       setLoading(false);

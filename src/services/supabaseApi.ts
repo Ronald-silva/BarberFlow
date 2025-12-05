@@ -5,16 +5,40 @@ import { sendNotification, scheduleReminder } from './notificationService';
 
 export const api = {
   login: async (email: string, pass: string): Promise<User | null> => {
-    // In a real app, use supabase.auth.signInWithPassword
-    // For now, we query the users table to match the mock behavior
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    try {
+      // 1. Autenticar com Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: pass,
+      });
 
-    if (error || !data) return null;
-    return data as User;
+      if (authError) {
+        console.error('Erro de autenticação:', authError.message);
+        return null;
+      }
+
+      if (!authData.user) {
+        console.error('Usuário não encontrado após autenticação');
+        return null;
+      }
+
+      // 2. Buscar dados completos do usuário na tabela users
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError || !userData) {
+        console.error('Erro ao buscar dados do usuário:', userError?.message);
+        return null;
+      }
+
+      return userData as User;
+    } catch (error) {
+      console.error('Erro inesperado no login:', error);
+      return null;
+    }
   },
 
   getBarbershopBySlug: async (slug: string): Promise<Barbershop | null> => {

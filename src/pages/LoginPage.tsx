@@ -155,7 +155,7 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        
+
         try {
             const success = await login(email, password);
             if (success) {
@@ -167,10 +167,11 @@ const LoginPage: React.FC = () => {
                     navigate('/dashboard');
                 }
             } else {
-                setError('Credenciais inválidas. Verifique seu email e senha.');
+                setError('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
             }
-        } catch (err) {
-            setError('Erro ao fazer login. Tente novamente.');
+        } catch (err: any) {
+            console.error('Erro no login:', err);
+            setError(err?.message || 'Erro ao fazer login. Verifique sua conexão e tente novamente.');
         } finally {
             setLoading(false);
         }

@@ -65,6 +65,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
+
+    // Limpar sessão anterior antes de fazer login
+    await supabase.auth.signOut();
+
     const loggedInUser = await api.login(email, pass);
     if (loggedInUser) {
       setUser(loggedInUser);
@@ -81,7 +85,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setBarbershop(null);
     setSubscription(null);
