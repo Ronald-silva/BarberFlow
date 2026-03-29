@@ -1,4 +1,4 @@
-# Fluxo de Agendamento Implementado - BarberFlow
+# Fluxo de Agendamento Implementado - Shafar
 
 ## ✅ Implementação Concluída!
 

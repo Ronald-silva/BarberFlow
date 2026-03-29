@@ -116,7 +116,7 @@ const PlatformSettingsPage: React.FC = () => {
           Configurações da Plataforma ⚙️
         </Heading>
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
-          Gerencie configurações globais da plataforma BarberFlow
+          Gerencie configurações globais da plataforma Shafar
         </Text>
       </div>
 
@@ -138,7 +138,7 @@ const PlatformSettingsPage: React.FC = () => {
                 <Input
                   id="platform-name"
                   type="text"
-                  defaultValue="BarberFlow"
+                  defaultValue="Shafar"
                   placeholder="Nome da plataforma"
                 />
               </FormGroup>
@@ -148,7 +148,7 @@ const PlatformSettingsPage: React.FC = () => {
                 <Input
                   id="platform-email"
                   type="email"
-                  defaultValue="contato@barberflow.com"
+                  defaultValue="contato@shafar.com"
                   placeholder="Email de contato"
                 />
               </FormGroup>
@@ -158,7 +158,7 @@ const PlatformSettingsPage: React.FC = () => {
                 <Input
                   id="support-email"
                   type="email"
-                  defaultValue="suporte@barberflow.com"
+                  defaultValue="suporte@shafar.com"
                   placeholder="Email de suporte"
                 />
               </FormGroup>

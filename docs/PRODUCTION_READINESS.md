@@ -1,4 +1,4 @@
-# 🎯 Production Readiness - BarberFlow
+# 🎯 Production Readiness - Shafar
 
 ## ❌ Resposta Direta: NÃO está pronto para produção
 
@@ -140,7 +140,7 @@ CREATE POLICY "Users can view their barbershop" ON barbershops FOR SELECT USING 
 
 #### Hosting
 - ❌ Deploy em **Vercel** ou **Netlify** (frontend)
-- ❌ Configuração de **domínio** (barberflow.com.br)
+- ❌ Configuração de **domínio** (shafar.com.br)
 - ❌ SSL/HTTPS configurado
 - ❌ CDN para assets
 

@@ -1,4 +1,4 @@
-# Simplificação de Métodos de Pagamento - BarberFlow
+# Simplificação de Métodos de Pagamento - Shafar
 
 ## 🎯 Decisão: Remover Bitcoin e USDT
 

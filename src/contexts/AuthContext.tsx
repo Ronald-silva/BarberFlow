@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeAuth = async () => {
       setLoading(true);
-      const storedUser = localStorage.getItem('barberflow_user');
+      const storedUser = localStorage.getItem('shafar_user');
       if (storedUser) {
         const currentUser: User = JSON.parse(storedUser);
         setUser(currentUser);
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loggedInUser = await api.login(email, pass);
     if (loggedInUser) {
       setUser(loggedInUser);
-      localStorage.setItem('barberflow_user', JSON.stringify(loggedInUser));
+      localStorage.setItem('shafar_user', JSON.stringify(loggedInUser));
       await fetchAndSetData(loggedInUser);
       setLoading(false);
       return true;
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     setBarbershop(null);
     setSubscription(null);
-    localStorage.removeItem('barberflow_user');
+    localStorage.removeItem('shafar_user');
     setLoading(false);
     return false;
   };
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     setBarbershop(null);
     setSubscription(null);
-    localStorage.removeItem('barberflow_user');
+    localStorage.removeItem('shafar_user');
     window.location.hash = '/login';
   };
 

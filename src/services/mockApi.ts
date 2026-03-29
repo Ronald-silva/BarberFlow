@@ -10,7 +10,7 @@ const barbershops: Barbershop[] = [
 
 const users: User[] = [
     // PLATFORM ADMIN - VOCÊ (para gerenciar todas as barbearias)
-    { id: 'platform1', name: 'Admin BarberFlow', email: 'platform@barberflow.com', barbershopId: null, role: UserRole.PLATFORM_ADMIN, workHours: [] },
+    { id: 'platform1', name: 'Admin Shafar', email: 'platform@shafar.com', barbershopId: null, role: UserRole.PLATFORM_ADMIN, workHours: [] },
     
     // BARBEARIA ADMINS - SEUS CLIENTES
     { id: 'u1', name: 'Roberto Silva', email: 'admin@barber.com', barbershopId: 'b1', role: UserRole.ADMIN, workHours: [{day: 1, start: '09:00', end: '18:00'}, {day: 2, start: '09:00', end: '18:00'}, {day: 3, start: '09:00', end: '18:00'}, {day: 4, start: '09:00', end: '18:00'}, {day: 5, start: '09:00', end: '20:00'}, {day: 6, start: '08:00', end: '16:00'}] },

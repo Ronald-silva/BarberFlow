@@ -1,4 +1,4 @@
-# 🚀 Guia de Deploy no Vercel - BarberFlow
+# 🚀 Guia de Deploy no Vercel - Shafar
 
 ## 🔧 **Correções Aplicadas para Erro 127**
 

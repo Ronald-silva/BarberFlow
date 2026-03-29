@@ -1,4 +1,4 @@
-# BarberFlow - Sistema de Agendamento para Barbearias
+# Shafar - Sistema de Agendamento para Barbearias
 
 Sistema completo de agendamento online para barbearias, desenvolvido com React, TypeScript e Supabase.
 
@@ -48,7 +48,7 @@ Sistema completo de agendamento online para barbearias, desenvolvido com React, 
 ### 1. Clone e Instale
 ```bash
 git clone <repository-url>
-cd barberflow
+cd shafar
 npm install
 ```
 

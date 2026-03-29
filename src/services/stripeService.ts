@@ -32,45 +32,51 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: 'basic',
     name: 'Básico',
     description: 'Ideal para barbearias pequenas',
-    price: 7900, // R$ 79,00
+    price: 2990, // R$ 29,90
     interval: 'month',
     maxProfessionals: 2,
     features: [
       'Até 2 profissionais',
       'Agendamentos ilimitados',
       'Notificações WhatsApp',
+      'Gestão de clientes',
+      'Catálogo de serviços',
+      'Pagamentos PIX',
       'Suporte por email',
     ],
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'professional',
+    name: 'Profissional',
     description: 'Para barbearias em crescimento',
-    price: 14900, // R$ 149,00
+    price: 5990, // R$ 59,90
     interval: 'month',
     maxProfessionals: 5,
     features: [
       'Até 5 profissionais',
       'Agendamentos ilimitados',
       'Notificações WhatsApp + SMS',
+      'Gestão completa de clientes',
+      'Catálogo avançado',
+      'Pagamentos PIX com desconto',
       'Relatórios avançados',
-      'Suporte prioritário',
     ],
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
+    id: 'premium',
+    name: 'Premium',
     description: 'Para grandes barbearias',
-    price: 29900, // R$ 299,00
+    price: 9990, // R$ 99,90
     interval: 'month',
     maxProfessionals: null,
     features: [
       'Profissionais ilimitados',
       'Agendamentos ilimitados',
       'Todas as notificações',
+      'CRM completo',
+      'Recursos premium',
+      'Todos os métodos de pagamento',
       'Relatórios personalizados',
-      'Suporte 24/7',
-      'API dedicada',
     ],
   },
 ];
@@ -102,7 +108,7 @@ export async function createCheckoutSession(
           price_data: {
             currency: 'brl',
             product_data: {
-              name: `BarberFlow - ${plan.name}`,
+              name: `Shafar - ${plan.name}`,
               description: plan.description,
             },
             unit_amount: plan.price,

@@ -1,12 +1,12 @@
-# Arquitetura Multi-Tenant - BarberFlow
+# Arquitetura Multi-Tenant - Shafar
 
 ## 🏗️ Visão Geral da Arquitetura
 
-O BarberFlow possui uma arquitetura **multi-tenant** com **2 níveis de acesso** separados:
+O Shafar possui uma arquitetura **multi-tenant** com **2 níveis de acesso** separados:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      BARBERFLOW SAAS                         │
+│                      Shafar SAAS                         │
 │                 (Plataforma de Agendamentos)                 │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -37,8 +37,8 @@ O BarberFlow possui uma arquitetura **multi-tenant** com **2 níveis de acesso**
 - **Acessa:** `/platform/*`
 - **Escopo:** **Todas** as barbearias da plataforma
 - **Exemplos:**
-  - Você (dono do BarberFlow)
-  - Equipe de suporte do BarberFlow
+  - Você (dono do Shafar)
+  - Equipe de suporte do Shafar
   - CTO/administradores da plataforma
 
 **Características:**
@@ -141,7 +141,7 @@ src/pages/
 
 ### LoginPage.tsx (Redirecionamento)
 ```typescript
-const userData = JSON.parse(localStorage.getItem('barberflow_user') || '{}');
+const userData = JSON.parse(localStorage.getItem('shafar_user') || '{}');
 
 if (userData.role === 'platform_admin') {
   navigate('/platform');  // ← Platform admin vai para painel da plataforma
@@ -189,7 +189,7 @@ CREATE TABLE users (
 **Exemplos:**
 | email | name | role | barbershop_id |
 |-------|------|------|---------------|
-| platform@barberflow.com | Platform Admin | platform_admin | **NULL** |
+| platform@shafar.com | Platform Admin | platform_admin | **NULL** |
 | joao@barbearia.com | João Silva | admin | uuid-barbearia-1 |
 | pedro@barbearia.com | Pedro Santos | professional | uuid-barbearia-1 |
 
@@ -312,7 +312,7 @@ CREATE POLICY "Users can view barbershop appointments"
 ### Platform Layout
 ```
 ┌────────────────────────────────────────────┐
-│ BarberFlow                                 │
+│ Shafar                                 │
 │ [PLATFORM ADMIN]                           │ ← Badge especial
 │                                            │
 │ 📊 Visão Geral                            │
@@ -324,7 +324,7 @@ CREATE POLICY "Users can view barbershop appointments"
 │ ─────────────────────                     │
 │ 🚪 Sair                                   │
 │ Platform Administrator                     │
-│ platform@barberflow.com                    │
+│ platform@shafar.com                    │
 │ Platform Administrator                     │ ← Texto em cinza
 └────────────────────────────────────────────┘
 ```
@@ -332,7 +332,7 @@ CREATE POLICY "Users can view barbershop appointments"
 ### Barbershop Layout
 ```
 ┌────────────────────────────────────────────┐
-│ BarberFlow                                 │
+│ Shafar                                 │
 │ Barbearia João Silva                       │ ← Nome da barbearia
 │                                            │
 │ 📊 Dashboard                              │

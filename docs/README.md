@@ -1,4 +1,4 @@
-# 📚 Documentação BarberFlow
+# 📚 Documentação Shafar
 
 ## 🎯 Guias Principais
 
@@ -78,4 +78,4 @@ Todos os scripts SQL estão organizados na pasta [`sql/`](sql/):
 
 ---
 
-**Documentação mantida atualizada e organizada para facilitar o desenvolvimento e manutenção do BarberFlow!** 📖
+**Documentação mantida atualizada e organizada para facilitar o desenvolvimento e manutenção do Shafar!** 📖

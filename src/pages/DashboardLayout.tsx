@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
-import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, LogoutIcon } from '../components/icons';
+import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, LogoutIcon, CreditCardIcon } from '../components/icons';
 import { Text } from '../components/ui/Container';
 import MobileBottomNav from '../components/ui/MobileBottomNav';
 
@@ -343,6 +343,7 @@ const DashboardLayout: React.FC = () => {
         { to: 'clients', icon: <UsersIcon />, text: 'Clientes', adminOnly: false },
         { to: 'services', icon: <ScissorsIcon />, text: 'Serviços', adminOnly: true },
         { to: 'professionals', icon: <TeamIcon />, text: 'Profissionais', adminOnly: true },
+        { to: 'subscription', icon: <CreditCardIcon />, text: 'Assinatura', adminOnly: true },
         { to: 'settings', icon: <SettingsIcon />, text: 'Configurações', adminOnly: true },
     ].filter(item => !item.adminOnly || user.role === UserRole.ADMIN);
 
@@ -350,7 +351,7 @@ const DashboardLayout: React.FC = () => {
         <LayoutContainer>
             {/* Mobile Header */}
             <MobileHeader>
-                <MobileLogo>BarberFlow</MobileLogo>
+                <MobileLogo>Shafar</MobileLogo>
                 <MenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
                 </MenuButton>
@@ -361,7 +362,7 @@ const DashboardLayout: React.FC = () => {
 
             {/* Sidebar */}
             <Sidebar $isOpen={isMobileMenuOpen} className="slide-in">
-                <Logo>BarberFlow</Logo>
+                <Logo>Shafar</Logo>
                 
                 <Navigation>
                     {navItems.map(item => (

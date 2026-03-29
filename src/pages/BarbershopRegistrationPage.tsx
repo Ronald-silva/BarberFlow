@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import InputField from "../components/ui/InputField";
 import {
@@ -12,6 +12,7 @@ import {
   Flex,
 } from "../components/ui/Container";
 import { supabase } from "../services/supabase";
+import { logMultipleConsents } from "../services/consentLogger";
 
 const RegistrationContainer = styled.div`
   min-height: 100vh;
@@ -73,6 +74,48 @@ const StepLine = styled.div<{ $completed: boolean }>`
   border-radius: ${(props) => props.theme.radii.full};
 `;
 
+const CheckboxContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: ${(props) => props.theme.spacing[3]};
+  margin-bottom: ${(props) => props.theme.spacing[4]};
+`;
+
+const Checkbox = styled.input`
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+`;
+
+const CheckboxLabel = styled.label`
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.secondary};
+  cursor: pointer;
+  line-height: 1.6;
+
+  a {
+    color: ${(props) => props.theme.colors.primary};
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const LegalNotice = styled.div`
+  background: ${(props) => props.theme.colors.background.secondary};
+  border-left: 3px solid ${(props) => props.theme.colors.primary};
+  padding: ${(props) => props.theme.spacing[4]};
+  border-radius: ${(props) => props.theme.radii.md};
+  margin-bottom: ${(props) => props.theme.spacing[4]};
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.secondary};
+`;
+
 interface BarbershopData {
   name: string;
   slug: string;
@@ -92,6 +135,8 @@ const BarbershopRegistrationPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const [barbershopData, setBarbershopData] = useState<BarbershopData>({
     name: "",
@@ -150,7 +195,13 @@ const BarbershopRegistrationPage: React.FC = () => {
   };
 
   const validateStep2 = () => {
-    return adminData.name && adminData.email && adminData.password.length >= 6;
+    return (
+      adminData.name &&
+      adminData.email &&
+      adminData.password.length >= 6 &&
+      acceptedTerms &&
+      acceptedPrivacy
+    );
   };
 
   const handleNextStep = () => {
@@ -177,7 +228,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         .from("barbershops")
         .select("slug")
         .eq("slug", barbershopData.slug)
-        .single();
+        .maybeSingle();
 
       if (existingSlug) {
         setError(
@@ -192,7 +243,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         .from("barbershops")
         .select("email")
         .eq("email", barbershopData.email)
-        .single();
+        .maybeSingle();
 
       if (existingEmail) {
         setError(
@@ -300,6 +351,11 @@ const BarbershopRegistrationPage: React.FC = () => {
 
       if (servicesError) throw servicesError;
 
+      // 5. Register consent logs (LGPD)
+      if (authUser.user) {
+        await logMultipleConsents(authUser.user.id, ['terms', 'privacy']);
+      }
+
       // Success! Redirect to login
       navigate("/login", {
         state: {
@@ -401,7 +457,7 @@ const BarbershopRegistrationPage: React.FC = () => {
                     onChange={(e) =>
                       handleBarbershopChange("slug", e.target.value)
                     }
-                    helperText="Esta será sua URL: barberflow.com/navalha-dourada"
+                    helperText="Esta será sua URL: shafar.com/navalha-dourada"
                     required
                   />
 
@@ -499,6 +555,49 @@ const BarbershopRegistrationPage: React.FC = () => {
                     required
                   />
                 </Flex>
+              </div>
+
+              {/* Legal Consent Section */}
+              <LegalNotice>
+                <strong>📋 Termos Legais (LGPD)</strong>
+                <p style={{ margin: "0.5rem 0 0 0" }}>
+                  Para criar sua conta, você precisa aceitar nossos documentos legais em conformidade com a Lei Geral de Proteção de Dados (LGPD).
+                </p>
+              </LegalNotice>
+
+              <div>
+                <CheckboxContainer>
+                  <Checkbox
+                    type="checkbox"
+                    id="terms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    required
+                  />
+                  <CheckboxLabel htmlFor="terms">
+                    Eu li e concordo com os{" "}
+                    <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                      Termos de Uso
+                    </Link>
+                  </CheckboxLabel>
+                </CheckboxContainer>
+
+                <CheckboxContainer>
+                  <Checkbox
+                    type="checkbox"
+                    id="privacy"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    required
+                  />
+                  <CheckboxLabel htmlFor="privacy">
+                    Eu li e concordo com a{" "}
+                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">
+                      Política de Privacidade
+                    </Link>{" "}
+                    e autorizo o tratamento de meus dados pessoais conforme a LGPD
+                  </CheckboxLabel>
+                </CheckboxContainer>
               </div>
 
               <Flex $justify="between" $gap="1rem">

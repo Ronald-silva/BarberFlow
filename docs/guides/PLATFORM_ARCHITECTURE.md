@@ -1,4 +1,4 @@
-# 🏗️ Nova Arquitetura da Plataforma BarberFlow
+# 🏗️ Nova Arquitetura da Plataforma Shafar
 
 ## 🎯 Problema Identificado
 
@@ -53,7 +53,7 @@ Baseada em plataformas como **Calendly**, **Booksy**, **Fresha** e **Square**:
 ### Platform Admin (Você)
 ```typescript
 // Acesso ao dashboard da plataforma
-user.email === 'admin@barberflow.com' || user.role === 'platform_admin'
+user.email === 'admin@shafar.com' || user.role === 'platform_admin'
 ```
 
 ### Barbershop Admin
@@ -72,19 +72,19 @@ user.role === 'professional' && user.barbershopId === barbershopId
 
 ### Para Clientes (Público)
 ```
-https://barberflow.com/                    # Landing page
-https://barberflow.com/book/barbearia-joao # Agendamento público
+https://shafar.com/                    # Landing page
+https://shafar.com/book/barbearia-joao # Agendamento público
 ```
 
 ### Para Barbearias (Privado)
 ```
-https://barberflow.com/login               # Login da barbearia
-https://barberflow.com/dashboard/overview  # Dashboard da barbearia
+https://shafar.com/login               # Login da barbearia
+https://shafar.com/dashboard/overview  # Dashboard da barbearia
 ```
 
 ### Para Você (Platform Admin)
 ```
-https://barberflow.com/platform/overview   # SEU dashboard
+https://shafar.com/platform/overview   # SEU dashboard
 ```
 
 ## 📊 Comparação com Concorrentes
@@ -101,7 +101,7 @@ https://barberflow.com/platform/overview   # SEU dashboard
 - **Platform**: Dashboard para Square gerenciar merchants
 - **Merchant**: Dashboard para cada merchant gerenciar negócio
 
-### BarberFlow (Nova Arquitetura)
+### Shafar (Nova Arquitetura)
 - **Platform** (`/platform`): SEU dashboard para gerenciar barbearias
 - **Barbershop** (`/dashboard`): Dashboard para cada barbearia
 
@@ -137,7 +137,7 @@ enum UserRole {
 ALTER TABLE users ADD COLUMN is_platform_admin BOOLEAN DEFAULT FALSE;
 
 -- Definir você como platform admin
-UPDATE users SET is_platform_admin = TRUE WHERE email = 'admin@barberflow.com';
+UPDATE users SET is_platform_admin = TRUE WHERE email = 'admin@shafar.com';
 ```
 
 ### 3. Atualizar Navegação

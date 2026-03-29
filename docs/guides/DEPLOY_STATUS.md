@@ -1,4 +1,4 @@
-# 🚀 Status Final do Deploy - BarberFlow
+# 🚀 Status Final do Deploy - Shafar
 
 ## ✅ **PROJETO 100% PRONTO PARA VERCEL**
 
@@ -148,4 +148,4 @@ vercel --prod
 vercel --prod
 ```
 
-**Seu BarberFlow estará live em 3 minutos!** 🎯
+**Seu Shafar estará live em 3 minutos!** 🎯

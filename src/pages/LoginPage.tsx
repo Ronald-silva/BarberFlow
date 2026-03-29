@@ -160,7 +160,7 @@ const LoginPage: React.FC = () => {
             const success = await login(email, password);
             if (success) {
                 // Redirecionar baseado no tipo de usuário
-                const userData = JSON.parse(localStorage.getItem('barberflow_user') || '{}');
+                const userData = JSON.parse(localStorage.getItem('shafar_user') || '{}');
                 if (userData.role === 'platform_admin') {
                     navigate('/platform');
                 } else {
@@ -181,7 +181,7 @@ const LoginPage: React.FC = () => {
         <LoginContainer>
             <LoginCard className="fade-in">
                 <LoginHeader>
-                    <Logo>BarberFlow</Logo>
+                    <Logo>Shafar</Logo>
                     <Subtitle>Acesse seu painel administrativo</Subtitle>
                 </LoginHeader>
                 

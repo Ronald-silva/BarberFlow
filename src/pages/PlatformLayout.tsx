@@ -341,7 +341,7 @@ const PlatformLayout: React.FC = () => {
     return (
         <LayoutContainer>
             <MobileHeader>
-                <MobileLogo>BarberFlow Platform</MobileLogo>
+                <MobileLogo>Shafar Platform</MobileLogo>
                 <MenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
                 </MenuButton>
@@ -350,7 +350,7 @@ const PlatformLayout: React.FC = () => {
             <MobileOverlay $isOpen={isMobileMenuOpen} onClick={closeMobileMenu} />
 
             <Sidebar $isOpen={isMobileMenuOpen} className="slide-in">
-                <Logo>BarberFlow</Logo>
+                <Logo>Shafar</Logo>
                 <PlatformBadge>Platform Admin</PlatformBadge>
                 
                 <Navigation>

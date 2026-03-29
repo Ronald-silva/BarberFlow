@@ -1,4 +1,4 @@
-# 🚀 Guia de Deploy no Vercel - BarberFlow
+# 🚀 Guia de Deploy no Vercel - Shafar
 
 ## ✅ **Pré-requisitos Atendidos**
 
@@ -49,7 +49,7 @@ NODE_ENV=production
    - Acesse [vercel.com](https://vercel.com)
    - Clique em "New Project"
    - Conecte seu repositório GitHub
-   - Selecione o projeto BarberFlow
+   - Selecione o projeto Shafar
 
 3. **Configurar Build**:
    - Framework: **Vite**
@@ -196,7 +196,7 @@ Analytics: https://vercel.com/dashboard/analytics
 
 ## 🎉 **Resultado Final**
 
-Seu BarberFlow estará:
+Seu Shafar estará:
 - 🚀 **Live** em poucos minutos
 - 📱 **Mobile-first** e responsivo
 - ⚡ **Super rápido** com CDN global

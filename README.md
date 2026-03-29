@@ -1,10 +1,10 @@
-# 🚀 BarberFlow - Sistema Inteligente de Agendamento
+# 🚀 Shafar - Sistema Inteligente de Agendamento
 
 > **Status**: ✅ Pronto para Produção | **Build**: ✅ Sucesso | **Última atualização**: 2025-12-02
 
 ## 📋 Sobre o Projeto
 
-BarberFlow é um sistema completo de agendamento para barbearias com arquitetura multi-tenant, sistema de pagamentos integrado (PIX + Bitcoin) e interface moderna e responsiva.
+Shafar é um sistema completo de agendamento para barbearias com arquitetura multi-tenant, sistema de pagamentos integrado (PIX + Bitcoin) e interface moderna e responsiva.
 
 ## ✨ Funcionalidades Principais
 
@@ -74,7 +74,7 @@ BarberFlow é um sistema completo de agendamento para barbearias com arquitetura
 ```bash
 # Clone o repositório
 git clone [url-do-repositorio]
-cd barberflow
+cd shafar
 
 # Instale as dependências
 npm install

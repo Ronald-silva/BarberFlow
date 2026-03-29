@@ -1,4 +1,4 @@
-# 🎯 Nova Arquitetura BarberFlow - Resumo Executivo
+# 🎯 Nova Arquitetura Shafar - Resumo Executivo
 
 ## ❌ Problema Identificado
 
@@ -77,7 +77,7 @@ Você estava certo! A arquitetura anterior estava **confusa** porque:
 
 ```typescript
 // Platform Admin (VOCÊ)
-user.email === 'admin@barberflow.com' → /platform
+user.email === 'admin@shafar.com' → /platform
 
 // Barbershop Admin (SEUS CLIENTES)
 user.role === 'admin' → /dashboard
@@ -112,7 +112,7 @@ user.role === 'professional' → /dashboard (limitado)
 - **Platform**: Dashboard para Booksy gerenciar salões
 - **Salon**: Dashboard para cada salão
 
-### BarberFlow (Agora)
+### Shafar (Agora)
 
 - **Platform**: SEU dashboard para gerenciar barbearias
 - **Barbershop**: Dashboard para cada barbearia

@@ -1,4 +1,4 @@
-# Deploy do BarberFlow na Vercel
+# Deploy do Shafar na Vercel
 
 ## ⚠️ AVISO CRÍTICO
 
@@ -34,7 +34,7 @@ git add .
 git commit -m "feat: deploy inicial para Vercel"
 
 # 4. Criar repositório no GitHub e conectar
-git remote add origin https://github.com/seu-usuario/barberflow.git
+git remote add origin https://github.com/seu-usuario/shafar.git
 git branch -M main
 git push -u origin main
 ```
@@ -111,7 +111,7 @@ VITE_ENVIRONMENT=production
 
 Clique em **Deploy** e aguarde 2-3 minutos.
 
-✅ **Seu site estará disponível em:** `https://barberflow.vercel.app` (ou URL customizada)
+✅ **Seu site estará disponível em:** `https://shafar.vercel.app` (ou URL customizada)
 
 ---
 
@@ -133,7 +133,7 @@ git push
 ## 🌍 Passo 5: Domínio Customizado (Opcional)
 
 1. Na Vercel, vá em **Settings** → **Domains**
-2. Adicione seu domínio (exemplo: `barberflow.com.br`)
+2. Adicione seu domínio (exemplo: `shafar.com.br`)
 3. Configure o DNS conforme instruções da Vercel
 4. SSL é configurado automaticamente
 

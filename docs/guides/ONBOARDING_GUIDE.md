@@ -1,8 +1,8 @@
-# 🚀 Guia de Onboarding - BarberFlow Multi-Tenant
+# 🚀 Guia de Onboarding - Shafar Multi-Tenant
 
 ## 🎯 **Como Cadastrar Novas Barbearias**
 
-Agora o BarberFlow tem um sistema completo de cadastro de barbearias! Aqui está como funciona:
+Agora o Shafar tem um sistema completo de cadastro de barbearias! Aqui está como funciona:
 
 ## 📱 **Fluxo Completo do Cliente**
 
@@ -167,7 +167,7 @@ VALUES
 3. **Apresentações personalizadas** para cada cliente
 4. **Teste gratuito** por 30 dias
 
-**Agora o BarberFlow está 100% pronto para receber múltiplas barbearias como clientes!** 🏢✨
+**Agora o Shafar está 100% pronto para receber múltiplas barbearias como clientes!** 🏢✨
 
 ### **URLs Importantes:**
 - **Home**: `/` (landing page)

@@ -1,4 +1,4 @@
--- BarberFlow Database Setup for Supabase
+-- Shafar Database Setup for Supabase
 -- Execute este script no SQL Editor do Supabase
 
 -- Enable UUID extension

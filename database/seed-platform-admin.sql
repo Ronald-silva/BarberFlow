@@ -1,7 +1,7 @@
 -- =====================================================
 -- Seed Script: Platform Administrator
 -- =====================================================
--- Este script cria o usuário administrador da plataforma BarberFlow
+-- Este script cria o usuário administrador da plataforma Shafar
 -- Você (dono do SaaS) usará este usuário para gerenciar todas as barbearias
 
 -- =====================================================
@@ -24,7 +24,7 @@ INSERT INTO users (
 )
 VALUES (
   gen_random_uuid(),                       -- UUID gerado automaticamente
-  'platform@barberflow.com',               -- Email do admin
+  'platform@shafar.com',               -- Email do admin
   'Platform Administrator',                -- Nome do admin
   'platform_admin',                        -- Role especial
   NULL,                                    -- Não pertence a nenhuma barbearia
@@ -74,10 +74,10 @@ SELECT id, email, name, role, barbershop_id FROM users WHERE email = 'admin@barb
 -- Você deve ver uma linha com:
 -- - role: 'platform_admin'
 -- - barbershop_id: NULL
--- - email: 'platform@barberflow.com'
+-- - email: 'platform@shafar.com'
 --
 -- Agora você pode fazer login com:
---   Email: platform@barberflow.com
+--   Email: platform@shafar.com
 --   Senha: (qualquer senha, não está validando ainda)
 --
 -- Após o login, você será redirecionado para /platform

@@ -1,11 +1,11 @@
-# 🚀 Configuração do Supabase para BarberFlow
+# 🚀 Configuração do Supabase para Shafar
 
 Este guia te ajudará a configurar o Supabase para usar dados reais ao invés do sistema mock.
 
 ## 📋 Pré-requisitos
 
 1. Conta no [Supabase](https://supabase.com)
-2. Projeto BarberFlow já configurado localmente
+2. Projeto Shafar já configurado localmente
 
 ## 🛠️ Passo a Passo
 
@@ -27,7 +27,7 @@ Este guia te ajudará a configurar o Supabase para usar dados reais ao invés do
 1. **Vá para Authentication > Users**
 2. **Clique em "Add user"**
 3. **Preencha:**
-   - Email: `platform@barberflow.com`
+   - Email: `platform@shafar.com`
    - Password: `123456` (ou sua preferência)
    - Confirm: ✅
 
@@ -35,7 +35,7 @@ Este guia te ajudará a configurar o Supabase para usar dados reais ao invés do
 5. **No SQL Editor, execute:**
 ```sql
 INSERT INTO users (id, email, name, barbershop_id, role, work_hours) VALUES 
-('SEU-UUID-AQUI', 'platform@barberflow.com', 'Admin BarberFlow', NULL, 'platform_admin', '[]');
+('SEU-UUID-AQUI', 'platform@shafar.com', 'Admin Shafar', NULL, 'platform_admin', '[]');
 ```
 
 #### Barbershop Admin (Cliente de Teste)
@@ -63,7 +63,7 @@ O script `setup.sql` já configura as políticas de segurança, mas verifique se
 1. **Execute `npm run dev`**
 2. **Acesse `http://localhost:3000`**
 3. **Faça login com:**
-   - **Platform Admin:** `platform@barberflow.com` / `123456`
+   - **Platform Admin:** `platform@shafar.com` / `123456`
    - **Barbershop Admin:** `admin@barber.com` / `123456`
 
 ## 🔧 Configurações Avançadas

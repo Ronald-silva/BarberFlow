@@ -1,4 +1,4 @@
-# Configuração do Admin da Plataforma - BarberFlow
+# Configuração do Admin da Plataforma - Shafar
 
 ## 🎯 Problema Identificado
 
@@ -10,7 +10,7 @@ Você está tentando acessar o **painel administrativo da plataforma** (para ger
 
 O sistema já está **corretamente estruturado** com dois níveis de acesso:
 
-### 1. **Platform Admin** (Você - Dono do BarberFlow)
+### 1. **Platform Admin** (Você - Dono do Shafar)
 - **Rota:** `/platform`
 - **Role necessária:** `platform_admin`
 - **Páginas:**
@@ -35,7 +35,7 @@ O usuário `admin@barber.com` provavelmente **NÃO tem a role `platform_admin`**
 
 **Lógica de redirecionamento (LoginPage.tsx:131-136):**
 ```typescript
-const userData = JSON.parse(localStorage.getItem('barberflow_user') || '{}');
+const userData = JSON.parse(localStorage.getItem('shafar_user') || '{}');
 if (userData.role === 'platform_admin') {
     navigate('/platform');  // ← Você precisa chegar aqui
 } else {
@@ -92,7 +92,7 @@ INSERT INTO users (
 )
 VALUES (
   gen_random_uuid(),
-  'platform@barberflow.com',
+  'platform@shafar.com',
   'Platform Administrator',
   'platform_admin',
   NULL,
@@ -112,7 +112,7 @@ WHERE role = 'platform_admin';
 ```
 
 **Credenciais de login:**
-- **Email:** `platform@barberflow.com`
+- **Email:** `platform@shafar.com`
 - **Senha:** (qualquer senha, não está validando)
 
 ---
@@ -122,17 +122,17 @@ WHERE role = 'platform_admin';
 1. **Execute o SQL** no Supabase SQL Editor
 2. **Faça logout** (se estiver logado): `localStorage.clear()`
 3. **Faça login novamente** com as credenciais:
-   - Email: `platform@barberflow.com` (ou `admin@barber.com` se usou Opção 2)
+   - Email: `platform@shafar.com` (ou `admin@barber.com` se usou Opção 2)
    - Senha: qualquer (não está validando por enquanto)
 4. **Você será redirecionado para** `/platform` ✅
 
 ---
 
-## 📊 Estrutura de Roles no BarberFlow
+## 📊 Estrutura de Roles no Shafar
 
 | Role | Acesso | Escopo | Exemplo |
 |------|--------|--------|---------|
-| `platform_admin` | Painel da Plataforma (`/platform`) | **Todas** as barbearias | Você (dono do BarberFlow) |
+| `platform_admin` | Painel da Plataforma (`/platform`) | **Todas** as barbearias | Você (dono do Shafar) |
 | `admin` | Dashboard Barbershop (`/dashboard`) | **Sua** barbearia | Dono de uma barbearia |
 | `professional` | Dashboard Barbershop (`/dashboard`) | **Sua** barbearia | Barbeiro/cabeleireiro |
 | `receptionist` | Dashboard Barbershop (`/dashboard`) | **Sua** barbearia | Recepcionista |
@@ -188,7 +188,7 @@ INSERT INTO users (
 )
 VALUES (
   '00000000-0000-0000-0000-000000000001', -- UUID fixo para platform admin
-  'platform@barberflow.com',
+  'platform@shafar.com',
   'Platform Administrator',
   'platform_admin',
   NULL,

@@ -475,7 +475,7 @@ const LandingPage: React.FC = () => {
     <LandingContainer>
       <Header>
         <Nav>
-          <Logo>BarberFlow</Logo>
+          <Logo>Shafar</Logo>
           <NavButtons>
             <NavButton $variant="secondary" onClick={() => navigate('/login')}>
               Entrar
@@ -597,7 +597,7 @@ const LandingPage: React.FC = () => {
                 <PlanName>Básico</PlanName>
                 <PlanDescription>Ideal para barbearias pequenas</PlanDescription>
                 <Price>
-                  R$ 79<PriceInterval>/mês</PriceInterval>
+                  R$ 29,90<PriceInterval>/mês</PriceInterval>
                 </Price>
                 <FeaturesList>
                   <FeatureItem>Até 2 profissionais</FeatureItem>
@@ -624,10 +624,10 @@ const LandingPage: React.FC = () => {
             <PricingCard $variant="elevated" $isPopular>
               <PopularBadge>Mais Popular</PopularBadge>
               <CardContent>
-                <PlanName>Pro</PlanName>
+                <PlanName>Profissional</PlanName>
                 <PlanDescription>Para barbearias em crescimento</PlanDescription>
                 <Price>
-                  R$ 149<PriceInterval>/mês</PriceInterval>
+                  R$ 59,90<PriceInterval>/mês</PriceInterval>
                 </Price>
                 <FeaturesList>
                   <FeatureItem>Até 5 profissionais</FeatureItem>
@@ -653,10 +653,10 @@ const LandingPage: React.FC = () => {
             {/* Plano Enterprise */}
             <PricingCard $variant="elevated">
               <CardContent>
-                <PlanName>Enterprise</PlanName>
+                <PlanName>Premium</PlanName>
                 <PlanDescription>Para grandes barbearias</PlanDescription>
                 <Price>
-                  R$ 299<PriceInterval>/mês</PriceInterval>
+                  R$ 99,90<PriceInterval>/mês</PriceInterval>
                 </Price>
                 <FeaturesList>
                   <FeatureItem>Profissionais ilimitados</FeatureItem>

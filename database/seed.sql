@@ -1,4 +1,4 @@
--- BarberFlow Seed Data
+-- Shafar Seed Data
 -- Execute este script APÓS o setup.sql
 
 -- Insert sample barbershop
@@ -11,10 +11,10 @@ INSERT INTO barbershops (id, name, slug, logo_url, address) VALUES
 -- Exemplo de como inserir usuários (substitua os UUIDs pelos IDs reais do auth.users):
 
 -- Platform Admin (VOCÊ)
--- Primeiro crie a conta: platform@barberflow.com no Supabase Auth
+-- Primeiro crie a conta: platform@shafar.com no Supabase Auth
 -- Depois execute:
 -- INSERT INTO users (id, email, name, barbershop_id, role, work_hours) VALUES 
--- ('seu-uuid-aqui', 'platform@barberflow.com', 'Admin BarberFlow', NULL, 'platform_admin', '[]');
+-- ('seu-uuid-aqui', 'platform@shafar.com', 'Admin Shafar', NULL, 'platform_admin', '[]');
 
 -- Barbershop Admin
 -- Primeiro crie a conta: admin@barber.com no Supabase Auth  

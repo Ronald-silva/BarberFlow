@@ -1,9 +1,9 @@
-# 📁 Estrutura do Projeto BarberFlow
+# 📁 Estrutura do Projeto Shafar
 
 ## 🏗️ Organização Geral
 
 ```
-barberflow/
+shafar/
 ├── 📁 src/                    # Código fonte principal
 │   ├── 📁 components/         # Componentes React reutilizáveis
 │   ├── 📁 pages/             # Páginas da aplicação

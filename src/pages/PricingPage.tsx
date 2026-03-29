@@ -106,7 +106,7 @@ const PricingPage: React.FC = () => {
       <Grid $columns={3} $responsive style={{ marginTop: '3rem' }}>
         {SUBSCRIPTION_PLANS.map((plan) => {
           const isCurrentPlan = currentSubscription?.plan_id === plan.id;
-          const isPopular = plan.id === 'pro';
+          const isPopular = plan.id === 'professional';
 
           return (
             <PlanCard

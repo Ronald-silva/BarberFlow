@@ -32,7 +32,7 @@ const messageTemplates = {
     `• Data/Hora: ${data.dateTime}\n` +
     `${data.price ? `• Valor: R$ ${(data.price / 100).toFixed(2)}\n` : ''}` +
     `\nChegue com 5 minutos de antecedência!\n\n` +
-    `_Mensagem automática - BarberFlow_`,
+    `_Mensagem automática - Shafar_`,
 
   appointment_reminder: (data: NotificationData['data']) =>
     `⏰ *Lembrete de Agendamento*\n\n` +
@@ -43,7 +43,7 @@ const messageTemplates = {
     `• Profissional: ${data.professionalName}\n` +
     `• Data/Hora: ${data.dateTime}\n\n` +
     `Não esqueça! 😊\n\n` +
-    `_Mensagem automática - BarberFlow_`,
+    `_Mensagem automática - Shafar_`,
 
   appointment_canceled: (data: NotificationData['data']) =>
     `❌ *Agendamento Cancelado*\n\n` +
@@ -53,7 +53,7 @@ const messageTemplates = {
     `• Serviço: ${data.serviceName}\n` +
     `• Data/Hora: ${data.dateTime}\n\n` +
     `Entre em contato para reagendar.\n\n` +
-    `_Mensagem automática - BarberFlow_`,
+    `_Mensagem automática - Shafar_`,
 
   payment_confirmed: (data: NotificationData['data']) =>
     `💰 *Pagamento Confirmado!*\n\n` +
@@ -61,7 +61,7 @@ const messageTemplates = {
     `Recebemos seu pagamento de *R$ ${data.price ? (data.price / 100).toFixed(2) : '0.00'}*\n\n` +
     `Seu agendamento está confirmado para ${data.dateTime}\n\n` +
     `Te esperamos! 😊\n\n` +
-    `_Mensagem automática - BarberFlow_`,
+    `_Mensagem automática - Shafar_`,
 };
 
 // Enviar WhatsApp (SIMULADO - Em produção, chamar API backend)

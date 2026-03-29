@@ -1,4 +1,4 @@
-# Análise de Fluxo de Agendamento - BarberFlow
+# Análise de Fluxo de Agendamento - Shafar
 
 ## 📊 Análise do Fluxo Atual
 
@@ -53,7 +53,7 @@
 
 ---
 
-## 🎯 Fluxo Recomendado para BarberFlow
+## 🎯 Fluxo Recomendado para Shafar
 
 ### **FASE 1 - MVP (Implementar AGORA)**
 
@@ -226,7 +226,7 @@
 
 ---
 
-## 🎨 Implementação no BarberFlow
+## 🎨 Implementação no Shafar
 
 ### Arquivos a Modificar:
 1. `src/pages/BookingPage.tsx` - Simplificar fluxo

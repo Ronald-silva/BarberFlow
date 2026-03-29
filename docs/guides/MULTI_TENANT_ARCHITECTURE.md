@@ -1,8 +1,8 @@
-# 🏢 Arquitetura Multi-Tenant - BarberFlow
+# 🏢 Arquitetura Multi-Tenant - Shafar
 
 ## 🎯 **Como Funciona o Sistema de Múltiplas Barbearias**
 
-O BarberFlow usa uma arquitetura **multi-tenant** onde cada barbearia é um "tenant" independente, mas compartilha a mesma aplicação e infraestrutura.
+O Shafar usa uma arquitetura **multi-tenant** onde cada barbearia é um "tenant" independente, mas compartilha a mesma aplicação e infraestrutura.
 
 ## 🗄️ **Estrutura do Banco de Dados**
 
@@ -222,7 +222,7 @@ const useAppointments = () => {
 
 ## 🎯 **Resumo**
 
-O BarberFlow é um **SaaS multi-tenant** onde:
+O Shafar é um **SaaS multi-tenant** onde:
 
 1. **Cada barbearia é independente** (dados isolados)
 2. **Usuários têm perfis específicos** (admin/member)

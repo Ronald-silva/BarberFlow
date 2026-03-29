@@ -10,6 +10,8 @@ import { ToastProvider } from './src/contexts/ToastContext';
 import LazyLoad from './src/components/ui/LazyLoad';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { queryClient } from './src/lib/queryClient';
+import { Footer } from './src/components/Footer';
+import { CookieConsent } from './src/components/CookieConsent';
 
 // Lazy loading das páginas para melhor performance
 const BookingPage = lazy(() => import('./src/pages/BookingPage'));
@@ -36,6 +38,8 @@ const LoginPage = lazy(() => import('./src/pages/LoginPage'));
 const BarbershopRegistrationPage = lazy(() => import('./src/pages/BarbershopRegistrationPage'));
 const LandingPage = lazy(() => import('./src/pages/LandingPage'));
 const PricingPage = lazy(() => import('./src/pages/PricingPage'));
+const PrivacyPolicyPage = lazy(() => import('./src/pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./src/pages/TermsOfServicePage'));
 
 // Protected Route Components
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -88,6 +92,8 @@ const App: React.FC = () => {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<BarbershopRegistrationPage />} />
                     <Route path="/book/:barbershopSlug" element={<BookingPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
 
                     {/* Platform Admin Routes (SEU dashboard para gerenciar todas as barbearias) */}
                     <Route
@@ -121,9 +127,12 @@ const App: React.FC = () => {
                       <Route path="clients" element={<ClientsPage />} />
                       <Route path="services" element={<AdminRoute><ServicesPage /></AdminRoute>} />
                       <Route path="professionals" element={<AdminRoute><ProfessionalsPage /></AdminRoute>} />
+                      <Route path="subscription" element={<AdminRoute><PricingPage /></AdminRoute>} />
                       <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
                     </Route>
                   </Routes>
+                  <Footer />
+                  <CookieConsent />
                 </LazyLoad>
               </AuthProvider>
             </HashRouter>
