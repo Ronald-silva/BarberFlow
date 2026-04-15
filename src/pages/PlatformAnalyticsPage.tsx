@@ -1,19 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
+import { Button } from '../components/ui/Button';
+import { useToastContext } from '../contexts/ToastContext';
+import { supabaseApi as api } from '../services/supabaseApi';
 
-const ChartPlaceholder = styled.div`
+const AnalyticsPanel = styled.div`
   width: 100%;
-  height: 300px;
+  min-height: 260px;
   background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
   border-radius: ${props => props.theme.radii.lg};
-  border: 2px dashed ${props => props.theme.colors.border.secondary};
+  border: 1px solid ${props => props.theme.colors.border.primary};
+  padding: ${props => props.theme.spacing[4]};
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${props => props.theme.colors.text.tertiary};
-  font-size: ${props => props.theme.typography.fontSizes.lg};
-  font-weight: ${props => props.theme.typography.fontWeights.medium};
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[3]};
 `;
 
 const MetricCard = styled(Card)`
@@ -55,7 +56,74 @@ const MetricLabel = styled.div`
   letter-spacing: 0.05em;
 `;
 
+const DataList = styled.ul`
+  margin: 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+interface PlatformAnalyticsData {
+  monthlyRevenue: number;
+  newBarbershopsThisMonth: number;
+  newBarbershopsLastMonth: number;
+  conversionRate: number;
+  churnRate: number;
+  planDistribution: Array<{ plan: string; count: number }>;
+  dailyAppointments: Array<{ date: string; count: number }>;
+}
+
 const PlatformAnalyticsPage: React.FC = () => {
+  const toast = useToastContext();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState<PlatformAnalyticsData | null>(null);
+
+  const loadAnalytics = async (showFeedback = false) => {
+    setLoading(true);
+    setRefreshing(true);
+    try {
+      const overview = await api.getPlatformAnalyticsOverview();
+      setData(overview);
+      if (showFeedback) {
+        toast.success('Analytics atualizados com sucesso.');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar analytics da plataforma:', error);
+      setData({
+        monthlyRevenue: 0,
+        newBarbershopsThisMonth: 0,
+        newBarbershopsLastMonth: 0,
+        conversionRate: 0,
+        churnRate: 0,
+        planDistribution: [],
+        dailyAppointments: [],
+      });
+      toast.error('Falha ao carregar analytics da plataforma.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadAnalytics();
+  }, []);
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Text>Carregando analytics da plataforma...</Text>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  const growthDelta = (data?.newBarbershopsThisMonth || 0) - (data?.newBarbershopsLastMonth || 0);
+
   return (
     <PageContainer className="fade-in">
       <div style={{ marginBottom: '2rem' }}>
@@ -65,15 +133,22 @@ const PlatformAnalyticsPage: React.FC = () => {
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
           Análise detalhada de performance e crescimento da plataforma
         </Text>
+        <div style={{ marginTop: '1rem' }}>
+          <Button $variant="secondary" onClick={() => void loadAnalytics(true)} disabled={refreshing}>
+            {refreshing ? 'Atualizando...' : 'Recarregar Analytics'}
+          </Button>
+        </div>
       </div>
 
       <Grid $columns={4} $responsive style={{ marginBottom: '2rem' }}>
         <MetricCard $variant="elevated">
           <CardContent>
             <MetricLabel>Receita Mensal</MetricLabel>
-            <MetricValue>R$ 15.890</MetricValue>
-            <Text $size="sm" $color="success">
-              ↗ +12.5% vs mês anterior
+            <MetricValue>
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data?.monthlyRevenue || 0)}
+            </MetricValue>
+            <Text $size="sm" $color="tertiary">
+              soma das assinaturas ativas
             </Text>
           </CardContent>
         </MetricCard>
@@ -81,9 +156,9 @@ const PlatformAnalyticsPage: React.FC = () => {
         <MetricCard $variant="elevated">
           <CardContent>
             <MetricLabel>Novos Cadastros</MetricLabel>
-            <MetricValue>24</MetricValue>
-            <Text $size="sm" $color="success">
-              ↗ +8 este mês
+            <MetricValue>{data?.newBarbershopsThisMonth || 0}</MetricValue>
+            <Text $size="sm" $color={growthDelta >= 0 ? 'success' : 'secondary'}>
+              {growthDelta >= 0 ? '↗' : '↘'} {Math.abs(growthDelta)} vs mês anterior
             </Text>
           </CardContent>
         </MetricCard>
@@ -91,9 +166,9 @@ const PlatformAnalyticsPage: React.FC = () => {
         <MetricCard $variant="elevated">
           <CardContent>
             <MetricLabel>Taxa de Conversão</MetricLabel>
-            <MetricValue>68%</MetricValue>
-            <Text $size="sm" $color="success">
-              ↗ +5% vs mês anterior
+            <MetricValue>{(data?.conversionRate || 0).toFixed(1)}%</MetricValue>
+            <Text $size="sm" $color="tertiary">
+              assinaturas ativas / novos cadastros
             </Text>
           </CardContent>
         </MetricCard>
@@ -101,9 +176,9 @@ const PlatformAnalyticsPage: React.FC = () => {
         <MetricCard $variant="elevated">
           <CardContent>
             <MetricLabel>Churn Rate</MetricLabel>
-            <MetricValue>2.1%</MetricValue>
-            <Text $size="sm" $color="success">
-              ↘ -0.3% vs mês anterior
+            <MetricValue>{(data?.churnRate || 0).toFixed(1)}%</MetricValue>
+            <Text $size="sm" $color="tertiary">
+              assinaturas canceladas no mês
             </Text>
           </CardContent>
         </MetricCard>
@@ -113,56 +188,38 @@ const PlatformAnalyticsPage: React.FC = () => {
         <Card $variant="elevated">
           <CardContent>
             <Heading $level={3} $color="primary" style={{ marginBottom: '1rem' }}>
-              Crescimento de Receita
+              Distribuição por Plano
             </Heading>
-            <ChartPlaceholder>
-              📊 Gráfico de Receita Mensal
-            </ChartPlaceholder>
-            <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
-              Integração com Chart.js em breve
-            </Text>
+            <AnalyticsPanel>
+              <DataList>
+                {data?.planDistribution.length ? data.planDistribution.map((item) => (
+                  <li key={item.plan}>
+                    <strong>{item.plan}</strong>: {item.count} assinatura{item.count !== 1 ? 's' : ''}
+                  </li>
+                )) : (
+                  <li>Nenhuma assinatura ativa encontrada.</li>
+                )}
+              </DataList>
+            </AnalyticsPanel>
           </CardContent>
         </Card>
 
         <Card $variant="elevated">
           <CardContent>
             <Heading $level={3} $color="primary" style={{ marginBottom: '1rem' }}>
-              Cadastros por Mês
+              Agendamentos nos Últimos 7 Dias
             </Heading>
-            <ChartPlaceholder>
-              📊 Gráfico de Cadastros
-            </ChartPlaceholder>
-            <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
-              Integração com Chart.js em breve
-            </Text>
-          </CardContent>
-        </Card>
-
-        <Card $variant="elevated">
-          <CardContent>
-            <Heading $level={3} $color="primary" style={{ marginBottom: '1rem' }}>
-              Agendamentos por Plano
-            </Heading>
-            <ChartPlaceholder>
-              📊 Gráfico de Pizza
-            </ChartPlaceholder>
-            <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
-              Integração com Chart.js em breve
-            </Text>
-          </CardContent>
-        </Card>
-
-        <Card $variant="elevated">
-          <CardContent>
-            <Heading $level={3} $color="primary" style={{ marginBottom: '1rem' }}>
-              Retenção de Clientes
-            </Heading>
-            <ChartPlaceholder>
-              📊 Gráfico de Retenção
-            </ChartPlaceholder>
-            <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
-              Integração com Chart.js em breve
-            </Text>
+            <AnalyticsPanel>
+              <DataList>
+                {data?.dailyAppointments.length ? data.dailyAppointments.map((item) => (
+                  <li key={item.date}>
+                    {new Date(`${item.date}T00:00:00`).toLocaleDateString('pt-BR')}: {item.count} agendamento{item.count !== 1 ? 's' : ''}
+                  </li>
+                )) : (
+                  <li>Nenhum agendamento no período.</li>
+                )}
+              </DataList>
+            </AnalyticsPanel>
           </CardContent>
         </Card>
       </Grid>

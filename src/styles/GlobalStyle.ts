@@ -1,7 +1,15 @@
-import { createGlobalStyle } from "styled-components";
+import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
-  /* Reset CSS moderno */
+  /* ===================================================
+   * SHAFAR — Global Styles v2.0
+   * Mobile-first, premium dark design
+   * =================================================== */
+
+  /* Import Inter font */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  /* Reset moderno */
   *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -9,40 +17,52 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    font-size: 14px; /* Mobile first - smaller base font */
+    font-size: 14px;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%; /* Prevent iOS font scaling */
-    -ms-text-size-adjust: 100%;
-    
-    @media (min-width: 640px) { /* sm */
-      font-size: 15px;
-    }
-    
-    @media (min-width: 768px) { /* md */
-      font-size: 16px;
-    }
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+
+    @media (min-width: 480px) { font-size: 15px; }
+    @media (min-width: 768px) { font-size: 16px; }
   }
 
   body {
-    font-family: ${(props) => props.theme.typography.fonts.primary};
-    font-size: ${(props) => props.theme.typography.fontSizes.base};
-    font-weight: ${(props) => props.theme.typography.fontWeights.normal};
-    line-height: ${(props) => props.theme.typography.lineHeights.normal};
-    background-color: ${(props) => props.theme.colors.background.primary};
-    color: ${(props) => props.theme.colors.text.secondary};
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.55;
+    background-color: #0D0D0D;
+    color: #ABABAB;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
-    
-    /* Better mobile scrolling */
-    -webkit-overflow-scrolling: touch;
-    
-    /* Prevent horizontal scroll on mobile */
     max-width: 100vw;
+    -webkit-overflow-scrolling: touch;
+    background-image:
+      radial-gradient(circle at 20% -10%, rgba(200, 146, 42, 0.08) 0%, transparent 35%),
+      radial-gradient(circle at 80% 120%, rgba(200, 146, 42, 0.06) 0%, transparent 40%);
   }
 
-  /* Elementos interativos */
+  ::selection {
+    background-color: rgba(200, 146, 42, 0.25);
+    color: #F5F5F5;
+  }
+
+  /* ===================== Links ===================== */
+  a {
+    text-decoration: none;
+    color: inherit;
+    &:focus-visible {
+      outline: 2px solid #C8922A;
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+  }
+
+  /* ================ Form Elements ================= */
   button, input, textarea, select {
     font-family: inherit;
     font-size: inherit;
@@ -53,251 +73,119 @@ export const GlobalStyle = createGlobalStyle`
     border: none;
     background: none;
     outline: none;
-    
-    &:disabled {
-      cursor: not-allowed;
-    }
+    &:disabled { cursor: not-allowed; }
   }
 
   input, textarea {
     outline: none;
     border: none;
-    
-    &::placeholder {
-      color: ${(props) => props.theme.colors.text.tertiary};
-    }
+    background: none;
+    &::placeholder { color: #6B6B6B; }
   }
 
-  a {
-    text-decoration: none;
-    color: inherit;
-    
-    &:focus-visible {
-      outline: 2px solid ${(props) => props.theme.colors.border.focus};
-      outline-offset: 2px;
-    }
-  }
-
-  /* Scrollbar personalizada */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: ${(props) => props.theme.colors.background.secondary};
-  }
-
+  /* ================ Scrollbar Premium ================= */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #141414; }
   ::-webkit-scrollbar-thumb {
-    background: ${(props) => props.theme.colors.border.secondary};
-    border-radius: ${(props) => props.theme.radii.full};
-    
-    &:hover {
-      background: ${(props) => props.theme.colors.text.tertiary};
-    }
+    background: #3A3A3A;
+    border-radius: 9999px;
+    border: 2px solid #141414;
+    &:hover { background: #535353; }
   }
 
-  /* Focus styles globais */
+  /* ================ Focus Global ================= */
   *:focus-visible {
-    outline: 2px solid ${(props) => props.theme.colors.border.focus};
+    outline: 2px solid #C8922A;
     outline-offset: 2px;
+    border-radius: 4px;
   }
 
-  /* React Calendar Styles - Design moderno e responsivo */
-  .react-calendar {
-    border: none;
-    border-radius: ${(props) => props.theme.radii.lg};
-    background-color: ${(props) => props.theme.colors.background.elevated};
-    color: ${(props) => props.theme.colors.text.secondary};
-    font-family: inherit;
-    box-shadow: ${(props) => props.theme.shadows.md};
-    padding: ${(props) => props.theme.spacing[3]};
-    width: 100%;
-    max-width: 100%;
-    
-    @media (min-width: 640px) {
-      border-radius: ${(props) => props.theme.radii.xl};
-      box-shadow: ${(props) => props.theme.shadows.lg};
-      padding: ${(props) => props.theme.spacing[4]};
-      max-width: 350px;
-    }
+  /* ================ Utilitários ================= */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 
-  .react-calendar__navigation {
-    display: flex;
-    height: 44px;
-    margin-bottom: ${(props) => props.theme.spacing[4]};
-  }
-
-  .react-calendar__navigation button {
-    color: ${(props) => props.theme.colors.text.primary};
-    background: none;
-    border: none;
-    font-size: ${(props) => props.theme.typography.fontSizes.lg};
-    font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
-    padding: ${(props) => props.theme.spacing[2]} ${(props) =>
-  props.theme.spacing[3]};
-    border-radius: ${(props) => props.theme.radii.md};
-    transition: ${(props) => props.theme.transitions.fast};
-    min-width: 44px;
-    
-    &:enabled:hover,
-    &:enabled:focus {
-      background-color: ${(props) => props.theme.colors.interactive.hover};
-    }
-    
-    &:disabled {
-      color: ${(props) => props.theme.colors.text.disabled};
-    }
-  }
-
-  .react-calendar__month-view__weekdays {
-    text-align: center;
-    text-transform: uppercase;
-    font-weight: ${(props) => props.theme.typography.fontWeights.medium};
-    font-size: ${(props) => props.theme.typography.fontSizes.xs};
-    color: ${(props) => props.theme.colors.text.tertiary};
-    margin-bottom: ${(props) => props.theme.spacing[2]};
-  }
-
-  .react-calendar__month-view__weekdays__weekday {
-    padding: ${(props) => props.theme.spacing[2]};
-    text-decoration: none;
-  }
-
-  .react-calendar__tile {
-    background: none;
-    border: none;
-    border-radius: ${(props) => props.theme.radii.md};
-    color: ${(props) => props.theme.colors.text.secondary};
-    font-size: ${(props) => props.theme.typography.fontSizes.sm};
-    font-weight: ${(props) => props.theme.typography.fontWeights.medium};
-    padding: ${(props) => props.theme.spacing[2]};
-    transition: ${(props) => props.theme.transitions.fast};
-    position: relative;
-    min-height: 44px; /* Better touch target for mobile */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    @media (min-width: 640px) {
-      padding: ${(props) => props.theme.spacing[3]};
-      min-height: 40px;
-    }
-    
-    &:enabled:hover,
-    &:enabled:focus {
-      background-color: ${(props) => props.theme.colors.interactive.hover};
-      
-      @media (min-width: 640px) {
-        transform: translateY(-1px);
-      }
-    }
-    
-    &:disabled {
-      color: ${(props) => props.theme.colors.text.disabled};
-      cursor: not-allowed;
-    }
-  }
-
-  .react-calendar__tile--now {
-    background: ${(props) => props.theme.colors.background.tertiary};
-    color: ${(props) => props.theme.colors.text.primary};
-    font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      background: ${(props) => props.theme.colors.primary};
-      border-radius: ${(props) => props.theme.radii.full};
-    }
-  }
-
-  .react-calendar__tile--active,
-  .react-calendar__tile--active:enabled:hover,
-  .react-calendar__tile--active:enabled:focus {
-    background: ${(props) => props.theme.colors.primary} !important;
-    color: ${(props) => props.theme.colors.text.inverse} !important;
-    font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
-    box-shadow: ${(props) => props.theme.shadows.glow};
-    transform: translateY(-2px);
-  }
-
-  .react-calendar__month-view__days__day--weekend {
-    color: ${(props) => props.theme.colors.warning};
-  }
-
-  .react-calendar__month-view__days__day--neighboringMonth {
-    color: ${(props) => props.theme.colors.text.disabled};
-  }
-
-  /* Animações suaves */
+  /* ================ Animações Premium ================= */
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
   }
 
-  .fade-in {
-    animation: fadeIn 0.3s ease-out;
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
-  .slide-in {
-    animation: slideIn 0.3s ease-out;
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
-  /* Mobile-specific improvements */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(200, 146, 42, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(200, 146, 42, 0.6); }
+  }
+
+  @keyframes brandGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .fade-in { animation: fadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .fade-in-scale { animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-in { animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-up { animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  /* Staggered children */
+  .stagger > * { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+  /* ================ Mobile específico ================= */
   @media (max-width: 1023px) {
-    /* Improve touch targets */
-    button, a, input, select, textarea {
-      min-height: 44px;
-    }
-    
-    /* Better spacing for mobile */
-    .mobile-spacing {
-      padding: ${(props) => props.theme.spacing[4]};
-    }
-    
-    /* Hide desktop-only elements */
-    .desktop-only {
-      display: none !important;
-    }
-    
-    /* Full width on mobile */
-    .mobile-full-width {
-      width: 100% !important;
-    }
+    button, a { min-height: 44px; }
+    input, select, textarea { min-height: 44px; }
   }
 
-  @media (min-width: 1024px) {
-    /* Hide mobile-only elements */
-    .mobile-only {
-      display: none !important;
-    }
-  }
-
-  /* Safe area support for iOS devices */
+  /* ================ iOS Safe Area ================= */
   @supports (padding: max(0px)) {
     body {
       padding-left: env(safe-area-inset-left);
@@ -305,7 +193,7 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
-  /* Reduce motion for users who prefer it */
+  /* ================ Reduced Motion ================= */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -314,10 +202,113 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
-  /* High contrast mode support */
-  @media (prefers-contrast: high) {
-    * {
-      border-color: currentColor !important;
+  /* ================ React Calendar — Redesign Premium ================= */
+  .react-calendar {
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+    background-color: #141414;
+    color: #ABABAB;
+    font-family: "Inter", sans-serif;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
+
+    @media (min-width: 480px) {
+      padding: 16px;
+      max-width: 340px;
     }
+  }
+
+  .react-calendar__navigation {
+    display: flex;
+    height: 48px;
+    margin-bottom: 12px;
+    gap: 4px;
+  }
+
+  .react-calendar__navigation button {
+    color: #F5F5F5;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 150ms ease;
+    min-width: 44px;
+
+    &:enabled:hover,
+    &:enabled:focus {
+      background-color: rgba(200, 146, 42, 0.1);
+      color: #E8B84B;
+    }
+
+    &:disabled { color: #3D3D3D; }
+  }
+
+  .react-calendar__month-view__weekdays {
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: #6B6B6B;
+    margin-bottom: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  .react-calendar__month-view__weekdays__weekday {
+    padding: 8px;
+    abbr { text-decoration: none; }
+  }
+
+  .react-calendar__tile {
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: #ABABAB;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 8px;
+    transition: all 150ms ease;
+    position: relative;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:enabled:hover,
+    &:enabled:focus {
+      background-color: rgba(200, 146, 42, 0.1);
+      color: #E8B84B;
+    }
+
+    &:disabled {
+      color: #3D3D3D;
+      cursor: not-allowed;
+    }
+  }
+
+  .react-calendar__tile--now {
+    background: rgba(200, 146, 42, 0.1);
+    color: #E8B84B;
+    font-weight: 600;
+  }
+
+  .react-calendar__tile--active,
+  .react-calendar__tile--active:enabled:hover,
+  .react-calendar__tile--active:enabled:focus {
+    background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%) !important;
+    color: #0D0D0D !important;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(200, 146, 42, 0.4);
+  }
+
+  .react-calendar__month-view__days__day--weekend {
+    color: #8B7355;
+  }
+
+  .react-calendar__month-view__days__day--neighboringMonth {
+    color: #3D3D3D;
   }
 `;

@@ -266,7 +266,7 @@ export async function getEmailLogs(
     throw new Error('Não foi possível carregar o histórico de emails');
   }
 
-  return data || [];
+  return (data || []) as unknown as EmailLog[];
 }
 
 /**

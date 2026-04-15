@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../contexts/ToastContext';
 import { supabaseApi as api } from '../services/supabaseApi';
 import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { Button } from '../components/ui/Button';
 
 interface PlatformStats {
     totalBarbershops: number;
@@ -94,7 +95,7 @@ const BarbershopsList = styled.div`
 const BarbershopItem = styled.div`
   display: flex;
   align-items: center;
-  justify-content: between;
+  justify-content: space-between;
   padding: ${props => props.theme.spacing[4]};
   background: ${props => props.theme.colors.background.elevated};
   border: 1px solid ${props => props.theme.colors.border.primary};
@@ -177,51 +178,49 @@ const WelcomeSection = styled.div`
 `;
 
 const PlatformDashboardPage: React.FC = () => {
-    const { user } = useAuth();
+    const toast = useToastContext();
     const [data, setData] = useState<PlatformStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const loadPlatformData = async (showFeedback = false) => {
+        setLoading(true);
+        setRefreshing(true);
+        try {
+            const metrics = await api.getPlatformMetrics();
+            const recentBarbershops = await api.getPlatformBarbershopSummaries(5);
+            
+            const statsData: PlatformStats = {
+                totalBarbershops: metrics.totalBarbershops,
+                totalRevenue: metrics.monthlyRevenue,
+                activeSubscriptions: metrics.activeSubscriptions,
+                totalAppointments: metrics.todayAppointments,
+                recentBarbershops
+            };
+            
+            setData(statsData);
+            if (showFeedback) {
+                toast.success('Dados da plataforma atualizados.');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados da plataforma:', error);
+            const fallbackData: PlatformStats = {
+                totalBarbershops: 0,
+                totalRevenue: 0,
+                activeSubscriptions: 0,
+                totalAppointments: 0,
+                recentBarbershops: []
+            };
+            setData(fallbackData);
+            toast.error('Falha ao atualizar dados da plataforma.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchPlatformData = async () => {
-            setLoading(true);
-            try {
-                // Carregar métricas da plataforma do Supabase
-                const metrics = await api.getPlatformMetrics();
-                const barbershops = await api.getAllBarbershops();
-                
-                const mockData: PlatformStats = {
-                    totalBarbershops: metrics.totalBarbershops,
-                    totalRevenue: metrics.monthlyRevenue,
-                    activeSubscriptions: metrics.activeSubscriptions,
-                    totalAppointments: metrics.todayAppointments,
-                    recentBarbershops: barbershops.slice(0, 5).map(b => ({
-                        id: b.id,
-                        name: b.name,
-                        slug: b.slug,
-                        createdAt: new Date().toISOString().split('T')[0], // Placeholder
-                        status: 'active' as const,
-                        monthlyRevenue: Math.random() * 1000 // Placeholder
-                    }))
-                };
-                
-                setData(mockData);
-            } catch (error) {
-                console.error('Erro ao carregar dados da plataforma:', error);
-                // Fallback para dados mock em caso de erro
-                const fallbackData: PlatformStats = {
-                    totalBarbershops: 0,
-                    totalRevenue: 0,
-                    activeSubscriptions: 0,
-                    totalAppointments: 0,
-                    recentBarbershops: []
-                };
-                setData(fallbackData);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPlatformData();
+        void loadPlatformData();
     }, []);
 
     if (loading) {
@@ -246,6 +245,9 @@ const PlatformDashboardPage: React.FC = () => {
                             Gerencie todas as barbearias assinantes da sua plataforma
                         </Text>
                     </div>
+                    <Button $variant="secondary" onClick={() => void loadPlatformData(true)} disabled={refreshing}>
+                        {refreshing ? 'Atualizando...' : 'Recarregar Dados'}
+                    </Button>
                 </Flex>
             </WelcomeSection>
 
@@ -275,7 +277,7 @@ const PlatformDashboardPage: React.FC = () => {
                     <CardContent>
                         <StatsLabel>Receita Total</StatsLabel>
                         <StatsValue className="revenue">
-                            R$ {data?.totalRevenue?.toFixed(2) || '0,00'}
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data?.totalRevenue || 0)}
                         </StatsValue>
                         <Text $size="sm" $color="tertiary" style={{ marginTop: '0.5rem' }}>
                             receita mensal
@@ -302,7 +304,7 @@ const PlatformDashboardPage: React.FC = () => {
                             {data?.totalAppointments || 0}
                         </StatsValue>
                         <Text $size="sm" $color="tertiary" style={{ marginTop: '0.5rem' }}>
-                            este mês
+                            hoje
                         </Text>
                     </CardContent>
                 </StatsCard>
@@ -320,7 +322,7 @@ const PlatformDashboardPage: React.FC = () => {
             <Card $variant="elevated">
                 <CardContent>
                     <BarbershopsList>
-                        {data?.recentBarbershops.map((barbershop) => (
+                        {data?.recentBarbershops.length ? data.recentBarbershops.map((barbershop) => (
                             <BarbershopItem key={barbershop.id}>
                                 <BarbershopInfo>
                                     <BarbershopName>{barbershop.name}</BarbershopName>
@@ -336,14 +338,16 @@ const PlatformDashboardPage: React.FC = () => {
                                 </BarbershopInfo>
                                 <RevenueDisplay>
                                     <RevenueValue>
-                                        R$ {barbershop.monthlyRevenue.toFixed(2)}
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(barbershop.monthlyRevenue)}
                                     </RevenueValue>
                                     <Text $size="sm" $color="tertiary">
                                         /mês
                                     </Text>
                                 </RevenueDisplay>
                             </BarbershopItem>
-                        ))}
+                        )) : (
+                            <Text $color="tertiary">Nenhuma barbearia recente encontrada.</Text>
+                        )}
                     </BarbershopsList>
                 </CardContent>
             </Card>

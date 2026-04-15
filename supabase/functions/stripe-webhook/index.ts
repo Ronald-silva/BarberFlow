@@ -264,7 +264,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   // Get subscription from database
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('barbershop_id, stripe_customer_id')
+    .select('id, barbershop_id, stripe_customer_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single();
 
@@ -326,7 +326,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   // Get subscription from database
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('barbershop_id, stripe_customer_id')
+    .select('id, barbershop_id, stripe_customer_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single();
 

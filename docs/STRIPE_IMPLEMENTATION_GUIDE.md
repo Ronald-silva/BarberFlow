@@ -55,12 +55,6 @@ A integração do Stripe no Shafar permite:
 
 ### 2. Frontend (React/TypeScript)
 
-- **[src/config/stripe.ts](../src/config/stripe.ts)** - Configuração Stripe
-  - Inicialização do Stripe
-  - Formatação de preços
-  - Price IDs mapping
-  - Helper functions
-
 - **[src/services/subscriptionService.ts](../src/services/subscriptionService.ts)** - Service para assinaturas
   - Fetch plans
   - Gerenciar assinaturas
@@ -68,6 +62,8 @@ A integração do Stripe no Shafar permite:
   - Histórico de pagamentos
 
 - **[src/pages/PricingPage.tsx](../src/pages/PricingPage.tsx)** - Página de preços (já existia)
+  - Consome planos reais de `subscription_plans`
+  - Inicia checkout via Edge Function
 
 ### 3. Edge Functions (Supabase/Deno)
 

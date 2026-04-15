@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Plan } from '../types';
-import { SUBSCRIPTION_PLANS } from '../services/stripeService';
-import { PageContainer, Card, CardContent, Heading, Text, Grid, Flex } from '../components/ui/Container';
+import { createCheckoutSession, getSubscriptionPlans, SubscriptionPlan } from '../services/subscriptionService';
+import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../services/supabase';
 
@@ -12,24 +11,42 @@ const PricingPage: React.FC = () => {
   const { user, barbershop } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
 
   useEffect(() => {
-    if (user && barbershop) {
-      fetchCurrentSubscription();
-    }
+    void fetchPlans();
+  }, []);
+
+  useEffect(() => {
+    if (!user || !barbershop) return;
+    void fetchCurrentSubscription();
   }, [user, barbershop]);
+
+  const fetchPlans = async () => {
+    setPlansLoading(true);
+    try {
+      const activePlans = await getSubscriptionPlans();
+      setPlans(activePlans);
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+      alert('Erro ao carregar os planos. Tente novamente.');
+    } finally {
+      setPlansLoading(false);
+    }
+  };
 
   const fetchCurrentSubscription = async () => {
     if (!barbershop) return;
 
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('*, plan:plans(*)')
+      .select('*, plan:subscription_plans(*)')
       .eq('barbershop_id', barbershop.id)
       .in('status', ['active', 'trialing'])
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
       setCurrentSubscription(data);
@@ -46,25 +63,8 @@ const PricingPage: React.FC = () => {
     setSelectedPlan(planId);
 
     try {
-      // Criar sessão de checkout
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId,
-          barbershopId: barbershop.id,
-          successUrl: `${window.location.origin}/#/dashboard/overview?success=true`,
-          cancelUrl: `${window.location.origin}/#/pricing?canceled=true`,
-        }),
-      });
-
-      const { url } = await response.json();
-      
-      if (url) {
-        window.location.href = url;
-      }
+      const checkoutUrl = await createCheckoutSession(planId, 'monthly', barbershop.id);
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Erro ao criar checkout:', error);
       alert('Erro ao processar pagamento. Tente novamente.');
@@ -75,7 +75,7 @@ const PricingPage: React.FC = () => {
   };
 
   const formatPrice = (price: number) => {
-    return (price / 100).toLocaleString('pt-BR', {
+    return price.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });
@@ -95,7 +95,7 @@ const PricingPage: React.FC = () => {
       {currentSubscription && (
         <CurrentPlanBanner>
           <Text $weight="semibold">
-            📌 Plano Atual: {currentSubscription.plan.name}
+            📌 Plano Atual: {currentSubscription.plan?.name || 'Assinatura ativa'}
           </Text>
           <Text $size="sm" $color="tertiary">
             Válido até {new Date(currentSubscription.current_period_end).toLocaleDateString('pt-BR')}
@@ -103,10 +103,13 @@ const PricingPage: React.FC = () => {
         </CurrentPlanBanner>
       )}
 
+      {plansLoading ? (
+        <Text style={{ textAlign: 'center', marginTop: '3rem' }}>Carregando planos...</Text>
+      ) : (
       <Grid $columns={3} $responsive style={{ marginTop: '3rem' }}>
-        {SUBSCRIPTION_PLANS.map((plan) => {
+        {plans.map((plan) => {
           const isCurrentPlan = currentSubscription?.plan_id === plan.id;
-          const isPopular = plan.id === 'professional';
+          const isPopular = plan.slug === 'professional';
 
           return (
             <PlanCard
@@ -123,7 +126,7 @@ const PricingPage: React.FC = () => {
                 <PlanDescription>{plan.description}</PlanDescription>
 
                 <PriceSection>
-                  <Price>{formatPrice(plan.price)}</Price>
+                  <Price>{formatPrice(plan.price_monthly)}</Price>
                   <PriceInterval>/mês</PriceInterval>
                 </PriceSection>
 
@@ -154,6 +157,7 @@ const PricingPage: React.FC = () => {
           );
         })}
       </Grid>
+      )}
 
       <FAQSection>
         <Heading $level={2} style={{ textAlign: 'center', marginBottom: '2rem' }}>

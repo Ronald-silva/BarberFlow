@@ -452,7 +452,7 @@ const SettingsPage: React.FC = () => {
             <SettingsForm onSubmit={handleBarbershopSubmit}>
               <Grid $columns={2} $responsive>
                 <FormGroup>
-                  <Label htmlFor="barbershopName" required>
+                  <Label htmlFor="barbershopName" $required>
                     Nome da Barbearia
                   </Label>
                   <Input

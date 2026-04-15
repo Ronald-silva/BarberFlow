@@ -131,9 +131,8 @@ const App: React.FC = () => {
                       <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
                     </Route>
                   </Routes>
-                  <Footer />
-                  <CookieConsent />
                 </LazyLoad>
+                <CookieConsent />
               </AuthProvider>
             </HashRouter>
           </ThemeProvider>

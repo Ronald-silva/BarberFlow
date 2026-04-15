@@ -151,7 +151,26 @@ const InfoBox = styled.div`
   border-radius: ${props => props.theme.radii.md};
 `;
 
-export function TermsOfServicePage() {
+const NoMarginParagraph = styled.p`
+  margin-bottom: 0;
+`;
+
+const TightList = styled.ul`
+  margin-bottom: 0;
+`;
+
+const FinalNote = styled.p`
+  text-align: center;
+  margin-top: ${props => props.theme.spacing[12]};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  color: #999;
+`;
+
+const FinalNoteCompact = styled(FinalNote)`
+  margin-top: ${props => props.theme.spacing[2]};
+`;
+
+export default function TermsOfServicePage() {
   const navigate = useNavigate();
 
   return (
@@ -167,11 +186,11 @@ export function TermsOfServicePage() {
       <Content>
         <h2>1. ACEITAÇÃO DOS TERMOS</h2>
         <WarningBox>
-          <p style={{ marginBottom: 0 }}>
+          <NoMarginParagraph>
             <strong>Atenção:</strong> Ao se cadastrar, acessar ou utilizar a Plataforma Shafar,
             você declara ter lido e concordado com todos os termos deste documento. Se você{' '}
             <strong>não concordar</strong>, não utilize a Plataforma.
-          </p>
+          </NoMarginParagraph>
         </WarningBox>
 
         <p>
@@ -189,7 +208,7 @@ export function TermsOfServicePage() {
           <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
           <p><strong>E-mail:</strong> contato@shafar.com.br</p>
           <p><strong>Telefone:</strong> [INSERIR TELEFONE]</p>
-          <p style={{ marginBottom: 0 }}><strong>Website:</strong> https://shafar.com.br</p>
+          <NoMarginParagraph><strong>Website:</strong> https://shafar.com.br</NoMarginParagraph>
         </InfoBox>
 
         <hr />
@@ -254,12 +273,12 @@ export function TermsOfServicePage() {
         <h3>4.2. Responsabilidade pela Conta</h3>
         <WarningBox>
           <p><strong>Você é totalmente responsável por:</strong></p>
-          <ul style={{ marginBottom: 0 }}>
+          <TightList>
             <li>Manter sigilo de sua senha</li>
             <li>Todas as atividades realizadas em sua conta</li>
             <li>Notificar imediatamente qualquer uso não autorizado</li>
             <li>Não compartilhar sua conta com terceiros</li>
-          </ul>
+          </TightList>
         </WarningBox>
 
         <p>
@@ -322,12 +341,12 @@ export function TermsOfServicePage() {
         <h3>5.2. Período de Teste (Trial)</h3>
         <InfoBox>
           <p><strong>Oferecemos 14 dias de teste gratuito para novos usuários:</strong></p>
-          <ul style={{ marginBottom: 0 }}>
+          <TightList>
             <li>Acesso completo a todas as funcionalidades</li>
             <li>Sem necessidade de cartão de crédito</li>
             <li>Sem compromisso de continuidade</li>
             <li>Após 14 dias, será necessário assinar um plano para continuar</li>
-          </ul>
+          </TightList>
         </InfoBox>
 
         <h3>5.3. Cobrança Recorrente</h3>
@@ -378,7 +397,7 @@ export function TermsOfServicePage() {
         <h3>6.2. Condutas Proibidas</h3>
         <WarningBox>
           <p><strong>É estritamente proibido:</strong></p>
-          <ul style={{ marginBottom: 0 }}>
+          <TightList>
             <li><strong>Uso fraudulento:</strong> Criar contas com dados falsos, usar cartões de terceiros</li>
             <li><strong>Violação de direitos:</strong> Infringir direitos autorais, marcas, patentes</li>
             <li><strong>Conteúdo ilegal:</strong> Publicar conteúdo ofensivo, discriminatório, pornográfico</li>
@@ -387,7 +406,7 @@ export function TermsOfServicePage() {
             <li><strong>Engenharia reversa:</strong> Descompilar ou fazer engenharia reversa do código</li>
             <li><strong>Revenda:</strong> Revender ou sublicenciar acesso à Plataforma</li>
             <li><strong>Compartilhamento de conta:</strong> Permitir acesso de terceiros não autorizados</li>
-          </ul>
+          </TightList>
         </WarningBox>
 
         <h3>6.3. Consequências de Violação</h3>
@@ -502,9 +521,9 @@ export function TermsOfServicePage() {
         </ul>
 
         <WarningBox>
-          <p style={{ marginBottom: 0 }}>
+          <NoMarginParagraph>
             <strong>Importante:</strong> Exporte seus dados antes de cancelar a conta!
-          </p>
+          </NoMarginParagraph>
         </WarningBox>
 
         <hr />
@@ -536,7 +555,7 @@ export function TermsOfServicePage() {
           <p><strong>E-mail jurídico:</strong> legal@shafar.com.br</p>
           <p><strong>Telefone:</strong> [INSERIR TELEFONE]</p>
           <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
-          <p style={{ marginBottom: 0 }}><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h</p>
+          <NoMarginParagraph><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h</NoMarginParagraph>
         </InfoBox>
 
         <hr />
@@ -544,25 +563,25 @@ export function TermsOfServicePage() {
         <h2>12. CONSENTIMENTO</h2>
         <WarningBox>
           <p><strong>Ao clicar em "Aceitar Termos" ou utilizar a Plataforma, você declara que:</strong></p>
-          <ul style={{ marginBottom: 0 }}>
+          <TightList>
             <li>Leu e compreendeu integralmente estes Termos de Uso</li>
             <li>Leu e compreendeu a Política de Privacidade</li>
             <li>Concorda com todas as disposições aqui previstas</li>
             <li>Tem capacidade legal para contratar</li>
             <li>Forneceu informações verdadeiras e precisas</li>
             <li>Compromete-se a utilizar a Plataforma de forma responsável e legal</li>
-          </ul>
+          </TightList>
         </WarningBox>
 
         <hr />
 
-        <p style={{ textAlign: 'center', marginTop: '3rem', fontSize: '0.875rem', color: '#999' }}>
+        <FinalNote>
           <strong>Última atualização: 30 de dezembro de 2025 | Versão 1.0</strong>
-        </p>
+        </FinalNote>
 
-        <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#999' }}>
+        <FinalNoteCompact>
           © 2025 Shafar. Todos os direitos reservados.
-        </p>
+        </FinalNoteCompact>
       </Content>
 
       <BackButton onClick={() => navigate(-1)}>

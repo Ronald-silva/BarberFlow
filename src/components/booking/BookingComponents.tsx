@@ -380,6 +380,9 @@ export const ReviewSection = styled.div`
 `;
 
 export const ReviewSectionTitle = styled.h4`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: ${props => props.theme.typography.fontSizes.sm};
   font-weight: ${props => props.theme.typography.fontWeights.semibold};
   color: ${props => props.theme.colors.text.tertiary};
@@ -568,4 +571,20 @@ export const PaymentPlanBadge = styled.div<{ required?: boolean }>`
   color: ${props => props.required ? '#EF4444' : '#8B5CF6'};
   font-weight: ${props => props.theme.typography.fontWeights.semibold};
   margin-top: ${props => props.theme.spacing[2]};
+`;
+
+export const InlineInfoBox = styled.div`
+  margin-bottom: ${props => props.theme.spacing[6]};
+  padding: ${props => props.theme.spacing[4]};
+  background-color: rgba(212, 175, 55, 0.1);
+  border-radius: ${props => props.theme.radii.lg};
+  border: 1px solid rgba(212, 175, 55, 0.3);
+`;
+
+export const SuccessStatusCard = styled.div`
+  background: rgba(0, 195, 120, 0.06);
+  border: 1px solid rgba(0, 195, 120, 0.2);
+  border-radius: ${props => props.theme.radii.xl};
+  padding: ${props => props.theme.spacing[5]};
+  text-align: center;
 `;

@@ -2,6 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/supabaseApi';
 import { Client } from '../types';
+
+export type CreateClientPayload = Omit<Client, 'id' | 'lastVisit'> & { lastVisit?: string };
 import { logError } from '../utils/errors';
 
 // Query keys
@@ -21,7 +23,7 @@ export function useClients(barbershopId?: string) {
     queryKey: clientKeys.list(barbershopId),
     queryFn: async () => {
       try {
-        const clients = await api.getClients(barbershopId);
+        const clients = await api.getClientsByBarbershop(barbershopId!);
         return clients;
       } catch (error) {
         logError(error, 'useClients');
@@ -58,7 +60,7 @@ export function useCreateClient() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: CreateClientPayload) => {
       try {
         const client = await api.createClient(data);
         return client;

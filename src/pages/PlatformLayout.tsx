@@ -34,12 +34,24 @@ const MobileHeader = styled.header`
 `;
 
 const MobileLogo = styled.div`
-  font-size: ${props => props.theme.typography.fontSizes.xl};
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  img {
+    height: 28px;
+    width: auto;
+    border-radius: 7px;
+  }
+  
+  span {
+    font-size: ${props => props.theme.typography.fontSizes.xl};
+    font-weight: ${props => props.theme.typography.fontWeights.bold};
+    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 `;
 
 const MenuButton = styled.button`
@@ -104,15 +116,28 @@ const Sidebar = styled.aside<{ $isOpen?: boolean }>`
 `;
 
 const Logo = styled.div`
-  font-size: ${props => props.theme.typography.fontSizes['2xl']};
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: ${props => props.theme.spacing[2]};
   text-align: center;
-  letter-spacing: -0.01em;
+  justify-content: center;
+  
+  img {
+    height: 36px;
+    width: auto;
+    border-radius: 9px;
+  }
+  
+  span {
+    font-size: ${props => props.theme.typography.fontSizes['2xl']};
+    font-weight: ${props => props.theme.typography.fontWeights.bold};
+    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.01em;
+  }
 `;
 
 const PlatformBadge = styled.div`
@@ -341,7 +366,10 @@ const PlatformLayout: React.FC = () => {
     return (
         <LayoutContainer>
             <MobileHeader>
-                <MobileLogo>Shafar Platform</MobileLogo>
+                <MobileLogo>
+                    <img src="/logo.png" alt="Shafar" />
+                    <span>Plataforma Shafar</span>
+                </MobileLogo>
                 <MenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
                 </MenuButton>
@@ -350,8 +378,11 @@ const PlatformLayout: React.FC = () => {
             <MobileOverlay $isOpen={isMobileMenuOpen} onClick={closeMobileMenu} />
 
             <Sidebar $isOpen={isMobileMenuOpen} className="slide-in">
-                <Logo>Shafar</Logo>
-                <PlatformBadge>Platform Admin</PlatformBadge>
+                <Logo>
+                    <img src="/logo.png" alt="Shafar" />
+                    <span>Shafar</span>
+                </Logo>
+                <PlatformBadge>Admin da Plataforma</PlatformBadge>
                 
                 <Navigation>
                     {navItems.map(item => (
@@ -377,7 +408,7 @@ const PlatformLayout: React.FC = () => {
                         <UserName>{user.name}</UserName>
                         <UserEmail>{user.email}</UserEmail>
                         <Text $size="xs" $color="tertiary" style={{ marginTop: '0.25rem' }}>
-                            Platform Administrator
+                            Administrador da Plataforma
                         </Text>
                     </UserInfo>
                 </UserSection>

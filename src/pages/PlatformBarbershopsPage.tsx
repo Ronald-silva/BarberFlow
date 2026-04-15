@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { supabaseApi as api } from '../services/supabaseApi';
+import { useToastContext } from '../contexts/ToastContext';
 import { Barbershop } from '../types';
 import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { Button } from '../components/ui/Button';
 
 // Styled Components
 const BarbershopCard = styled(Card)`
@@ -61,7 +63,7 @@ const BarbershopMeta = styled.div`
 
 const MetaItem = styled.div`
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
 `;
 
@@ -137,24 +139,32 @@ const EmptyState = styled.div`
 `;
 
 const PlatformBarbershopsPage: React.FC = () => {
+    const toast = useToastContext();
     const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const fetchBarbershops = async () => {
-            setLoading(true);
-            try {
-                const data = await api.getAllBarbershops();
-                setBarbershops(data);
-            } catch (error) {
-                console.error('Erro ao carregar barbearias:', error);
-            } finally {
-                setLoading(false);
+    const loadBarbershops = async (showFeedback = false) => {
+        setLoading(true);
+        setRefreshing(true);
+        try {
+            const data = await api.getAllBarbershops();
+            setBarbershops(data);
+            if (showFeedback) {
+                toast.success('Lista de barbearias atualizada.');
             }
-        };
+        } catch (error) {
+            console.error('Erro ao carregar barbearias:', error);
+            toast.error('Falha ao carregar barbearias.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
-        fetchBarbershops();
+    useEffect(() => {
+        void loadBarbershops();
     }, []);
 
     const filteredBarbershops = barbershops.filter(barbershop =>
@@ -189,9 +199,14 @@ const PlatformBarbershopsPage: React.FC = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <Text $size="sm" $color="tertiary">
-                        {filteredBarbershops.length} barbearia{filteredBarbershops.length !== 1 ? 's' : ''} encontrada{filteredBarbershops.length !== 1 ? 's' : ''}
-                    </Text>
+                    <Flex $align="center" style={{ gap: '0.75rem' }}>
+                        <Text $size="sm" $color="tertiary">
+                            {filteredBarbershops.length} barbearia{filteredBarbershops.length !== 1 ? 's' : ''} encontrada{filteredBarbershops.length !== 1 ? 's' : ''}
+                        </Text>
+                        <Button $variant="secondary" onClick={() => void loadBarbershops(true)} disabled={refreshing}>
+                            {refreshing ? 'Atualizando...' : 'Recarregar'}
+                        </Button>
+                    </Flex>
                 </Flex>
             </div>
 
@@ -234,7 +249,7 @@ const PlatformBarbershopsPage: React.FC = () => {
                                         <BarbershopSlug>/{barbershop.slug}</BarbershopSlug>
                                     </BarbershopInfo>
                                     <StatusBadge $status="active">
-                                        Ativo
+                                        Ativa
                                     </StatusBadge>
                                 </BarbershopHeader>
 
@@ -252,7 +267,7 @@ const PlatformBarbershopsPage: React.FC = () => {
                                     <MetaItem>
                                         <MetaLabel>Status:</MetaLabel>
                                         <MetaValue style={{ color: '#10B981' }}>
-                                            Assinatura Ativa
+                                            Operação ativa
                                         </MetaValue>
                                     </MetaItem>
                                 </BarbershopMeta>

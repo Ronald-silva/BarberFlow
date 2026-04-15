@@ -143,7 +143,19 @@ const ContactBox = styled.div`
   border-radius: ${props => props.theme.radii.md};
 `;
 
-export function PrivacyPolicyPage() {
+const FinalNote = styled.p`
+  text-align: center;
+  margin-top: ${props => props.theme.spacing[12]};
+  color: #666;
+`;
+
+const CopyrightNote = styled.p`
+  text-align: center;
+  font-size: ${props => props.theme.typography.fontSizes.sm};
+  color: #999;
+`;
+
+export default function PrivacyPolicyPage() {
   const navigate = useNavigate();
 
   return (
@@ -490,16 +502,16 @@ export function PrivacyPolicyPage() {
 
         <hr />
 
-        <p style={{ textAlign: 'center', marginTop: '3rem', color: '#666' }}>
+        <FinalNote>
           <strong>
             Ao utilizar o Shafar, você declara ter lido, compreendido e concordado com esta
             Política de Privacidade.
           </strong>
-        </p>
+        </FinalNote>
 
-        <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#999' }}>
+        <CopyrightNote>
           © 2025 Shafar. Todos os direitos reservados.
-        </p>
+        </CopyrightNote>
       </Content>
 
       <BackButton onClick={() => navigate(-1)}>

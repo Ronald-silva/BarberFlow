@@ -1,3 +1,9 @@
+export type {
+  BarbershopPaymentSettings,
+  CheckoutMethod,
+  CheckoutOrderInput,
+  CheckoutProviderId,
+} from './barbershopPayments';
 
 export enum UserRole {
   PLATFORM_ADMIN = 'platform_admin',

@@ -53,7 +53,10 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 4. Get authenticated user from request
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Não autorizado');
+    }
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
@@ -61,31 +64,51 @@ serve(async (req) => {
       throw new Error('Não autorizado');
     }
 
-    // 5. Parse request body
-    const { barbershop_id } = await req.json();
+    // 5. Parse request body (aceita snake_case e camelCase)
+    const body = await req.json();
+    const barbershopId = body.barbershop_id || body.barbershopId;
+    const returnUrl = body.return_url || body.returnUrl;
 
-    if (!barbershop_id) {
+    if (!barbershopId) {
       throw new Error('barbershop_id é obrigatório');
     }
 
-    // 6. Get Stripe customer ID from database
+    // 6. Validate user access to barbershop
+    const { data: requester, error: requesterError } = await supabaseAdmin
+      .from('users')
+      .select('barbershop_id, role')
+      .eq('id', user.id)
+      .single();
+
+    if (requesterError || !requester) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    if (
+      requester.role !== 'platform_admin' &&
+      requester.barbershop_id !== barbershopId
+    ) {
+      throw new Error('Sem permissão para esta barbearia');
+    }
+
+    // 7. Get Stripe customer ID from database
     const { data: stripeCustomer, error: customerError } = await supabaseAdmin
       .from('stripe_customers')
       .select('stripe_customer_id')
-      .eq('barbershop_id', barbershop_id)
+      .eq('barbershop_id', barbershopId)
       .single();
 
     if (customerError || !stripeCustomer) {
       throw new Error('Cliente Stripe não encontrado. Faça uma assinatura primeiro.');
     }
 
-    // 7. Create Customer Portal Session
+    // 8. Create Customer Portal Session
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomer.stripe_customer_id,
-      return_url: `${req.headers.get('origin')}/dashboard/subscription`,
+      return_url: returnUrl || `${req.headers.get('origin')}/#/dashboard/settings`,
     });
 
-    // 8. Return session URL
+    // 9. Return session URL
     return new Response(
       JSON.stringify({
         url: session.url,

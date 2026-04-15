@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { Json } from './supabase';
 
 /**
  * Tipos de consentimento LGPD
@@ -81,7 +82,7 @@ export async function logConsent({
         // Frontend não consegue obter IP real devido a NAT/proxies
         ip_address: null,
         user_agent: userAgent,
-        device_info: deviceInfo,
+        device_info: JSON.parse(JSON.stringify(deviceInfo)) as Json,
       })
       .select('id')
       .single();
@@ -94,13 +95,13 @@ export async function logConsent({
     }
 
     console.log('[ConsentLogger] Consentimento registrado:', {
-      id: data.id,
+      id: data?.id,
       type: consentType,
       version,
       action: consentAction,
     });
 
-    return data.id;
+    return data?.id ?? null;
   } catch (err) {
     console.error('[ConsentLogger] Erro inesperado ao registrar consentimento:', err);
     // Não bloquear cadastro por erro de log

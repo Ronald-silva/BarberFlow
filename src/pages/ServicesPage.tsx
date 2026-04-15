@@ -427,7 +427,7 @@ const ServicesPage: React.FC = () => {
             )}
 
             <FormGroup>
-              <Label htmlFor="serviceName" required>
+              <Label htmlFor="serviceName" $required>
                 Nome do Serviço
               </Label>
               <Input
@@ -444,7 +444,7 @@ const ServicesPage: React.FC = () => {
             </FormGroup>
 
             <FormGroup>
-              <Label htmlFor="servicePrice" required>
+              <Label htmlFor="servicePrice" $required>
                 Preço (R$)
               </Label>
               <Input
@@ -463,7 +463,7 @@ const ServicesPage: React.FC = () => {
             </FormGroup>
 
             <FormGroup>
-              <Label htmlFor="serviceDuration" required>
+              <Label htmlFor="serviceDuration" $required>
                 Duração (minutos)
               </Label>
               <Input

@@ -43,7 +43,8 @@ export function ErrorBoundary({ children }: ErrorBoundaryProps) {
     logError(error, 'ErrorBoundary');
     console.error('Component Stack:', info.componentStack);
 
-    // TODO: Enviar para Sentry
+    // Sentry integration available in src/lib/sentry.ts
+    // Uncomment when Sentry is configured:
     // Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
   };
 

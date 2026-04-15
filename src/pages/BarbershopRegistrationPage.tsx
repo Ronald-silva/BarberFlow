@@ -1,622 +1,588 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import InputField from "../components/ui/InputField";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Heading,
-  Text,
-  Flex,
-} from "../components/ui/Container";
 import { supabase } from "../services/supabase";
+import type { Database } from "../services/supabase";
 import { logMultipleConsents } from "../services/consentLogger";
 
-const RegistrationContainer = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(
-    135deg,
-    ${(props) => props.theme.colors.background.primary} 0%,
-    ${(props) => props.theme.colors.background.secondary} 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: ${(props) => props.theme.spacing[4]};
+// ============================================================
+// SHAFAR — Registration Page v2.0
+// Mobile-first, 2-step wizard, premium dark aesthetic
+// ============================================================
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
-const RegistrationCard = styled(Card)`
-  width: 100%;
-  max-width: 500px;
-  box-shadow: ${(props) => props.theme.shadows.xl};
+const Page = styled.div`
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #0D0D0D;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.25rem 1.25rem 4rem;
+  position: relative;
+  overflow-x: hidden;
 
-  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
-    max-width: 100%;
-    margin: 0;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(200, 146, 42, 0.045) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, black, transparent);
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    padding: 2.5rem 1.25rem 5rem;
+    justify-content: center;
   }
 `;
 
-const StepIndicator = styled.div<{ $active: boolean }>`
-  width: 32px;
-  height: 32px;
-  border-radius: ${(props) => props.theme.radii.full};
-  background: ${(props) =>
-    props.$active
-      ? props.theme.colors.primary
-      : props.theme.colors.background.tertiary};
-  color: ${(props) =>
-    props.$active
-      ? props.theme.colors.text.inverse
-      : props.theme.colors.text.tertiary};
+/* ===== TOP NAV STRIP ===== */
+const TopBar = styled.div`
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+
+  @media (min-width: 768px) {
+    margin-bottom: 2.5rem;
+  }
+`;
+
+const LogoText = styled.div`
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+const BackBtn = styled.button`
+  background: none;
+  border: none;
+  color: #6B6B6B;
+  font-size: 0.875rem;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0;
+  transition: color 150ms;
+  min-height: auto;
+
+  &:hover { color: #ABABAB; }
+`;
+
+/* ===== CARD ===== */
+const Card = styled.div`
+  width: 100%;
+  max-width: 520px;
+  background: #141414;
+  border: 1px solid #1E1E1E;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: ${slideUp} 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+`;
+
+const CardHead = styled.div`
+  padding: 2rem 2rem 1.5rem;
+  border-bottom: 1px solid #1A1A1A;
+`;
+
+const StepTrack = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1.75rem;
+`;
+
+const StepDot = styled.div<{ $state: 'done' | 'active' | 'idle' }>`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
-  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 300ms ease;
+
+  ${p => p.$state === 'done' && `
+    background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%);
+    color: #0D0D0D;
+    box-shadow: 0 4px 12px rgba(200, 146, 42, 0.4);
+  `}
+  ${p => p.$state === 'active' && `
+    background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%);
+    color: #0D0D0D;
+    box-shadow: 0 4px 16px rgba(200, 146, 42, 0.5);
+  `}
+  ${p => p.$state === 'idle' && `
+    background: #1E1E1E;
+    color: #4A4A4A;
+    border: 1px solid #2A2A2A;
+  `}
 `;
 
-const StepContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${(props) => props.theme.spacing[3]};
-  margin-bottom: ${(props) => props.theme.spacing[6]};
-`;
-
-const StepLine = styled.div<{ $completed: boolean }>`
+const StepBar = styled.div<{ $filled: boolean }>`
   flex: 1;
   height: 2px;
-  background: ${(props) =>
-    props.$completed
-      ? props.theme.colors.primary
-      : props.theme.colors.border.primary};
-  border-radius: ${(props) => props.theme.radii.full};
+  background: ${p => p.$filled
+    ? 'linear-gradient(90deg, #C8922A 0%, #E8B84B 100%)'
+    : '#1E1E1E'};
+  transition: background 400ms ease;
+  margin: 0 8px;
 `;
 
-const CheckboxContainer = styled.div`
+const StepLabel = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: ${(props) => props.theme.spacing[3]};
-  margin-bottom: ${(props) => props.theme.spacing[4]};
+  justify-content: space-between;
+  margin-bottom: 0;
 `;
 
-const Checkbox = styled.input`
-  margin-top: 4px;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
-`;
+const HeadTitle = styled.h1`
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #F5F5F5;
+  margin-bottom: 0.375rem;
 
-const CheckboxLabel = styled.label`
-  font-size: ${(props) => props.theme.typography.fontSizes.sm};
-  color: ${(props) => props.theme.colors.text.secondary};
-  cursor: pointer;
-  line-height: 1.6;
-
-  a {
-    color: ${(props) => props.theme.colors.primary};
-    text-decoration: none;
-    font-weight: 500;
-
-    &:hover {
-      text-decoration: underline;
-    }
+  @media (min-width: 480px) {
+    font-size: 1.5rem;
   }
 `;
 
-const LegalNotice = styled.div`
-  background: ${(props) => props.theme.colors.background.secondary};
-  border-left: 3px solid ${(props) => props.theme.colors.primary};
-  padding: ${(props) => props.theme.spacing[4]};
-  border-radius: ${(props) => props.theme.radii.md};
-  margin-bottom: ${(props) => props.theme.spacing[4]};
-  font-size: ${(props) => props.theme.typography.fontSizes.sm};
-  color: ${(props) => props.theme.colors.text.secondary};
+const HeadSub = styled.p`
+  font-size: 0.875rem;
+  color: #6B6B6B;
 `;
 
-interface BarbershopData {
-  name: string;
-  slug: string;
-  address: string;
-  phone: string;
-  email: string;
-}
+/* ===== FORM BODY ===== */
+const FormBody = styled.div`
+  padding: 1.75rem 2rem;
+  animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+`;
 
+const FieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+`;
+
+const Field = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+`;
+
+const Label = styled.label`
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #ABABAB;
+  letter-spacing: 0.01em;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: #0D0D0D;
+  border: 1px solid #2A2A2A;
+  border-radius: 12px;
+  color: #F5F5F5;
+  font-size: 0.9375rem;
+  font-family: "Inter", sans-serif;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  min-height: 52px;
+
+  &::placeholder { color: #3D3D3D; }
+
+  &:focus {
+    border-color: rgba(200, 146, 42, 0.5);
+    box-shadow: 0 0 0 3px rgba(200, 146, 42, 0.1);
+    outline: none;
+  }
+
+  &:hover:not(:focus) { border-color: #363636; }
+`;
+
+const HelperText = styled.p`
+  font-size: 0.75rem;
+  color: #4A4A4A;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+`;
+
+/* ===== LEGAL SECTION ===== */
+const LegalBox = styled.div`
+  background: rgba(200, 146, 42, 0.04);
+  border: 1px solid rgba(200, 146, 42, 0.12);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+`;
+
+const LegalTitle = styled.p`
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #ABABAB;
+  margin-bottom: 0.375rem;
+`;
+
+const LegalDesc = styled.p`
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+`;
+
+const ConsentItem = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: #0D0D0D;
+  border: 1px solid #1E1E1E;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+  margin-bottom: 0.625rem;
+
+  &:hover { border-color: #2A2A2A; }
+
+  &:last-child { margin-bottom: 0; }
+`;
+
+const CustomCheckbox = styled.div<{ $checked: boolean }>`
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 6px;
+  border: 1.5px solid ${p => p.$checked ? '#C8922A' : '#2A2A2A'};
+  background: ${p => p.$checked ? 'linear-gradient(135deg, #C8922A 0%, #E8B84B 100%)' : 'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #0D0D0D;
+  font-weight: 900;
+  transition: all 200ms ease;
+  margin-top: 1px;
+  box-shadow: ${p => p.$checked ? '0 2px 8px rgba(200, 146, 42, 0.35)' : 'none'};
+`;
+
+const ConsentText = styled.span`
+  font-size: 0.875rem;
+  color: #6B6B6B;
+  line-height: 1.55;
+
+  a {
+    color: #C8922A;
+    text-decoration: none;
+    font-weight: 600;
+    &:hover { color: #E8B84B; }
+  }
+`;
+
+/* ===== FOOTER ACTIONS ===== */
+const Actions = styled.div`
+  padding: 1.25rem 2rem 1.75rem;
+  border-top: 1px solid #1A1A1A;
+  display: flex;
+  gap: 0.75rem;
+`;
+
+const ErrorAlert = styled.div`
+  margin: 0 2rem 1rem;
+  padding: 0.875rem 1rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #EF4444;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+`;
+
+/* ===== COMPONENT ===== */
+interface BarbershopData {
+  name: string; slug: string; address: string; phone: string; email: string;
+}
 interface AdminData {
-  name: string;
-  email: string;
-  password: string;
+  name: string; email: string; password: string;
 }
 
 const BarbershopRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
-  const [barbershopData, setBarbershopData] = useState<BarbershopData>({
-    name: "",
-    slug: "",
-    address: "",
-    phone: "",
-    email: "",
-  });
+  const [shop, setShop] = useState<BarbershopData>({ name: "", slug: "", address: "", phone: "", email: "" });
+  const [admin, setAdmin] = useState<AdminData>({ name: "", email: "", password: "" });
 
-  const [adminData, setAdminData] = useState<AdminData>({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const generateSlug = (name: string) =>
+    name.toLowerCase().normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-").trim();
 
-  // Auto-generate slug from name
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove accents
-      .replace(/[^a-z0-9\s-]/g, "") // Remove special chars
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/-+/g, "-") // Replace multiple hyphens
-      .trim();
-  };
-
-  const handleBarbershopChange = (
-    field: keyof BarbershopData,
-    value: string
-  ) => {
-    setBarbershopData((prev) => {
-      const updated = { ...prev, [field]: value };
-
-      // Auto-generate slug when name changes
-      if (field === "name") {
-        updated.slug = generateSlug(value);
-      }
-
-      return updated;
+  const handleShopChange = (field: keyof BarbershopData, value: string) => {
+    setShop(prev => {
+      const u = { ...prev, [field]: value };
+      if (field === "name") u.slug = generateSlug(value);
+      return u;
     });
   };
 
-  const handleAdminChange = (field: keyof AdminData, value: string) => {
-    setAdminData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const validateStep1 = () => {
-    return (
-      barbershopData.name &&
-      barbershopData.slug &&
-      barbershopData.address &&
-      barbershopData.phone &&
-      barbershopData.email
-    );
-  };
-
-  const validateStep2 = () => {
-    return (
-      adminData.name &&
-      adminData.email &&
-      adminData.password.length >= 6 &&
-      acceptedTerms &&
-      acceptedPrivacy
-    );
-  };
-
-  const handleNextStep = () => {
-    if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
-    }
-  };
+  const step1Valid = shop.name && shop.slug && shop.address && shop.phone && shop.email;
+  const step2Valid = admin.name && admin.email && admin.password.length >= 6 && acceptedTerms && acceptedPrivacy;
 
   const handleSubmit = async () => {
-    if (!validateStep2()) return;
-
+    if (!step2Valid) return;
     setLoading(true);
     setError("");
 
     try {
-      // Check if slug already exists
-      const { data: existingSlug } = await supabase
-        .from("barbershops")
-        .select("slug")
-        .eq("slug", barbershopData.slug)
-        .maybeSingle();
+      const { data: existingSlug } = await supabase.from("barbershops").select("slug").eq("slug", shop.slug).maybeSingle();
+      if (existingSlug) { setError("Esta URL já está em uso. Escolha outra."); setLoading(false); return; }
 
-      if (existingSlug) {
-        setError(
-          "Esta URL já está em uso. Escolha outra URL para sua barbearia."
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Check if email already exists
-      const { data: existingEmail } = await supabase
-        .from("barbershops")
-        .select("email")
-        .eq("email", barbershopData.email)
-        .maybeSingle();
-
-      if (existingEmail) {
-        setError(
-          "Este email já está cadastrado. Use outro email para sua barbearia."
-        );
-        setLoading(false);
-        return;
-      }
-
-      // 1. Create barbershop
-      const { data: barbershop, error: barbershopError } = await supabase
-        .from("barbershops")
-        .insert([
-          {
-            name: barbershopData.name,
-            slug: barbershopData.slug,
-            address: barbershopData.address,
-            phone: barbershopData.phone,
-            email: barbershopData.email,
-          },
-        ])
+      const insertBarbershop: Database['public']['Tables']['barbershops']['Insert'] = {
+        name: shop.name,
+        slug: shop.slug,
+        address: shop.address,
+        phone: shop.phone,
+        email: shop.email,
+      };
+      const { data: barbershop, error: bErr } = await supabase
+        .from('barbershops')
+        .insert(insertBarbershop)
         .select()
         .single();
 
-      if (barbershopError) {
-        if (barbershopError.code === "23505") {
-          if (barbershopError.message.includes("slug")) {
-            setError(
-              "Esta URL já está em uso. Escolha outra URL para sua barbearia."
-            );
-          } else if (barbershopError.message.includes("email")) {
-            setError(
-              "Este email já está cadastrado. Use outro email para sua barbearia."
-            );
-          } else {
-            setError(
-              "Dados duplicados. Verifique se a barbearia já não está cadastrada."
-            );
-          }
-        } else {
-          setError("Erro ao criar barbearia. Tente novamente.");
-        }
-        setLoading(false);
-        return;
-      }
+      if (bErr) throw bErr;
+      if (!barbershop) throw new Error('Falha ao criar barbearia');
 
-      // 2. Create admin user in Supabase Auth
-      const { data: authUser, error: authError } = await supabase.auth.signUp({
-        email: adminData.email,
-        password: adminData.password,
-        options: {
-          emailRedirectTo: window.location.origin + '/login',
-          data: {
-            name: adminData.name,
-            barbershop_id: barbershop.id,
-            role: "admin",
-          },
-        },
+      const { data: authUser, error: authErr } = await supabase.auth.signUp({
+        email: admin.email, password: admin.password,
+        options: { emailRedirectTo: window.location.origin + '/login', data: { name: admin.name, barbershop_id: barbershop.id, role: "admin" } },
       });
 
-      if (authError) {
-        console.error('Erro ao criar usuário no Supabase Auth:', authError);
-        throw authError;
-      }
+      if (authErr) throw authErr;
+      if (!authUser.user) throw new Error('Falha ao criar usuário');
 
-      if (!authUser.user) {
-        throw new Error('Usuário não foi criado no Supabase Auth');
-      }
+      const insertUser: Database['public']['Tables']['users']['Insert'] = {
+        id: authUser.user.id,
+        email: admin.email,
+        name: admin.name,
+        barbershop_id: barbershop.id,
+        role: 'admin',
+        work_hours: [
+          { day: 1, start: '09:00', end: '18:00' }, { day: 2, start: '09:00', end: '18:00' },
+          { day: 3, start: '09:00', end: '18:00' }, { day: 4, start: '09:00', end: '18:00' },
+          { day: 5, start: '09:00', end: '20:00' }, { day: 6, start: '08:00', end: '16:00' },
+        ],
+      };
+      const { error: uErr } = await supabase.from('users').insert(insertUser);
 
-      // 3. Create user record in users table
-      const { error: userError } = await supabase.from("users").insert([
-        {
-          id: authUser.user?.id,
-          email: adminData.email,
-          name: adminData.name,
-          barbershop_id: barbershop.id,
-          role: "admin",
-          work_hours: [
-            { day: 1, start: "09:00", end: "18:00" },
-            { day: 2, start: "09:00", end: "18:00" },
-            { day: 3, start: "09:00", end: "18:00" },
-            { day: 4, start: "09:00", end: "18:00" },
-            { day: 5, start: "09:00", end: "20:00" },
-            { day: 6, start: "08:00", end: "16:00" },
-          ],
-        },
-      ]);
+      if (uErr) throw uErr;
 
-      if (userError) throw userError;
-
-      // 4. Create default services
-      const defaultServices = [
-        { name: "Corte de Cabelo", price: 40.0, duration: 45 },
-        { name: "Barba", price: 30.0, duration: 30 },
-        { name: "Corte e Barba", price: 65.0, duration: 75 },
-        { name: "Pezinho", price: 15.0, duration: 15 },
+      const seedServices: Database['public']['Tables']['services']['Insert'][] = [
+        { name: 'Corte de Cabelo', price: 40.0, duration: 45, barbershop_id: barbershop.id },
+        { name: 'Barba', price: 30.0, duration: 30, barbershop_id: barbershop.id },
+        { name: 'Corte e Barba', price: 65.0, duration: 75, barbershop_id: barbershop.id },
+        { name: 'Pezinho', price: 15.0, duration: 15, barbershop_id: barbershop.id },
       ];
+      await supabase.from('services').insert(seedServices);
 
-      const { error: servicesError } = await supabase.from("services").insert(
-        defaultServices.map((service) => ({
-          ...service,
-          barbershop_id: barbershop.id,
-        }))
-      );
+      await logMultipleConsents(authUser.user.id, ['terms', 'privacy']);
 
-      if (servicesError) throw servicesError;
-
-      // 5. Register consent logs (LGPD)
-      if (authUser.user) {
-        await logMultipleConsents(authUser.user.id, ['terms', 'privacy']);
-      }
-
-      // Success! Redirect to login
-      navigate("/login", {
-        state: {
-          message: "Barbearia criada com sucesso! Faça login para começar.",
-          email: adminData.email,
-        },
-      });
+      navigate("/login", { state: { message: "Barbearia criada com sucesso! Faça login.", email: admin.email } });
     } catch (err: any) {
-      console.error("Erro no cadastro:", err);
-
-      // Mensagens de erro mais específicas
-      if (err.code === "23505") {
-        if (err.message.includes("slug")) {
-          setError("Esta URL já está em uso. Escolha outra URL para sua barbearia.");
-        } else if (err.message.includes("email")) {
-          setError("Este email já está cadastrado. Use outro email.");
-        } else {
-          setError("Dados duplicados. Verifique se a barbearia já não está cadastrada.");
-        }
-      } else if (err.message?.includes("User already registered")) {
-        setError("Este email já possui cadastro. Faça login ou use outro email.");
-      } else if (err.message?.includes("Email")) {
-        setError("Erro no email: " + err.message);
-      } else if (err.message?.includes("Password")) {
-        setError("A senha deve ter pelo menos 6 caracteres.");
-      } else {
-        setError(err.message || "Erro ao criar barbearia. Verifique os dados e tente novamente.");
-      }
+      if (err.message?.includes("User already registered")) setError("Este email já tem cadastro. Faça login ou use outro email.");
+      else if (err.code === "23505") setError("URL ou email já cadastrado. Verifique os dados.");
+      else setError(err.message || "Erro ao criar barbearia. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
+  const stepState = (n: number): 'done' | 'active' | 'idle' =>
+    n < step ? 'done' : n === step ? 'active' : 'idle';
+
+  const stepTitles = ['Sua Barbearia', 'Sua Conta'];
+  const stepSubs = ['Dados básicos da sua barbearia', 'Crie seu acesso de administrador'];
+
   return (
-    <RegistrationContainer>
-      <RegistrationCard $variant="elevated">
-        <CardHeader>
-          <div>
-            <Heading $level={2} $gradient>
-              Cadastrar Barbearia
-            </Heading>
-            <Text $color="tertiary" style={{ marginTop: "0.5rem" }}>
-              Crie sua conta e comece a gerenciar seus agendamentos
-            </Text>
-          </div>
-        </CardHeader>
+    <Page>
+      <TopBar>
+        <LogoText>Shafar</LogoText>
+        <BackBtn onClick={() => navigate('/login')}>
+          ← Voltar ao login
+        </BackBtn>
+      </TopBar>
 
-        <CardContent>
-          {/* Step Indicator */}
-          <StepContainer>
-            <StepIndicator $active={currentStep >= 1}>1</StepIndicator>
-            <StepLine $completed={currentStep > 1} />
-            <StepIndicator $active={currentStep >= 2}>2</StepIndicator>
-          </StepContainer>
+      <Card>
+        <CardHead>
+          {/* Step tracker */}
+          <StepTrack>
+            <StepDot $state={stepState(1)}>
+              {step > 1 ? '✓' : '1'}
+            </StepDot>
+            <StepBar $filled={step > 1} />
+            <StepDot $state={stepState(2)}>2</StepDot>
+          </StepTrack>
 
-          {error && (
-            <div
-              style={{
-                padding: "1rem",
-                background: "#fee2e2",
-                color: "#dc2626",
-                borderRadius: "0.5rem",
-                marginBottom: "1.5rem",
-                fontSize: "0.875rem",
-              }}
-            >
-              {error}
-            </div>
+          <HeadTitle>{stepTitles[step - 1]}</HeadTitle>
+          <HeadSub>{stepSubs[step - 1]} — Passo {step} de 2</HeadSub>
+        </CardHead>
+
+        {/* STEP 1 */}
+        {step === 1 && (
+          <FormBody key="step1">
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="shopName">Nome da barbearia</Label>
+                <Input id="shopName" placeholder="Ex: Navalha Dourada" value={shop.name}
+                  onChange={e => handleShopChange("name", e.target.value)} />
+              </Field>
+
+              <Field>
+                <Label htmlFor="shopSlug">URL da barbearia</Label>
+                <Input id="shopSlug" placeholder="navalha-dourada" value={shop.slug}
+                  onChange={e => handleShopChange("slug", e.target.value)} />
+                <HelperText>🔗 shafar.com.br/{shop.slug || 'sua-barbearia'}</HelperText>
+              </Field>
+
+              <Field>
+                <Label htmlFor="shopAddress">Endereço</Label>
+                <Input id="shopAddress" placeholder="Rua das Tesouras, 123 — Centro" value={shop.address}
+                  autoComplete="street-address" onChange={e => handleShopChange("address", e.target.value)} />
+              </Field>
+
+              <Field>
+                <Label htmlFor="shopPhone">Telefone</Label>
+                <Input id="shopPhone" type="tel" placeholder="(11) 99999-9999" value={shop.phone}
+                  autoComplete="tel" onChange={e => handleShopChange("phone", e.target.value)} />
+              </Field>
+
+              <Field>
+                <Label htmlFor="shopEmail">Email da barbearia</Label>
+                <Input id="shopEmail" type="email" placeholder="contato@barbearia.com" value={shop.email}
+                  autoComplete="email" onChange={e => handleShopChange("email", e.target.value)} />
+              </Field>
+            </FieldGroup>
+          </FormBody>
+        )}
+
+        {/* STEP 2 */}
+        {step === 2 && (
+          <FormBody key="step2">
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="adminName">Seu nome completo</Label>
+                <Input id="adminName" placeholder="João Silva" value={admin.name}
+                  autoComplete="name" onChange={e => setAdmin(p => ({ ...p, name: e.target.value }))} />
+              </Field>
+
+              <Field>
+                <Label htmlFor="adminEmail">Email de acesso</Label>
+                <Input id="adminEmail" type="email" placeholder="joao@barbearia.com" value={admin.email}
+                  autoComplete="email" onChange={e => setAdmin(p => ({ ...p, email: e.target.value }))} />
+                <HelperText>💡 Será usado para fazer login no sistema</HelperText>
+              </Field>
+
+              <Field>
+                <Label htmlFor="adminPass">Senha</Label>
+                <Input id="adminPass" type="password" placeholder="Mínimo 6 caracteres" value={admin.password}
+                  autoComplete="new-password" onChange={e => setAdmin(p => ({ ...p, password: e.target.value }))} />
+              </Field>
+            </FieldGroup>
+
+            {/* Legal */}
+            <LegalBox>
+              <LegalTitle>📋 Conformidade LGPD</LegalTitle>
+              <LegalDesc>Leia e aceite os termos antes de prosseguir.</LegalDesc>
+            </LegalBox>
+
+            <ConsentItem onClick={() => setAcceptedTerms(v => !v)}>
+              <CustomCheckbox $checked={acceptedTerms}>
+                {acceptedTerms && '✓'}
+              </CustomCheckbox>
+              <ConsentText>
+                Li e aceito os <Link to="/terms" target="_blank" onClick={e => e.stopPropagation()}>Termos de Uso</Link>
+              </ConsentText>
+            </ConsentItem>
+
+            <ConsentItem onClick={() => setAcceptedPrivacy(v => !v)} style={{ marginBottom: '1.5rem' }}>
+              <CustomCheckbox $checked={acceptedPrivacy}>
+                {acceptedPrivacy && '✓'}
+              </CustomCheckbox>
+              <ConsentText>
+                Li e aceito a{' '}
+                <Link to="/privacy" target="_blank" onClick={e => e.stopPropagation()}>Política de Privacidade</Link>
+                {' '}e autorizo o tratamento dos meus dados (LGPD)
+              </ConsentText>
+            </ConsentItem>
+          </FormBody>
+        )}
+
+        {/* Error */}
+        {error && (
+          <ErrorAlert>
+            <span>⚠️</span>
+            <span>{error}</span>
+          </ErrorAlert>
+        )}
+
+        {/* Actions */}
+        <Actions>
+          {step === 1 ? (
+            <Button $variant="ghost" $size="md" onClick={() => navigate('/login')} style={{ flexShrink: 0 }}>
+              Cancelar
+            </Button>
+          ) : (
+            <Button $variant="secondary" $size="md" onClick={() => setStep(1)} style={{ flexShrink: 0 }}>
+              ← Voltar
+            </Button>
           )}
 
-          {/* Step 1: Barbershop Info */}
-          {currentStep === 1 && (
-            <Flex $direction="column" $gap="1.5rem">
-              <div>
-                <Text
-                  $weight="medium"
-                  $color="primary"
-                  style={{ marginBottom: "0.5rem" }}
-                >
-                  Informações da Barbearia
-                </Text>
-
-                <Flex $direction="column" $gap="1rem">
-                  <InputField
-                    label="Nome da Barbearia"
-                    placeholder="Ex: Navalha Dourada"
-                    autoComplete="organization"
-                    value={barbershopData.name}
-                    onChange={(e) =>
-                      handleBarbershopChange("name", e.target.value)
-                    }
-                    required
-                  />
-
-                  <InputField
-                    label="URL da Barbearia"
-                    placeholder="navalha-dourada"
-                    value={barbershopData.slug}
-                    onChange={(e) =>
-                      handleBarbershopChange("slug", e.target.value)
-                    }
-                    helperText="Esta será sua URL: shafar.com/navalha-dourada"
-                    required
-                  />
-
-                  <InputField
-                    label="Endereço Completo"
-                    placeholder="Rua das Tesouras, 123 - Centro"
-                    autoComplete="street-address"
-                    value={barbershopData.address}
-                    onChange={(e) =>
-                      handleBarbershopChange("address", e.target.value)
-                    }
-                    required
-                  />
-
-                  <InputField
-                    label="Telefone"
-                    placeholder="(11) 99999-9999"
-                    type="tel"
-                    autoComplete="tel"
-                    value={barbershopData.phone}
-                    onChange={(e) =>
-                      handleBarbershopChange("phone", e.target.value)
-                    }
-                    required
-                  />
-
-                  <InputField
-                    label="Email da Barbearia"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="contato@navalhadourada.com"
-                    value={barbershopData.email}
-                    onChange={(e) =>
-                      handleBarbershopChange("email", e.target.value)
-                    }
-                    required
-                  />
-                </Flex>
-              </div>
-
-              <Flex $justify="between" $gap="1rem">
-                <Button $variant="ghost" onClick={() => navigate("/login")}>
-                  Voltar ao Login
-                </Button>
-                <Button onClick={handleNextStep} disabled={!validateStep1()}>
-                  Próximo Passo
-                </Button>
-              </Flex>
-            </Flex>
+          {step === 1 ? (
+            <Button $size="md" $fullWidth disabled={!step1Valid} onClick={() => setStep(2)}>
+              Continuar →
+            </Button>
+          ) : (
+            <Button $size="md" $fullWidth disabled={!step2Valid || loading} $loading={loading} onClick={handleSubmit}>
+              {loading ? 'Criando...' : 'Criar barbearia'}
+            </Button>
           )}
-
-          {/* Step 2: Admin Info */}
-          {currentStep === 2 && (
-            <Flex $direction="column" $gap="1.5rem">
-              <div>
-                <Text
-                  $weight="medium"
-                  $color="primary"
-                  style={{ marginBottom: "0.5rem" }}
-                >
-                  Dados do Administrador
-                </Text>
-
-                <Flex $direction="column" $gap="1rem">
-                  <InputField
-                    label="Nome Completo"
-                    placeholder="João Silva"
-                    autoComplete="name"
-                    value={adminData.name}
-                    onChange={(e) => handleAdminChange("name", e.target.value)}
-                    required
-                  />
-
-                  <InputField
-                    label="Email de Login"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="joao@navalhadourada.com"
-                    value={adminData.email}
-                    onChange={(e) => handleAdminChange("email", e.target.value)}
-                    helperText="Este será seu email para fazer login no sistema"
-                    required
-                  />
-
-                  <InputField
-                    label="Senha"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={adminData.password}
-                    onChange={(e) =>
-                      handleAdminChange("password", e.target.value)
-                    }
-                    helperText="Escolha uma senha segura"
-                    required
-                  />
-                </Flex>
-              </div>
-
-              {/* Legal Consent Section */}
-              <LegalNotice>
-                <strong>📋 Termos Legais (LGPD)</strong>
-                <p style={{ margin: "0.5rem 0 0 0" }}>
-                  Para criar sua conta, você precisa aceitar nossos documentos legais em conformidade com a Lei Geral de Proteção de Dados (LGPD).
-                </p>
-              </LegalNotice>
-
-              <div>
-                <CheckboxContainer>
-                  <Checkbox
-                    type="checkbox"
-                    id="terms"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    required
-                  />
-                  <CheckboxLabel htmlFor="terms">
-                    Eu li e concordo com os{" "}
-                    <Link to="/terms" target="_blank" rel="noopener noreferrer">
-                      Termos de Uso
-                    </Link>
-                  </CheckboxLabel>
-                </CheckboxContainer>
-
-                <CheckboxContainer>
-                  <Checkbox
-                    type="checkbox"
-                    id="privacy"
-                    checked={acceptedPrivacy}
-                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                    required
-                  />
-                  <CheckboxLabel htmlFor="privacy">
-                    Eu li e concordo com a{" "}
-                    <Link to="/privacy" target="_blank" rel="noopener noreferrer">
-                      Política de Privacidade
-                    </Link>{" "}
-                    e autorizo o tratamento de meus dados pessoais conforme a LGPD
-                  </CheckboxLabel>
-                </CheckboxContainer>
-              </div>
-
-              <Flex $justify="between" $gap="1rem">
-                <Button $variant="ghost" onClick={handlePrevStep}>
-                  Voltar
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!validateStep2() || loading}
-                  $loading={loading}
-                >
-                  {loading ? "Criando..." : "Criar Barbearia"}
-                </Button>
-              </Flex>
-            </Flex>
-          )}
-        </CardContent>
-      </RegistrationCard>
-    </RegistrationContainer>
+        </Actions>
+      </Card>
+    </Page>
   );
 };
 

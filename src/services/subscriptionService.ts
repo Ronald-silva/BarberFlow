@@ -175,7 +175,7 @@ export async function getActiveSubscription(
     throw new Error('Não foi possível carregar a assinatura ativa');
   }
 
-  return data;
+  return data as Subscription;
 }
 
 /**
@@ -272,7 +272,7 @@ export async function getStripeCustomer(
     return null;
   }
 
-  return data;
+  return data as unknown as StripeCustomer;
 }
 
 /**
@@ -286,7 +286,7 @@ export async function updateStripeCustomer(
 ): Promise<StripeCustomer | null> {
   const { data, error } = await supabase
     .from('stripe_customers')
-    .update(customerData)
+    .update(customerData as Record<string, unknown>)
     .eq('id', customerId)
     .select()
     .single();
@@ -296,7 +296,7 @@ export async function updateStripeCustomer(
     return null;
   }
 
-  return data;
+  return data as unknown as StripeCustomer;
 }
 
 // =====================================================
@@ -324,7 +324,7 @@ export async function getPaymentHistory(
     throw new Error('Não foi possível carregar o histórico de pagamentos');
   }
 
-  return data || [];
+  return (data || []) as PaymentHistory[];
 }
 
 /**
@@ -351,7 +351,7 @@ export async function getLatestPayment(
     return null;
   }
 
-  return data;
+  return data as PaymentHistory;
 }
 
 // =====================================================

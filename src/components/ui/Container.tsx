@@ -25,9 +25,9 @@ export const Container = styled.div<{ $maxWidth?: string; $padding?: boolean }>`
 `;
 
 export const PageContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[5]} ${props => props.theme.spacing[4]};
   min-height: calc(100vh - 80px); /* Account for mobile header */
   
   @media (min-width: ${props => props.theme.breakpoints.sm}) {
@@ -35,29 +35,34 @@ export const PageContainer = styled.div`
   }
   
   @media (min-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[5]};
+    padding: ${props => props.theme.spacing[7]} ${props => props.theme.spacing[6]};
   }
   
   @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    padding: ${props => props.theme.spacing[8]} ${props => props.theme.spacing[6]};
+    padding: ${props => props.theme.spacing[9]} ${props => props.theme.spacing[7]};
     min-height: 100vh; /* Full height on desktop */
   }
 `;
 
 // Cards
 export const Card = styled.div<{ $variant?: 'default' | 'elevated' | 'outlined' }>`
-  background-color: ${props => props.theme.colors.background.elevated};
+  background: linear-gradient(
+    180deg,
+    ${props => props.theme.colors.background.elevated} 0%,
+    ${props => props.theme.colors.background.tertiary} 100%
+  );
   border-radius: ${props => props.theme.radii.xl};
   overflow: hidden;
-  transition: ${props => props.theme.transitions.base};
+  transition: border-color ${props => props.theme.transitions.base}, box-shadow ${props => props.theme.transitions.base}, transform ${props => props.theme.transitions.base};
   
   ${props => props.$variant === 'elevated' && css`
     box-shadow: ${props => props.theme.shadows.lg};
     border: 1px solid ${props => props.theme.colors.border.primary};
     
     &:hover {
+      border-color: ${props => props.theme.colors.border.secondary};
       box-shadow: ${props => props.theme.shadows.xl};
-      transform: translateY(-2px);
+      transform: translateY(-3px);
     }
   `}
   
@@ -162,22 +167,22 @@ export const Grid = styled.div<{
   $responsive?: boolean;
 }>`
   display: grid;
-  gap: ${props => props.$gap || props.theme.spacing[4]};
+  gap: ${props => props.$gap || props.theme.spacing[5]};
   
   ${props => props.$responsive !== false ? css`
     /* Mobile first approach */
     grid-template-columns: 1fr;
     
     /* Small screens - 2 columns max */
-    @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    @media (min-width: ${props.theme.breakpoints.sm}) {
       grid-template-columns: repeat(${Math.min(props.$columns || 2, 2)}, 1fr);
-      gap: ${props => props.$gap || props.theme.spacing[5]};
+      gap: ${props.$gap || props.theme.spacing[6]};
     }
     
     /* Medium screens - 3 columns max */
-    @media (min-width: ${props => props.theme.breakpoints.md}) {
+    @media (min-width: ${props.theme.breakpoints.md}) {
       grid-template-columns: repeat(${Math.min(props.$columns || 3, 3)}, 1fr);
-      gap: ${props => props.$gap || props.theme.spacing[6]};
+      gap: ${props.$gap || props.theme.spacing[7]};
     }
     
     /* Large screens - full columns */
@@ -242,6 +247,7 @@ export const Heading = styled.h1<{
 }>`
   font-weight: ${props => props.theme.typography.fontWeights.bold};
   line-height: ${props => props.theme.typography.lineHeights.tight};
+  letter-spacing: ${props => props.theme.typography.letterSpacings.tight};
   margin: 0;
   
   ${props => {
@@ -262,7 +268,7 @@ export const Heading = styled.h1<{
           }
           
           @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['5xl']};
+            font-size: ${props.theme.typography.fontSizes['4xl']};
           }
         `;
       case 2: 
@@ -274,11 +280,11 @@ export const Heading = styled.h1<{
           }
           
           @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes['3xl']};
+            font-size: ${props.theme.typography.fontSizes['2xl']};
           }
           
           @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['4xl']};
+            font-size: ${props.theme.typography.fontSizes['3xl']};
           }
         `;
       case 3: 
@@ -290,11 +296,11 @@ export const Heading = styled.h1<{
           }
           
           @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
+            font-size: ${props.theme.typography.fontSizes.xl};
           }
           
           @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['3xl']};
+            font-size: ${props.theme.typography.fontSizes['2xl']};
           }
         `;
       case 4: 
@@ -370,7 +376,7 @@ export const Heading = styled.h1<{
   }}
   
   ${props => props.$gradient && css`
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    background: linear-gradient(135deg, ${props.theme.colors.primary.main} 0%, ${props.theme.colors.primary.light} 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -379,10 +385,11 @@ export const Heading = styled.h1<{
 
 export const Text = styled.p<{ 
   $size?: 'xs' | 'sm' | 'base' | 'lg' | 'xl';
-  $color?: 'primary' | 'secondary' | 'tertiary' | 'disabled';
+  $color?: 'primary' | 'secondary' | 'tertiary' | 'disabled' | 'success';
   $weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
 }>`
   margin: 0;
+  line-height: ${props => props.theme.typography.lineHeights.normal};
   
   ${props => {
     switch (props.$size) {
@@ -400,6 +407,7 @@ export const Text = styled.p<{
       case 'secondary': return `color: ${props.theme.colors.text.secondary};`;
       case 'tertiary': return `color: ${props.theme.colors.text.tertiary};`;
       case 'disabled': return `color: ${props.theme.colors.text.disabled};`;
+      case 'success': return `color: ${props.theme.colors.success.main};`;
       default: return `color: ${props.theme.colors.text.secondary};`;
     }
   }}

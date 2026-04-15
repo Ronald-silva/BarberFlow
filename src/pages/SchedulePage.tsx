@@ -48,12 +48,12 @@ const ScheduleGrid = styled.div`
   overflow: hidden;
 `;
 
-const GridContainer = styled.div<{ columns: number }>`
+const GridContainer = styled.div<{ $columns: number }>`
   display: grid;
-  grid-template-columns: 80px repeat(${props => props.columns}, 1fr);
+  grid-template-columns: 80px repeat(${props => props.$columns}, 1fr);
   
   @media (max-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: 60px repeat(${props => props.columns}, 1fr);
+    grid-template-columns: 60px repeat(${props => props.$columns}, 1fr);
   }
 `;
 

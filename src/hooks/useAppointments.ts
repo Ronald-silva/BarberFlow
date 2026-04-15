@@ -1,7 +1,8 @@
 // Hook para gerenciar agendamentos com React Query
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/supabaseApi';
-import { Appointment } from '../types';
+import { Appointment, AppointmentStatus } from '../types';
+import type { CreateAppointmentPayload } from '../services/supabaseApi';
 import { logError } from '../utils/errors';
 
 // Query keys
@@ -21,7 +22,7 @@ export function useAppointments(barbershopId?: string, date?: Date) {
     queryKey: appointmentKeys.list({ barbershopId, date }),
     queryFn: async () => {
       try {
-        const appointments = await api.getAppointments(barbershopId, date);
+        const appointments = await api.getAppointmentsForDate(barbershopId, date ?? new Date());
         return appointments;
       } catch (error) {
         logError(error, 'useAppointments');
@@ -58,7 +59,7 @@ export function useCreateAppointment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: CreateAppointmentPayload) => {
       try {
         const appointment = await api.createAppointment(data);
         return appointment;
@@ -129,7 +130,7 @@ export function useCancelAppointment() {
   const { mutate: updateAppointment, ...rest } = useUpdateAppointment();
 
   const cancelAppointment = (id: string) => {
-    updateAppointment({ id, data: { status: 'canceled' } });
+    updateAppointment({ id, data: { status: AppointmentStatus.CANCELED } });
   };
 
   return {

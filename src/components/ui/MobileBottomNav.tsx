@@ -4,139 +4,142 @@ import { NavLink } from 'react-router-dom';
 import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon } from '../icons';
 import { UserRole } from '../../types';
 
-interface MobileBottomNavProps {
+// ============================================================
+// SHAFAR MobileBottomNav v2.0 — iOS/Android premium pattern
+// ============================================================
+
+interface Props {
   userRole: UserRole;
 }
 
-const BottomNavContainer = styled.nav`
+const Bar = styled.nav`
   display: none;
-  
-  @media (max-width: ${props => props.theme.breakpoints.lg}) {
+
+  @media (max-width: 1023px) {
     display: flex;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(180deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.secondary} 100%);
-    border-top: 1px solid ${props => props.theme.colors.border.primary};
-    padding: ${props => props.theme.spacing[1]} 0;
-    z-index: ${props => props.theme.zIndex.sticky};
-    backdrop-filter: blur(10px);
-    box-shadow: ${props => props.theme.shadows.lg};
-    height: 70px; /* Fixed height for consistency */
-    
-    /* Safe area support for iOS devices */
-    @supports (padding: max(0px)) {
-      padding-bottom: max(${props => props.theme.spacing[1]}, env(safe-area-inset-bottom));
-    }
+    z-index: 100;
+    background: rgba(14, 14, 14, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid #1A1A1A;
+    height: 68px;
+    padding: 0 0.5rem;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 `;
 
-const NavItem = styled(NavLink)`
+const Item = styled(NavLink)`
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px; /* Fixed gap for consistency */
-  padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[1]};
-  border-radius: ${props => props.theme.radii.md};
+  gap: 3px;
   text-decoration: none;
-  color: ${props => props.theme.colors.text.tertiary};
-  font-size: 11px; /* Smaller font for mobile */
-  font-weight: ${props => props.theme.typography.fontWeights.medium};
-  transition: ${props => props.theme.transitions.fast};
-  min-height: 56px; /* Optimal touch target */
+  color: #4A4A4A;
+  border-radius: 12px;
+  transition: color 180ms ease;
+  min-height: 56px;
   position: relative;
-  
-  /* Icon container for consistent sizing */
-  .icon-container {
+  margin: 6px 2px;
+
+  /* Icon */
+  .nav-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
+    width: 38px;
+    height: 30px;
+    border-radius: 10px;
+    background: transparent;
+    transition: background 200ms ease;
+    position: relative;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
   }
-  
-  span {
-    line-height: 1.1;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    font-size: 10px; /* Even smaller text */
-    letter-spacing: 0.01em;
+
+  /* Label */
+  .nav-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition: color 180ms ease;
+    line-height: 1;
   }
-  
-  /* Hover effects (for devices that support it) */
+
+  /* Hover */
   @media (hover: hover) {
     &:hover {
-      color: ${props => props.theme.colors.text.secondary};
-      background-color: ${props => props.theme.colors.interactive.hover};
+      color: #6B6B6B;
+      .nav-icon { background: rgba(255, 255, 255, 0.04); }
     }
   }
-  
-  /* Active state with better visual feedback */
+
+  /* Active */
   &.active {
-    color: ${props => props.theme.colors.primary};
-    background-color: ${props => props.theme.colors.primaryLight}15;
-    
-    .icon-container {
-      transform: scale(1.05);
+    color: #E8B84B;
+
+    .nav-icon {
+      background: rgba(200, 146, 42, 0.12);
+
+      svg { transform: scale(1.1); }
+
+      /* Active pip */
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 16px;
+        height: 2px;
+        background: linear-gradient(90deg, #C8922A, #E8B84B);
+        border-radius: 9999px;
+      }
     }
-    
-    span {
-      font-weight: ${props => props.theme.typography.fontWeights.semibold};
-    }
-    
-    /* Active indicator */
-    &::before {
-      content: '';
-      position: absolute;
-      top: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 2px;
-      background: ${props => props.theme.colors.primary};
-      border-radius: ${props => props.theme.radii.full};
-    }
+
+    .nav-label { color: #C8922A; }
   }
-  
-  /* Pressed state for better touch feedback */
+
+  /* Press feedback */
   &:active {
-    transform: scale(0.95);
-    background-color: ${props => props.theme.colors.interactive.pressed || props.theme.colors.interactive.hover};
+    transform: scale(0.93);
+    .nav-icon { background: rgba(200, 146, 42, 0.1); }
   }
 `;
 
-const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ userRole }) => {
-  const navItems = [
-    { to: 'overview', icon: <DashboardIcon size={20} />, text: 'Início', adminOnly: false },
-    { to: 'schedule', icon: <CalendarIcon size={20} />, text: 'Agenda', adminOnly: false },
-    { to: 'clients', icon: <UsersIcon size={20} />, text: 'Clientes', adminOnly: false },
-    { to: 'services', icon: <ScissorsIcon size={20} />, text: 'Serviços', adminOnly: true },
-    { to: 'professionals', icon: <TeamIcon size={20} />, text: 'Equipe', adminOnly: true },
-    { to: 'settings', icon: <SettingsIcon size={20} />, text: 'Config', adminOnly: true },
-  ].filter(item => !item.adminOnly || userRole === UserRole.ADMIN);
+const MobileBottomNav: React.FC<Props> = ({ userRole }) => {
+  const items = [
+    { to: 'overview', icon: <DashboardIcon size={20} />, label: 'Início', adminOnly: false },
+    { to: 'schedule', icon: <CalendarIcon size={20} />, label: 'Agenda', adminOnly: false },
+    { to: 'clients', icon: <UsersIcon size={20} />, label: 'Clientes', adminOnly: false },
+    { to: 'services', icon: <ScissorsIcon size={20} />, label: 'Serviços', adminOnly: true },
+    { to: 'professionals', icon: <TeamIcon size={20} />, label: 'Equipe', adminOnly: true },
+    { to: 'settings', icon: <SettingsIcon size={20} />, label: 'Config.', adminOnly: true },
+  ].filter(i => !i.adminOnly || userRole === UserRole.ADMIN);
 
   return (
-    <BottomNavContainer>
-      {navItems.map(item => (
-        <NavItem
+    <Bar>
+      {items.map(item => (
+        <Item
           key={item.to}
           to={item.to}
           className={({ isActive }) => isActive ? 'active' : ''}
         >
-          <div className="icon-container">
-            {item.icon}
-          </div>
-          <span>{item.text}</span>
-        </NavItem>
+          <div className="nav-icon">{item.icon}</div>
+          <span className="nav-label">{item.label}</span>
+        </Item>
       ))}
-    </BottomNavContainer>
+    </Bar>
   );
 };
 

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
+import { useToastContext } from '../contexts/ToastContext';
+import { supabaseApi as api } from '../services/supabaseApi';
 
 const TicketCard = styled(Card)`
   cursor: pointer;
@@ -130,52 +132,69 @@ const FilterBar = styled.div`
   flex-wrap: wrap;
 `;
 
+type SupportTicket = {
+  id: string;
+  title: string;
+  barbershop: string;
+  priority: 'urgent' | 'high' | 'normal' | 'low';
+  status: 'open' | 'closed';
+  createdAt: string;
+  source: 'email' | 'subscription';
+};
+
 const PlatformSupportPage: React.FC = () => {
+  const toast = useToastContext();
   const [filter, setFilter] = useState<'all' | 'open' | 'closed'>('all');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [openTickets, setOpenTickets] = useState(0);
+  const [resolvedToday, setResolvedToday] = useState(0);
+  const [resolutionRate, setResolutionRate] = useState(0);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
 
-  const mockTickets = [
-    {
-      id: '1',
-      title: 'Erro ao processar pagamento PIX',
-      barbershop: 'Barbearia João Silva',
-      priority: 'urgent' as const,
-      status: 'open' as const,
-      date: '2025-12-03',
-      time: '10:30'
-    },
-    {
-      id: '2',
-      title: 'Dúvida sobre relatórios',
-      barbershop: 'Barber Shop Maria',
-      priority: 'normal' as const,
-      status: 'open' as const,
-      date: '2025-12-02',
-      time: '15:45'
-    },
-    {
-      id: '3',
-      title: 'Solicitação de cancelamento de assinatura',
-      barbershop: 'Espaço Masculino',
-      priority: 'high' as const,
-      status: 'open' as const,
-      date: '2025-12-01',
-      time: '09:15'
-    },
-    {
-      id: '4',
-      title: 'Como adicionar novo profissional?',
-      barbershop: 'Barbearia Central',
-      priority: 'low' as const,
-      status: 'closed' as const,
-      date: '2025-11-30',
-      time: '14:20'
-    },
-  ];
+  const fetchSupportData = async (showFeedback = false) => {
+    setLoading(true);
+    setRefreshing(true);
+    try {
+      const overview = await api.getPlatformSupportOverview();
+      setOpenTickets(overview.openTickets);
+      setResolvedToday(overview.resolvedToday);
+      setResolutionRate(overview.resolutionRate);
+      setTickets(overview.tickets);
+      if (showFeedback) {
+        toast.success('Painel de suporte atualizado.');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados de suporte:', error);
+      setOpenTickets(0);
+      setResolvedToday(0);
+      setResolutionRate(0);
+      setTickets([]);
+      toast.error('Falha ao carregar dados de suporte.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-  const filteredTickets = mockTickets.filter(ticket => {
+  useEffect(() => {
+    void fetchSupportData();
+  }, []);
+
+  const filteredTickets = useMemo(() => tickets.filter((ticket) => {
     if (filter === 'all') return true;
     return ticket.status === filter;
-  });
+  }), [filter, tickets]);
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Text>Carregando central de suporte...</Text>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer className="fade-in">
@@ -186,6 +205,11 @@ const PlatformSupportPage: React.FC = () => {
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
           Gerencie tickets e solicitações das barbearias
         </Text>
+        <div style={{ marginTop: '1rem' }}>
+          <Button $variant="secondary" onClick={() => void fetchSupportData(true)} disabled={refreshing}>
+            {refreshing ? 'Atualizando...' : 'Recarregar Suporte'}
+          </Button>
+        </div>
       </div>
 
       <Grid $columns={4} $responsive style={{ marginBottom: '2rem' }}>
@@ -194,16 +218,16 @@ const PlatformSupportPage: React.FC = () => {
             <Text $size="sm" $color="tertiary" $weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Tickets Abertos
             </Text>
-            <StatsValue>12</StatsValue>
+            <StatsValue>{openTickets}</StatsValue>
           </CardContent>
         </StatsCard>
 
         <StatsCard $variant="elevated">
           <CardContent>
             <Text $size="sm" $color="tertiary" $weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Tempo Médio
+              Taxa de Resolução
             </Text>
-            <StatsValue>2.4h</StatsValue>
+            <StatsValue>{resolutionRate.toFixed(0)}%</StatsValue>
           </CardContent>
         </StatsCard>
 
@@ -212,16 +236,16 @@ const PlatformSupportPage: React.FC = () => {
             <Text $size="sm" $color="tertiary" $weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Resolvidos Hoje
             </Text>
-            <StatsValue>8</StatsValue>
+            <StatsValue>{resolvedToday}</StatsValue>
           </CardContent>
         </StatsCard>
 
         <StatsCard $variant="elevated">
           <CardContent>
             <Text $size="sm" $color="tertiary" $weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Satisfação
+              Tickets no Painel
             </Text>
-            <StatsValue>94%</StatsValue>
+            <StatsValue>{tickets.length}</StatsValue>
           </CardContent>
         </StatsCard>
       </Grid>
@@ -231,24 +255,24 @@ const PlatformSupportPage: React.FC = () => {
           $variant={filter === 'all' ? 'primary' : 'secondary'}
           onClick={() => setFilter('all')}
         >
-          Todos ({mockTickets.length})
+          Todos ({tickets.length})
         </Button>
         <Button
           $variant={filter === 'open' ? 'primary' : 'secondary'}
           onClick={() => setFilter('open')}
         >
-          Abertos ({mockTickets.filter(t => t.status === 'open').length})
+          Abertos ({tickets.filter(t => t.status === 'open').length})
         </Button>
         <Button
           $variant={filter === 'closed' ? 'primary' : 'secondary'}
           onClick={() => setFilter('closed')}
         >
-          Resolvidos ({mockTickets.filter(t => t.status === 'closed').length})
+          Resolvidos ({tickets.filter(t => t.status === 'closed').length})
         </Button>
       </FilterBar>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {filteredTickets.map((ticket, index) => (
+        {filteredTickets.length ? filteredTickets.map((ticket, index) => (
           <TicketCard
             key={ticket.id}
             $variant="elevated"
@@ -275,11 +299,17 @@ const PlatformSupportPage: React.FC = () => {
                 </TicketMeta>
               </TicketHeader>
               <Text $size="sm" $color="tertiary">
-                📅 {ticket.date} às {ticket.time}
+                📅 {new Date(ticket.createdAt).toLocaleString('pt-BR')} • Fonte: {ticket.source === 'email' ? 'Email' : 'Assinatura'}
               </Text>
             </CardContent>
           </TicketCard>
-        ))}
+        )) : (
+          <Card $variant="elevated">
+            <CardContent>
+              <Text $color="tertiary">Nenhum ticket encontrado para o filtro selecionado.</Text>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card $variant="elevated" style={{ marginTop: '2rem' }}>

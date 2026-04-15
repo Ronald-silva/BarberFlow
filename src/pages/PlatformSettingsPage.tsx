@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { PageContainer, Card, CardContent, Heading, Text } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
+import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../contexts/ToastContext';
+import { supabaseApi as api } from '../services/supabaseApi';
 
 const SettingsSection = styled.div`
   margin-bottom: ${props => props.theme.spacing[6]};
@@ -104,10 +107,112 @@ const DangerZone = styled(Card)`
   background: ${props => props.theme.colors.errorLight}10;
 `;
 
+const STORAGE_KEY = 'shafar_platform_settings';
+
+interface PlatformLocalSettings {
+  platformName: string;
+  supportEmail: string;
+  phone: string;
+  emailNotifications: boolean;
+  autoRenew: boolean;
+  maintenanceMode: boolean;
+  trialDays: number;
+  gracePeriod: number;
+}
+
 const PlatformSettingsPage: React.FC = () => {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [autoRenew, setAutoRenew] = useState(true);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const { user } = useAuth();
+  const toast = useToastContext();
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [platformAdminName, setPlatformAdminName] = useState('');
+  const [settings, setSettings] = useState<PlatformLocalSettings>({
+    platformName: 'Shafar',
+    supportEmail: 'suporte@shafar.com',
+    phone: '+55 11 99999-9999',
+    emailNotifications: true,
+    autoRenew: true,
+    maintenanceMode: false,
+    trialDays: 14,
+    gracePeriod: 3,
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<PlatformLocalSettings>;
+        setSettings((prev) => ({
+          ...prev,
+          ...parsed,
+        }));
+      } catch (error) {
+        console.error('Erro ao carregar configurações locais da plataforma:', error);
+      }
+    }
+
+    if (user) {
+      setPlatformAdminName(user.name);
+    }
+    setLoading(false);
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const success = await api.updateCurrentUserProfile(user.id, { name: platformAdminName.trim() });
+      if (!success) {
+        throw new Error('Falha ao atualizar perfil');
+      }
+      toast.success('Perfil do administrador atualizado com sucesso.');
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast.error('Não foi possível salvar o perfil. Tente novamente.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const saveLocalSettings = () => {
+    setSavingSettings(true);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      toast.success('Configurações operacionais salvas localmente.');
+    } catch (error) {
+      console.error('Erro ao salvar configurações locais:', error);
+      toast.error('Não foi possível salvar as configurações locais.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const reloadLocalSettings = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        toast.info('Nenhuma configuração local salva para recarregar.');
+        return;
+      }
+      const parsed = JSON.parse(stored) as Partial<PlatformLocalSettings>;
+      setSettings((prev) => ({ ...prev, ...parsed }));
+      toast.success('Configurações locais recarregadas.');
+    } catch (error) {
+      console.error('Erro ao recarregar configurações locais:', error);
+      toast.error('Falha ao recarregar configurações locais.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Text>Carregando configurações da plataforma...</Text>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer className="fade-in">
@@ -134,32 +239,46 @@ const PlatformSettingsPage: React.FC = () => {
 
             <SettingsGrid>
               <FormGroup>
-                <Label htmlFor="platform-name">Nome da Plataforma</Label>
+                <Label htmlFor="platform-name">Nome da Plataforma (Local)</Label>
                 <Input
                   id="platform-name"
                   type="text"
-                  defaultValue="Shafar"
+                  value={settings.platformName}
                   placeholder="Nome da plataforma"
+                  onChange={(e) => setSettings((prev) => ({ ...prev, platformName: e.target.value }))}
                 />
               </FormGroup>
 
               <FormGroup>
-                <Label htmlFor="platform-email">Email de Contato</Label>
+                <Label htmlFor="platform-admin-name">Nome do Administrador</Label>
+                <Input
+                  id="platform-admin-name"
+                  type="text"
+                  value={platformAdminName}
+                  placeholder="Nome do administrador"
+                  onChange={(e) => setPlatformAdminName(e.target.value)}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="platform-email">Email do Administrador</Label>
                 <Input
                   id="platform-email"
                   type="email"
-                  defaultValue="contato@shafar.com"
+                  value={user?.email || ''}
                   placeholder="Email de contato"
+                  disabled
                 />
               </FormGroup>
 
               <FormGroup>
-                <Label htmlFor="support-email">Email de Suporte</Label>
+                <Label htmlFor="support-email">Email de Suporte (Local)</Label>
                 <Input
                   id="support-email"
                   type="email"
-                  defaultValue="suporte@shafar.com"
+                  value={settings.supportEmail}
                   placeholder="Email de suporte"
+                  onChange={(e) => setSettings((prev) => ({ ...prev, supportEmail: e.target.value }))}
                 />
               </FormGroup>
 
@@ -168,15 +287,27 @@ const PlatformSettingsPage: React.FC = () => {
                 <Input
                   id="phone"
                   type="tel"
-                  defaultValue="+55 11 99999-9999"
+                  value={settings.phone}
                   placeholder="Telefone de contato"
+                  onChange={(e) => setSettings((prev) => ({ ...prev, phone: e.target.value }))}
                 />
               </FormGroup>
             </SettingsGrid>
 
-            <div style={{ marginTop: '1.5rem' }}>
-              <Button $variant="primary">Salvar Informações</Button>
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <Button $variant="primary" onClick={saveProfile} disabled={savingProfile || !platformAdminName.trim()}>
+                {savingProfile ? 'Salvando perfil...' : 'Salvar Perfil do Admin'}
+              </Button>
+              <Button $variant="secondary" onClick={saveLocalSettings} disabled={savingSettings}>
+                {savingSettings ? 'Salvando...' : 'Salvar Configurações Locais'}
+              </Button>
+              <Button $variant="secondary" onClick={reloadLocalSettings}>
+                Recarregar Configurações Locais
+              </Button>
             </div>
+            <Text $size="sm" $color="tertiary" style={{ marginTop: '0.75rem' }}>
+              Campos marcados como local são salvos somente neste navegador/ambiente.
+            </Text>
           </SettingsSection>
 
           <SettingsSection>
@@ -200,8 +331,8 @@ const PlatformSettingsPage: React.FC = () => {
                 <ToggleSwitch>
                   <input
                     type="checkbox"
-                    checked={emailNotifications}
-                    onChange={(e) => setEmailNotifications(e.target.checked)}
+                    checked={settings.emailNotifications}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, emailNotifications: e.target.checked }))}
                   />
                   <span></span>
                 </ToggleSwitch>
@@ -230,8 +361,8 @@ const PlatformSettingsPage: React.FC = () => {
                 <ToggleSwitch>
                   <input
                     type="checkbox"
-                    checked={autoRenew}
-                    onChange={(e) => setAutoRenew(e.target.checked)}
+                    checked={settings.autoRenew}
+                    onChange={(e) => setSettings((prev) => ({ ...prev, autoRenew: e.target.checked }))}
                   />
                   <span></span>
                 </ToggleSwitch>
@@ -243,9 +374,12 @@ const PlatformSettingsPage: React.FC = () => {
                   <Input
                     id="trial-days"
                     type="number"
-                    defaultValue="14"
+                    value={settings.trialDays}
                     min="0"
                     max="90"
+                    onChange={(e) =>
+                      setSettings((prev) => ({ ...prev, trialDays: Number(e.target.value || 0) }))
+                    }
                   />
                 </FormGroup>
 
@@ -254,9 +388,12 @@ const PlatformSettingsPage: React.FC = () => {
                   <Input
                     id="grace-period"
                     type="number"
-                    defaultValue="3"
+                    value={settings.gracePeriod}
                     min="0"
                     max="30"
+                    onChange={(e) =>
+                      setSettings((prev) => ({ ...prev, gracePeriod: Number(e.target.value || 0) }))
+                    }
                   />
                 </FormGroup>
               </SettingsGrid>
@@ -283,8 +420,8 @@ const PlatformSettingsPage: React.FC = () => {
               <ToggleSwitch>
                 <input
                   type="checkbox"
-                  checked={maintenanceMode}
-                  onChange={(e) => setMaintenanceMode(e.target.checked)}
+                  checked={settings.maintenanceMode}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, maintenanceMode: e.target.checked }))}
                 />
                 <span></span>
               </ToggleSwitch>

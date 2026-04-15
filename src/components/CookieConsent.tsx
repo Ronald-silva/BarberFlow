@@ -1,188 +1,208 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { logConsent } from '../services/consentLogger';
+
+// ============================================================
+// SHAFAR CookieConsent v2.0 — Discreto, profissional
+// ============================================================
+
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 const Banner = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: ${props => props.theme.colors.background.elevated};
-  border-top: 2px solid ${props => props.theme.colors.primary.main};
-  padding: ${props => props.theme.spacing[6]};
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
-  animation: slideUp 0.3s ease-out;
+  z-index: 9998;
+  padding: 0.875rem 1.25rem;
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
+  background: #141414;
+  border-top: 1px solid #1E1E1E;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  animation: ${slideIn} 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 1s;
 
-  @keyframes slideUp {
-    from {
-      transform: translateY(100%);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
-
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    padding: ${props => props.theme.spacing[4]};
+  @media (min-width: 768px) {
+    padding: 1rem 1.5rem;
+    bottom: 1.25rem;
+    left: 1.25rem;
+    right: auto;
+    max-width: 420px;
+    border: 1px solid #1E1E1E;
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
   }
 `;
 
-const Content = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
+const Inner = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: ${props => props.theme.spacing[6]};
+  flex-direction: column;
+  gap: 0.75rem;
 
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
+  @media (min-width: 480px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 `;
 
-const TextContainer = styled.div`
+const TextArea = styled.div`
   flex: 1;
 `;
 
-const Title = styled.h3`
-  font-size: ${props => props.theme.typography.fontSizes.lg};
+const Title = styled.p`
+  font-size: 0.875rem;
   font-weight: 600;
-  color: ${props => props.theme.colors.text.primary};
-  margin: 0 0 ${props => props.theme.spacing[2]} 0;
+  color: #F5F5F5;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 `;
 
-const Text = styled.p`
-  color: ${props => props.theme.colors.text.secondary};
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  margin: 0;
-  line-height: 1.6;
+const Desc = styled.p`
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+  line-height: 1.55;
 
   a {
-    color: ${props => props.theme.colors.primary.main};
+    color: #C8922A;
     text-decoration: none;
     font-weight: 500;
-
-    &:hover {
-      text-decoration: underline;
-    }
+    &:hover { color: #E8B84B; }
   }
 `;
 
-const Buttons = styled.div`
+const BtnGroup = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing[3]};
+  gap: 0.625rem;
+  flex-shrink: 0;
 
-  @media (max-width: ${props => props.theme.breakpoints.sm}) {
-    width: 100%;
-    flex-direction: column;
+  @media (max-width: 479px) {
+    justify-content: flex-end;
   }
 `;
 
-const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[6]};
-  border-radius: ${props => props.theme.radii.md};
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  font-weight: 600;
+const AcceptBtn = styled.button`
+  padding: 0.5rem 1.125rem;
+  background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%);
+  color: #0D0D0D;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
   white-space: nowrap;
+  min-height: 36px;
+  transition: box-shadow 150ms ease;
+  box-shadow: 0 4px 12px rgba(200, 146, 42, 0.3);
 
-  ${props => props.variant === 'primary' ? `
-    background: ${props.theme.colors.primary.main};
-    color: white;
-    border: none;
-
-    &:hover {
-      background: ${props.theme.colors.primary.dark};
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-  ` : `
-    background: transparent;
-    color: ${props.theme.colors.text.secondary};
-    border: 1px solid ${props.theme.colors.border.main};
-
-    &:hover {
-      background: ${props.theme.colors.background.secondary};
-      border-color: ${props.theme.colors.primary.main};
-      color: ${props.theme.colors.text.primary};
-    }
-  `}
+  &:hover { box-shadow: 0 6px 16px rgba(200, 146, 42, 0.45); }
 `;
 
-const COOKIE_CONSENT_KEY = 'cookie_consent';
-const COOKIE_CONSENT_DATE_KEY = 'cookie_consent_date';
-const COOKIE_CONSENT_VERSION = '1.0';
+const DismissBtn = styled.button`
+  padding: 0.5rem 0.875rem;
+  background: none;
+  color: #6B6B6B;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+  border: 1px solid #2A2A2A;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 36px;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: #1A1A1A;
+    color: #ABABAB;
+    border-color: #363636;
+  }
+`;
 
 export function CookieConsent() {
-  const [show, setShow] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Verificar se já aceitou cookies
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    const consentVersion = localStorage.getItem('cookie_consent_version');
-
-    // Mostrar banner se nunca aceitou ou se a versão mudou
-    if (!consent || consentVersion !== COOKIE_CONSENT_VERSION) {
-      // Pequeno delay para melhor UX
-      const timer = setTimeout(() => setShow(true), 1000);
-      return () => clearTimeout(timer);
+    const accepted = localStorage.getItem('shafar_cookies_accepted');
+    if (!accepted) {
+      const t = setTimeout(() => setVisible(true), 1200);
+      return () => clearTimeout(t);
     }
   }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
-    localStorage.setItem(COOKIE_CONSENT_DATE_KEY, new Date().toISOString());
-    localStorage.setItem('cookie_consent_version', COOKIE_CONSENT_VERSION);
-    setShow(false);
-
-    // Aqui você pode habilitar cookies de analytics (Google Analytics, etc.)
-    // enableAnalytics();
+  const accept = async () => {
+    localStorage.setItem('shafar_cookies_accepted', 'true');
+    localStorage.setItem('shafar_cookies_date', new Date().toISOString());
+    
+    // Registrar consentimento no banco (LGPD)
+    if (user?.id) {
+      try {
+        await logConsent({
+          userId: user.id,
+          consentType: 'cookies',
+          consentVersion: '1.0',
+        });
+      } catch (error) {
+        console.error('Erro ao registrar consentimento:', error);
+        // Não bloquear a ação do usuário por erro de log
+      }
+    }
+    
+    setVisible(false);
   };
 
-  const handleRejectOptional = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'essential_only');
-    localStorage.setItem(COOKIE_CONSENT_DATE_KEY, new Date().toISOString());
-    localStorage.setItem('cookie_consent_version', COOKIE_CONSENT_VERSION);
-    setShow(false);
-
-    // Manter apenas cookies essenciais
-    // disableOptionalCookies();
+  const dismiss = async () => {
+    localStorage.setItem('shafar_cookies_accepted', 'dismissed');
+    localStorage.setItem('shafar_cookies_date', new Date().toISOString());
+    
+    // Registrar rejeição no banco (LGPD)
+    if (user?.id) {
+      try {
+        await logConsent({
+          userId: user.id,
+          consentType: 'cookies',
+          consentVersion: '1.0',
+        });
+      } catch (error) {
+        console.error('Erro ao registrar rejeição:', error);
+        // Não bloquear a ação do usuário por erro de log
+      }
+    }
+    
+    setVisible(false);
   };
 
-  if (!show) return null;
+  if (!visible) return null;
 
   return (
-    <Banner role="dialog" aria-label="Cookie consent banner">
-      <Content>
-        <TextContainer>
-          <Title>🍪 Uso de Cookies</Title>
-          <Text>
-            Utilizamos cookies <strong>essenciais</strong> para o funcionamento da plataforma e
-            cookies de <strong>desempenho</strong> para melhorar sua experiência. Ao continuar
-            navegando, você concorda com nossa{' '}
-            <Link to="/privacy" target="_blank" rel="noopener noreferrer">
-              Política de Privacidade
-            </Link>
-            {' '}e uso de cookies.
-          </Text>
-        </TextContainer>
-
-        <Buttons>
-          <Button variant="secondary" onClick={handleRejectOptional} aria-label="Aceitar apenas cookies essenciais">
-            Apenas Essenciais
-          </Button>
-          <Button variant="primary" onClick={handleAccept} aria-label="Aceitar todos os cookies">
-            Aceitar Todos
-          </Button>
-        </Buttons>
-      </Content>
+    <Banner role="alert" aria-live="polite">
+      <Inner>
+        <TextArea>
+          <Title>🍪 Cookies</Title>
+          <Desc>
+            Usamos cookies para melhorar sua experiência. Saiba mais em nossa{' '}
+            <Link to="/privacy">Política de Privacidade</Link>.
+          </Desc>
+        </TextArea>
+        <BtnGroup>
+          <DismissBtn onClick={dismiss}>Rejeitar</DismissBtn>
+          <AcceptBtn onClick={accept}>Aceitar</AcceptBtn>
+        </BtnGroup>
+      </Inner>
     </Banner>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Barbershop, Service, User } from '../types';
 import { supabaseApi } from '../services/supabaseApi';
+import { useToastContext } from '../contexts/ToastContext';
 import Calendar from 'react-calendar';
 import { addDays, format, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
@@ -58,6 +59,8 @@ import {
   PaymentOptionFeatures,
   PaymentOptionFeature,
   PaymentPlanBadge,
+  InlineInfoBox,
+  SuccessStatusCard,
   SuccessContainer,
   SuccessIcon,
   SuccessTitle,
@@ -87,6 +90,7 @@ const FEATURES = {
 type PaymentMethod = 'in_person' | 'pix' | 'bitcoin' | 'usdt';
 
 const BookingPage: React.FC = () => {
+  const toast = useToastContext();
   const { barbershopSlug } = useParams<{ barbershopSlug: string }>();
   const [barbershop, setBarbershop] = useState<Barbershop | null>(null);
   const [services, setServices] = useState<Service[]>([]);
@@ -183,7 +187,7 @@ const BookingPage: React.FC = () => {
       setStep(7); // Success step
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
-      alert('Erro ao criar agendamento. Tente novamente.');
+      toast.error('Erro ao criar agendamento. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -273,11 +277,11 @@ const BookingPage: React.FC = () => {
               </ServiceGrid>
 
               {selectedServices.length > 0 && (
-                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'rgba(212, 175, 55, 0.1)', borderRadius: '0.75rem', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                <InlineInfoBox>
                   <Text $color="primary" $weight="semibold">
                     Total: R$ {totalPrice.toFixed(2)} • {totalDuration} min
                   </Text>
-                </div>
+                </InlineInfoBox>
               )}
 
               <StepNavigation>
@@ -410,7 +414,7 @@ const BookingPage: React.FC = () => {
 
               <ClientForm>
                 <FormGroup>
-                  <Label htmlFor="name" required>Nome Completo</Label>
+                  <Label htmlFor="name" $required>Nome Completo</Label>
                   <Input
                     id="name"
                     type="text"
@@ -422,7 +426,7 @@ const BookingPage: React.FC = () => {
                 </FormGroup>
 
                 <FormGroup>
-                  <Label htmlFor="whatsapp" required>WhatsApp</Label>
+                  <Label htmlFor="whatsapp" $required>WhatsApp</Label>
                   <Input
                     id="whatsapp"
                     type="tel"
@@ -461,7 +465,7 @@ const BookingPage: React.FC = () => {
                 <ReviewSection>
                   <ReviewSectionTitle>
                     Serviços
-                    <EditButton onClick={() => setStep(1)} style={{ float: 'right' }}>Editar</EditButton>
+                    <EditButton onClick={() => setStep(1)}>Editar</EditButton>
                   </ReviewSectionTitle>
                   {selectedServices.map(sId => {
                     const service = services.find(s => s.id === sId);
@@ -477,7 +481,7 @@ const BookingPage: React.FC = () => {
                 <ReviewSection>
                   <ReviewSectionTitle>
                     Profissional
-                    <EditButton onClick={() => setStep(2)} style={{ float: 'right' }}>Editar</EditButton>
+                    <EditButton onClick={() => setStep(2)}>Editar</EditButton>
                   </ReviewSectionTitle>
                   <ReviewItem>
                     <ReviewLabel>Profissional</ReviewLabel>
@@ -490,7 +494,7 @@ const BookingPage: React.FC = () => {
                 <ReviewSection>
                   <ReviewSectionTitle>
                     Data e Horário
-                    <EditButton onClick={() => setStep(3)} style={{ float: 'right' }}>Editar</EditButton>
+                    <EditButton onClick={() => setStep(3)}>Editar</EditButton>
                   </ReviewSectionTitle>
                   <ReviewItem>
                     <ReviewLabel>Data</ReviewLabel>
@@ -509,7 +513,7 @@ const BookingPage: React.FC = () => {
                 <ReviewSection>
                   <ReviewSectionTitle>
                     Seus Dados
-                    <EditButton onClick={() => setStep(4)} style={{ float: 'right' }}>Editar</EditButton>
+                    <EditButton onClick={() => setStep(4)}>Editar</EditButton>
                   </ReviewSectionTitle>
                   <ReviewItem>
                     <ReviewLabel>Nome</ReviewLabel>
@@ -587,11 +591,11 @@ const BookingPage: React.FC = () => {
                     <PaymentOptionFeature>Todos os bancos aceitam</PaymentOptionFeature>
                   </PaymentOptionFeatures>
                   {paymentMethod === 'pix' && (
-                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '0.5rem' }}>
+                    <SuccessStatusCard style={{ marginTop: '0.75rem', padding: '0.75rem' }}>
                       <Text $size="sm" $color="success" $weight="bold">
                         💰 Você economiza R$ {(totalPrice - discountedPrice).toFixed(2)}!
                       </Text>
-                    </div>
+                    </SuccessStatusCard>
                   )}
                 </PaymentOptionCard>
 

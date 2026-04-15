@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { User, Barbershop, Subscription } from '../types';
-import { api } from '../services/supabaseApi';
+import { api, mapDbBarbershop } from '../services/supabaseApi';
 import { supabase } from '../services/supabase';
 
 interface AuthContextType {
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .single();
       
       if (barbershopError) console.error('Failed to fetch barbershop', barbershopError);
-      else setBarbershop(barbershopData);
+      else if (barbershopData) setBarbershop(mapDbBarbershop(barbershopData));
 
       // Fetch subscription status
       const { data: subData, error: subError } = await supabase
@@ -43,8 +43,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (subError && subError.code !== 'PGRST116') { // Ignore 'no rows found'
         console.error('Failed to fetch subscription', subError);
+      } else if (subData) {
+        setSubscription({
+          ...subData,
+          status: subData.status as Subscription['status'],
+        });
       } else {
-        setSubscription(subData);
+        setSubscription(null);
       }
     }
   }
@@ -52,15 +57,86 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeAuth = async () => {
       setLoading(true);
-      const storedUser = localStorage.getItem('shafar_user');
-      if (storedUser) {
-        const currentUser: User = JSON.parse(storedUser);
-        setUser(currentUser);
-        await fetchAndSetData(currentUser);
+      
+      // Verificar sessão do Supabase Auth
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Buscar dados completos do usuário
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (userData && !userError) {
+          const currentUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            barbershopId: userData.barbershop_id,
+            role: userData.role as User['role'],
+            workHours: Array.isArray(userData.work_hours) ? userData.work_hours : [],
+          };
+          
+          setUser(currentUser);
+          localStorage.setItem('shafar_user', JSON.stringify(currentUser));
+          await fetchAndSetData(currentUser);
+        }
+      } else {
+        // Limpar dados se não houver sessão
+        setUser(null);
+        setBarbershop(null);
+        setSubscription(null);
+        localStorage.removeItem('shafar_user');
       }
+      
       setLoading(false);
     };
+    
     initializeAuth();
+
+    // Listener para mudanças de autenticação
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Buscar dados do usuário
+          const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userData) {
+            const currentUser: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              barbershopId: userData.barbershop_id,
+              role: userData.role as User['role'],
+              workHours: Array.isArray(userData.work_hours) ? userData.work_hours : [],
+            };
+            
+            setUser(currentUser);
+            localStorage.setItem('shafar_user', JSON.stringify(currentUser));
+            await fetchAndSetData(currentUser);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setBarbershop(null);
+          setSubscription(null);
+          localStorage.removeItem('shafar_user');
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token foi renovado automaticamente, nada a fazer
+          console.log('Token refreshed successfully');
+        }
+      }
+    );
+
+    // Cleanup: cancelar subscription ao desmontar
+    return () => {
+      authSubscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {

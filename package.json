@@ -8,6 +8,8 @@
     "build": "npx vite build",
     "vercel-build": "npx vite build",
     "preview": "npx vite preview",
+    "smoke:test": "npm run type-check && npm run build",
+    "ci:check": "npm run type-check && npm run build && npm run pre-deploy",
     "type-check": "npx tsc --noEmit",
     "pre-deploy": "node scripts/pre-deploy-check.js",
     "api:mock": "node scripts/toggle-api.js mock",
@@ -25,7 +27,7 @@
     "react-calendar": "5.0.0",
     "react-dom": "^19.2.0",
     "react-error-boundary": "^6.0.0",
-    "react-router-dom": "6.22.0",
+    "react-router-dom": "^6.30.3",
     "stripe": "^20.0.0",
     "styled-components": "^6.1.19",
     "zod": "^4.1.13"
@@ -34,6 +36,6 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
-    "vite": "6.3.6"
+    "vite": "^6.4.2"
   }
 }

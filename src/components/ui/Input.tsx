@@ -10,14 +10,16 @@ const inputVariants = {
   default: css`
     background-color: ${props => props.theme.colors.background.secondary};
     border: 1px solid ${props => props.theme.colors.border.primary};
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 
     &:hover:not(:focus):not(:disabled) {
       border-color: ${props => props.theme.colors.border.secondary};
+      background-color: ${props => props.theme.colors.background.tertiary};
     }
 
     &:focus {
       border-color: ${props => props.theme.colors.border.focus};
-      box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
+      box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus}, ${props => props.theme.shadows.base};
       background-color: ${props => props.theme.colors.background.tertiary};
     }
   `,
@@ -55,23 +57,12 @@ const inputSizes = {
   sm: css`
     padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
     font-size: ${props => props.theme.typography.fontSizes.base};
-    min-height: 48px; /* Adequado para toque mobile */
-
-    @media (min-width: ${props => props.theme.breakpoints.sm}) {
-      padding: ${props => props.theme.spacing[2]} ${props => props.theme.spacing[3]};
-      font-size: ${props => props.theme.typography.fontSizes.sm};
-      min-height: 40px;
-    }
+    min-height: 44px;
   `,
   md: css`
-    padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[4]};
+    padding: ${props => props.theme.spacing[3.5]} ${props => props.theme.spacing[4]};
     font-size: ${props => props.theme.typography.fontSizes.base};
-    min-height: 52px; /* Adequado para toque mobile */
-
-    @media (min-width: ${props => props.theme.breakpoints.sm}) {
-      padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
-      min-height: 48px;
-    }
+    min-height: 48px;
   `,
   lg: css`
     padding: ${props => props.theme.spacing[4]} ${props => props.theme.spacing[5]};
@@ -118,9 +109,10 @@ export const Input = styled.input<InputProps>`
 export const Label = styled.label<{ $required?: boolean; $error?: boolean }>`
   display: block;
   font-size: ${props => props.theme.typography.fontSizes.sm};
-  font-weight: ${props => props.theme.typography.fontWeights.medium};
+  font-weight: ${props => props.theme.typography.fontWeights.semibold};
   color: ${props => props.$error ? props.theme.colors.error : props.theme.colors.text.secondary};
   margin-bottom: ${props => props.theme.spacing[2]};
+  letter-spacing: ${props => props.theme.typography.letterSpacings.wide};
 
   ${props => props.$required && css`
     &::after {
@@ -133,7 +125,7 @@ export const Label = styled.label<{ $required?: boolean; $error?: boolean }>`
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${props => props.theme.spacing[2]};
+  gap: ${props => props.theme.spacing[2.5]};
 `;
 
 export const FormRow = styled.div`

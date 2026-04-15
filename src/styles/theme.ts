@@ -1,71 +1,118 @@
+// ============================================================
+// SHAFAR — Design System v2.0
+// Inspirado em Fresha, Booksy e Square Appointments
+// Psicologia das Cores: Âmbar/Dourado = Autoridade + Luxo
+// Neurociência: Alto contraste foca atenção, dourado ativa confiança
+// ============================================================
+
 export const theme = {
   colors: {
-    // Brand Colors - Paleta dourada premium
-    primary: '#D4AF37', // Dourado mais vibrante
-    primaryHover: '#B8941F',
-    primaryLight: '#F4E4A6',
-    primaryDark: '#A67C00',
-    
-    // Background Colors - Tons escuros sofisticados
-    background: {
-      primary: '#0A0A0A', // Preto mais profundo
-      secondary: '#1C1C1E', // Cinza escuro Apple-like
-      tertiary: '#2C2C2E', // Cinza médio
-      elevated: '#3A3A3C', // Cinza elevado para cards
+    // Brand — Âmbar profundo: poder, exclusividade, luxo artesanal
+    primary: {
+      main: '#C8922A',       // Âmbar mais sóbrio — Premium
+      light: '#E8B84B',      // Hover states
+      lighter: '#F5D78E',    // Backgrounds sutis
+      dark: '#9E6E18',       // Active states
+      gradient: 'linear-gradient(135deg, #C8922A 0%, #E8B84B 100%)',
+      gradientReverse: 'linear-gradient(135deg, #E8B84B 0%, #C8922A 100%)',
+      glow: '0 0 24px rgba(200, 146, 42, 0.35)',
+      glowStrong: '0 0 40px rgba(200, 146, 42, 0.5)',
     },
-    
-    // Text Colors - Hierarquia clara
+
+    // Backgrounds — Escala de carvão premium
+    bg: {
+      base: '#0D0D0D',       // Preto carvão — base absoluta
+      card: '#141414',       // Cards e painéis
+      elevated: '#1C1C1C',   // Cards elevados
+      overlay: '#242424',    // Overlays, dropdowns
+      border: '#2A2A2A',     // Borders sutis
+      hover: '#1F1F1F',      // Hover em items de lista
+    },
+
+    // Text — Hierarquia perfeita de legibilidade
     text: {
-      primary: '#FFFFFF', // Branco puro para títulos
-      secondary: '#E5E5E7', // Cinza claro para texto principal
-      tertiary: '#8E8E93', // Cinza médio para texto secundário
-      disabled: '#48484A', // Cinza escuro para disabled
-      inverse: '#1C1C1E', // Texto escuro para fundos claros
+      primary: '#F5F5F5',    // Títulos — alta legibilidade
+      secondary: '#ABABAB',  // Corpo de texto
+      muted: '#6B6B6B',      // Placeholders, labels
+      tertiary: '#6B6B6B',   // Alias (legado)
+      disabled: '#3D3D3D',   // Disabled states
+      inverse: '#0D0D0D',    // Texto em fundos claros
+      brand: '#E8B84B',      // Texto com cor de marca
     },
-    
-    // Semantic Colors - Estados e feedback
-    success: '#30D158',
-    successLight: '#30D15820',
-    warning: '#FF9F0A',
-    warningLight: '#FF9F0A20',
-    error: '#FF453A',
-    errorLight: '#FF453A20',
-    info: '#007AFF',
-    infoLight: '#007AFF20',
-    
-    // Interactive Colors
-    interactive: {
-      hover: '#FFFFFF10',
-      pressed: '#FFFFFF20',
-      focus: '#D4AF3750',
-      disabled: '#48484A',
+
+    // Status — Paleta semântica premium
+    success: {
+      main: '#22C55E',
+      light: 'rgba(34, 197, 94, 0.12)',
+      border: 'rgba(34, 197, 94, 0.3)',
     },
-    
-    // Border Colors
+    warning: {
+      main: '#F59E0B',
+      light: 'rgba(245, 158, 11, 0.12)',
+      border: 'rgba(245, 158, 11, 0.3)',
+    },
+    error: {
+      main: '#EF4444',
+      light: 'rgba(239, 68, 68, 0.12)',
+      border: 'rgba(239, 68, 68, 0.3)',
+    },
+    info: {
+      main: '#3B82F6',
+      light: 'rgba(59, 130, 246, 0.12)',
+      border: 'rgba(59, 130, 246, 0.3)',
+    },
+
+    // Chaves planas (legado) — usadas em vários styled-components
+    primaryLight: '#E8B84B',
+    primaryDark: '#9E6E18',
+    primaryHover: '#E8B84B',
+    successLight: 'rgba(34, 197, 94, 0.12)',
+    warningLight: 'rgba(245, 158, 11, 0.12)',
+    errorLight: 'rgba(239, 68, 68, 0.12)',
+    infoLight: 'rgba(59, 130, 246, 0.12)',
+
+    // Legado — manter compatibilidade com componentes existentes
+    background: {
+      primary: '#0D0D0D',
+      secondary: '#141414',
+      tertiary: '#1C1C1C',
+      elevated: '#202020',
+    },
     border: {
-      primary: '#38383A',
-      secondary: '#48484A',
-      focus: '#D4AF37',
-      error: '#FF453A',
+      primary: '#2A2A2A',
+      secondary: '#363636',
+      focus: '#C8922A',
+      error: '#EF4444',
+      main: '#2A2A2A',
+    },
+    interactive: {
+      hover: 'rgba(200, 146, 42, 0.08)',
+      pressed: 'rgba(200, 146, 42, 0.15)',
+      focus: 'rgba(200, 146, 42, 0.25)',
+      disabled: '#2A2A2A',
     },
   },
-  
-  // Typography Scale - Baseado em design systems modernos
+
+  // Typography — Inter: O fonte padrão de produtos premium digitais
   typography: {
     fonts: {
-      primary: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      mono: 'SF Mono, Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+      primary: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      display: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
     },
     fontSizes: {
-      xs: '0.75rem',    // 12px
-      sm: '0.875rem',   // 14px
-      base: '1rem',     // 16px
-      lg: '1.125rem',   // 18px
-      xl: '1.25rem',    // 20px
-      '2xl': '1.5rem',  // 24px
-      '3xl': '1.875rem', // 30px
-      '4xl': '2.25rem', // 36px
-      '5xl': '3rem',    // 48px
+      '2xs': '0.625rem',   // 10px
+      xs: '0.75rem',       // 12px
+      sm: '0.875rem',      // 14px
+      base: '1rem',        // 16px
+      lg: '1.125rem',      // 18px
+      xl: '1.25rem',       // 20px
+      '2xl': '1.5rem',     // 24px
+      '3xl': '1.875rem',   // 30px
+      '4xl': '2.25rem',    // 36px
+      '5xl': '3rem',       // 48px
+      '6xl': '3.75rem',    // 60px
+      '7xl': '4.5rem',     // 72px
     },
     fontWeights: {
       light: 300,
@@ -74,65 +121,95 @@ export const theme = {
       semibold: 600,
       bold: 700,
       extrabold: 800,
+      black: 900,
     },
     lineHeights: {
-      tight: 1.25,
-      normal: 1.5,
-      relaxed: 1.75,
+      none: 1,
+      tight: 1.2,
+      snug: 1.375,
+      normal: 1.55,
+      relaxed: 1.625,
+      loose: 2,
+    },
+    letterSpacings: {
+      tighter: '-0.05em',
+      tight: '-0.025em',
+      normal: '0em',
+      wide: '0.025em',
+      wider: '0.05em',
+      widest: '0.1em',
     },
   },
-  
-  // Spacing Scale - Sistema 8pt
+
+  // Spacing — Sistema 4pt base (múltiplos de 4)
   spacing: {
     0: '0',
-    1: '0.25rem',  // 4px
-    2: '0.5rem',   // 8px
-    3: '0.75rem',  // 12px
-    4: '1rem',     // 16px
-    5: '1.25rem',  // 20px
-    6: '1.5rem',   // 24px
-    8: '2rem',     // 32px
-    10: '2.5rem',  // 40px
-    12: '3rem',    // 48px
-    16: '4rem',    // 64px
-    20: '5rem',    // 80px
-    24: '6rem',    // 96px
+    px: '1px',
+    0.5: '0.125rem',  // 2px
+    1: '0.25rem',     // 4px
+    1.5: '0.375rem',  // 6px
+    2: '0.5rem',      // 8px
+    2.5: '0.625rem',  // 10px
+    3: '0.75rem',     // 12px
+    3.5: '0.875rem',  // 14px
+    4: '1rem',        // 16px
+    5: '1.25rem',     // 20px
+    6: '1.5rem',      // 24px
+    7: '1.75rem',     // 28px
+    8: '2rem',        // 32px
+    9: '2.25rem',     // 36px
+    10: '2.5rem',     // 40px
+    11: '2.75rem',    // 44px
+    12: '3rem',       // 48px
+    14: '3.5rem',     // 56px
+    16: '4rem',       // 64px
+    20: '5rem',       // 80px
+    24: '6rem',       // 96px
+    28: '7rem',       // 112px
+    32: '8rem',       // 128px
   },
-  
-  // Border Radius - Consistência visual
+
+  // Border Radius — Cantos suaves mas precisos
   radii: {
     none: '0',
-    sm: '0.25rem',   // 4px
+    xs: '0.125rem',   // 2px
+    sm: '0.25rem',    // 4px
     base: '0.375rem', // 6px
-    md: '0.5rem',    // 8px
-    lg: '0.75rem',   // 12px
-    xl: '1rem',      // 16px
-    '2xl': '1.5rem', // 24px
+    md: '0.5rem',     // 8px
+    lg: '0.75rem',    // 12px
+    xl: '1rem',       // 16px
+    '2xl': '1.25rem', // 20px
+    '3xl': '1.5rem',  // 24px
     full: '9999px',
   },
-  
-  // Shadows - Profundidade e elevação
+
+  // Shadows — Profundidade realista no escuro
   shadows: {
     none: 'none',
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-    base: '0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-    glow: '0 0 20px rgba(212, 175, 55, 0.3)',
+    xs: '0 1px 2px rgba(0, 0, 0, 0.4)',
+    sm: '0 4px 10px rgba(0, 0, 0, 0.35)',
+    base: '0 8px 18px rgba(0, 0, 0, 0.4)',
+    md: '0 12px 28px rgba(0, 0, 0, 0.45)',
+    lg: '0 18px 36px rgba(0, 0, 0, 0.5)',
+    xl: '0 24px 52px rgba(0, 0, 0, 0.56)',
+    '2xl': '0 32px 64px rgba(0, 0, 0, 0.7)',
+    brand: '0 8px 24px rgba(200, 146, 42, 0.25)',
+    brandStrong: '0 16px 40px rgba(200, 146, 42, 0.4)',
+    // Legado
+    glow: '0 0 24px rgba(200, 146, 42, 0.35)',
   },
-  
-  // Breakpoints - Design responsivo
+
+  // Breakpoints — Mobile First
   breakpoints: {
-    sm: '640px',
+    xs: '375px',
+    sm: '480px',
     md: '768px',
     lg: '1024px',
     xl: '1280px',
     '2xl': '1536px',
   },
-  
-  // Z-index Scale - Camadas organizadas
+
+  // Z-index
   zIndex: {
     hide: -1,
     auto: 'auto',
@@ -144,16 +221,19 @@ export const theme = {
     overlay: 1300,
     modal: 1400,
     popover: 1500,
-    skipLink: 1600,
     toast: 1700,
     tooltip: 1800,
   },
-  
-  // Transitions - Animações consistentes
+
+  // Transitions — Animações calibradas
   transitions: {
+    instant: '80ms ease',
     fast: '150ms ease',
-    base: '200ms ease',
-    slow: '300ms ease',
-    slower: '500ms ease',
+    base: '220ms ease',
+    slow: '350ms ease',
+    slower: '500ms cubic-bezier(0.16, 1, 0.3, 1)',
+    spring: '400ms cubic-bezier(0.34, 1.56, 0.64, 1)',
   },
-};
+} as const;
+
+export type Theme = typeof theme;

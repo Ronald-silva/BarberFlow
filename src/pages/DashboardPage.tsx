@@ -108,6 +108,10 @@ const DateDisplay = styled.div`
   margin-top: ${props => props.theme.spacing[2]};
 `;
 
+const SectionHeader = styled.div`
+  margin-bottom: ${props => props.theme.spacing[7]};
+`;
+
 const DashboardPage: React.FC = () => {
     const { user } = useAuth();
     const [data, setData] = useState<DashboardData | null>(null);
@@ -165,14 +169,14 @@ const DashboardPage: React.FC = () => {
                 </Flex>
             </WelcomeSection>
 
-            <div style={{ marginBottom: '2rem' }}>
+            <SectionHeader>
                 <Heading $level={2} $color="primary" style={{ marginBottom: '0.5rem' }}>
                     Visão Geral de Hoje
                 </Heading>
                 <Text $color="tertiary">
                     Acompanhe o desempenho da sua barbearia em tempo real
                 </Text>
-            </div>
+            </SectionHeader>
 
             <Grid $columns={3} $responsive>
                 <StatsCard $variant="elevated" className="slide-in">
@@ -191,7 +195,7 @@ const DashboardPage: React.FC = () => {
                     <CardContent>
                         <StatsLabel>Faturamento Previsto</StatsLabel>
                         <StatsValue className="currency">
-                            R$ {data?.faturamentoPrevisto?.toFixed(2) || '0,00'}
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data?.faturamentoPrevisto || 0)}
                         </StatsValue>
                         <Text $size="sm" $color="tertiary" style={{ marginTop: '0.5rem' }}>
                             receita estimada hoje
