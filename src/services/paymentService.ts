@@ -22,7 +22,7 @@ export interface PaymentResponse {
   expiresAt?: string;
 }
 
-export type PaymentMethod = 'pix' | 'bitcoin' | 'credit_card' | 'debit_card';
+export type PaymentMethod = 'pix' | 'bitcoin' | 'credit_card' | 'debit_card' | 'boleto';
 
 class PaymentService {
   private pixKey: string;
@@ -38,33 +38,34 @@ class PaymentService {
   // Criar pagamento PIX
   async createPixPayment(data: PaymentData): Promise<PaymentResponse> {
     try {
-      const paymentId = `pix_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
+      const provider =
+        (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'stripe';
 
-      // Gerar código PIX
-      const pixCode = this.generatePixCode({
-        key: this.pixKey,
-        amount: data.amount,
-        description: data.description,
-        txid: paymentId
+      const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
+        body: {
+          appointment_id: data.appointmentId,
+          amount: data.amount,
+          description: data.description,
+          customer_name: data.clientName,
+          customer_email: data.clientEmail,
+          customer_phone: data.clientPhone,
+          method: 'pix',
+          provider,
+        },
       });
 
-      // Gerar QR Code do PIX
-      const qrCode = await this.generateQRCode(pixCode);
+      if (error) {
+        throw error;
+      }
 
-      // Salvar pagamento no banco
-      await this.savePaymentRecord(paymentId, data.appointmentId, 'pending', 'pix', {
-        pixCode,
-        amount: data.amount,
-        expiresAt: expiresAt.toISOString()
-      });
-
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       return {
-        paymentId,
-        pixCode,
-        qrCode,
-        status: 'pending',
-        expiresAt: expiresAt.toISOString()
+        paymentId: response.paymentId,
+        paymentUrl: response.paymentUrl,
+        qrCode: response.qrCode,
+        pixCode: response.pixCode,
+        status: response.status || 'pending',
+        expiresAt,
       };
     } catch (error) {
       console.error('Erro ao criar pagamento PIX:', error);
@@ -353,6 +354,55 @@ class PaymentService {
         return this.createPixPayment(data);
       case 'bitcoin':
         return this.createBitcoinPayment(data);
+      case 'credit_card':
+      case 'debit_card': {
+        const provider =
+          (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'stripe';
+        const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
+          body: {
+            appointment_id: data.appointmentId,
+            amount: data.amount,
+            description: data.description,
+            customer_name: data.clientName,
+            customer_email: data.clientEmail,
+            customer_phone: data.clientPhone,
+            method,
+            provider,
+          },
+        });
+        if (error) {
+          throw error;
+        }
+        return {
+          paymentId: response.paymentId,
+          paymentUrl: response.paymentUrl,
+          status: response.status || 'pending',
+        };
+      }
+      case 'boleto': {
+        const provider =
+          (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
+        const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
+          body: {
+            appointment_id: data.appointmentId,
+            amount: data.amount,
+            description: data.description,
+            customer_name: data.clientName,
+            customer_email: data.clientEmail,
+            customer_phone: data.clientPhone,
+            method: 'boleto',
+            provider,
+          },
+        });
+        if (error) {
+          throw error;
+        }
+        return {
+          paymentId: response.paymentId,
+          paymentUrl: response.paymentUrl,
+          status: response.status || 'pending',
+        };
+      }
       default:
         throw new Error(`Método de pagamento ${method} não implementado ainda`);
     }

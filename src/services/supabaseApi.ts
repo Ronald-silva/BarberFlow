@@ -978,6 +978,112 @@ export const api = {
     };
   },
 
+  getPaymentProviderConfig: async (barbershopId: string): Promise<{
+    subscriptionProvider: 'stripe' | 'asaas';
+    bookingProvider: 'stripe' | 'asaas';
+    fallbackProvider: 'stripe' | 'asaas';
+    rolloutEnabled: boolean;
+  } | null> => {
+    const { data, error } = await supabase
+      .from('payment_provider_configs')
+      .select('subscription_provider, booking_provider, fallback_provider, rollout_enabled')
+      .eq('barbershop_id', barbershopId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching payment provider config:', error);
+      return null;
+    }
+
+    if (!data) {
+      return {
+        subscriptionProvider: 'stripe',
+        bookingProvider: 'stripe',
+        fallbackProvider: 'stripe',
+        rolloutEnabled: false,
+      };
+    }
+
+    return {
+      subscriptionProvider: data.subscription_provider,
+      bookingProvider: data.booking_provider,
+      fallbackProvider: data.fallback_provider,
+      rolloutEnabled: data.rollout_enabled,
+    };
+  },
+
+  updatePaymentProviderConfig: async (
+    barbershopId: string,
+    payload: {
+      subscriptionProvider: 'stripe' | 'asaas';
+      bookingProvider: 'stripe' | 'asaas';
+      fallbackProvider?: 'stripe' | 'asaas';
+      rolloutEnabled?: boolean;
+    }
+  ): Promise<boolean> => {
+    const { error } = await supabase.from('payment_provider_configs').upsert(
+      {
+        barbershop_id: barbershopId,
+        subscription_provider: payload.subscriptionProvider,
+        booking_provider: payload.bookingProvider,
+        fallback_provider: payload.fallbackProvider || 'stripe',
+        rollout_enabled: payload.rolloutEnabled ?? true,
+      },
+      { onConflict: 'barbershop_id' }
+    );
+
+    if (error) {
+      console.error('Error updating payment provider config:', error);
+      return false;
+    }
+
+    return true;
+  },
+
+  getBillingOperationalMetrics: async (): Promise<{
+    webhookFailures24h: number;
+    pendingWebhookEvents: number;
+    providerBreakdown: Array<{ provider: string; count: number }>;
+    successRate24h: number;
+  }> => {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: failed } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('status', 'failed')
+      .gte('created_at', since);
+
+    const { data: pending } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('status', 'received');
+
+    const { data: recentEvents } = await supabase
+      .from('webhook_events')
+      .select('provider, status')
+      .gte('created_at', since);
+
+    const providerMap = new Map<string, number>();
+    (recentEvents || []).forEach((event) => {
+      providerMap.set(event.provider, (providerMap.get(event.provider) || 0) + 1);
+    });
+
+    const total = recentEvents?.length || 0;
+    const processed = (recentEvents || []).filter((event) => event.status === 'processed').length;
+    const successRate24h = total > 0 ? (processed / total) * 100 : 100;
+
+    return {
+      webhookFailures24h: failed?.length || 0,
+      pendingWebhookEvents: pending?.length || 0,
+      providerBreakdown: Array.from(providerMap.entries()).map(([provider, count]) => ({
+        provider,
+        count,
+      })),
+      successRate24h,
+    };
+  },
+
   updateCurrentUserProfile: async (userId: string, payload: { name: string }): Promise<boolean> => {
     const { error } = await supabase
       .from('users')

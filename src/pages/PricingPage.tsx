@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createCheckoutSession, getSubscriptionPlans, SubscriptionPlan } from '../services/subscriptionService';
+import {
+  BillingProvider,
+  createCheckoutSession,
+  getSubscriptionPlans,
+  resolveSubscriptionProvider,
+  SubscriptionPlan,
+} from '../services/subscriptionService';
 import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../services/supabase';
@@ -15,6 +21,7 @@ const PricingPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [provider, setProvider] = useState<BillingProvider>('stripe');
 
   useEffect(() => {
     void fetchPlans();
@@ -23,7 +30,19 @@ const PricingPage: React.FC = () => {
   useEffect(() => {
     if (!user || !barbershop) return;
     void fetchCurrentSubscription();
+    void fetchProvider();
   }, [user, barbershop]);
+
+  const fetchProvider = async () => {
+    if (!barbershop) return;
+    try {
+      const currentProvider = await resolveSubscriptionProvider(barbershop.id);
+      setProvider(currentProvider);
+    } catch (error) {
+      console.error('Erro ao resolver provider de assinatura:', error);
+      setProvider('stripe');
+    }
+  };
 
   const fetchPlans = async () => {
     setPlansLoading(true);
@@ -63,7 +82,7 @@ const PricingPage: React.FC = () => {
     setSelectedPlan(planId);
 
     try {
-      const checkoutUrl = await createCheckoutSession(planId, 'monthly', barbershop.id);
+      const checkoutUrl = await createCheckoutSession(planId, 'monthly', barbershop.id, provider);
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Erro ao criar checkout:', error);
@@ -90,6 +109,9 @@ const PricingPage: React.FC = () => {
         <Text $size="lg" $color="secondary" style={{ marginTop: '1rem' }}>
           Comece com 14 dias grátis. Cancele quando quiser.
         </Text>
+        <ProviderHint>
+          Gateway ativo desta barbearia: <strong>{provider === 'asaas' ? 'Asaas' : 'Stripe'}</strong>
+        </ProviderHint>
       </HeaderSection>
 
       {currentSubscription && (
@@ -198,6 +220,12 @@ const PricingPage: React.FC = () => {
 const HeaderSection = styled.div`
   text-align: center;
   margin-bottom: 3rem;
+`;
+
+const ProviderHint = styled.p`
+  margin-top: 0.75rem;
+  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${props => props.theme.typography.fontSizes.sm};
 `;
 
 const CurrentPlanBanner = styled.div`

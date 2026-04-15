@@ -23,6 +23,82 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+type BillingProvider = 'stripe' | 'asaas';
+
+type CheckoutRequest = {
+  plan_id?: string;
+  planId?: string;
+  billing_cycle?: 'monthly' | 'yearly';
+  billingCycle?: 'monthly' | 'yearly';
+  barbershop_id?: string;
+  barbershopId?: string;
+  success_url?: string;
+  successUrl?: string;
+  cancel_url?: string;
+  cancelUrl?: string;
+  provider?: BillingProvider;
+  billing_type?: 'CREDIT_CARD' | 'PIX' | 'BOLETO';
+};
+
+function normalizeBillingCycle(value?: string): 'monthly' | 'yearly' {
+  return value === 'yearly' ? 'yearly' : 'monthly';
+}
+
+async function resolveProvider(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  barbershopId: string,
+  requestedProvider?: BillingProvider
+): Promise<BillingProvider> {
+  if (requestedProvider) {
+    return requestedProvider;
+  }
+
+  const { data: config } = await supabaseAdmin
+    .from('payment_provider_configs')
+    .select('subscription_provider, rollout_enabled')
+    .eq('barbershop_id', barbershopId)
+    .maybeSingle();
+
+  if (config?.rollout_enabled && config.subscription_provider) {
+    return config.subscription_provider as BillingProvider;
+  }
+
+  const envProvider = Deno.env.get('BILLING_PROVIDER_DEFAULT');
+  return envProvider === 'asaas' ? 'asaas' : 'stripe';
+}
+
+function toAsaasBaseUrl(): string {
+  const env = (Deno.env.get('ASAAS_ENV') || 'sandbox').toLowerCase();
+  return env === 'production'
+    ? 'https://api.asaas.com/v3'
+    : 'https://sandbox.asaas.com/api/v3';
+}
+
+async function asaasRequest(path: string, method: string, body: Record<string, unknown>) {
+  const asaasApiKey = Deno.env.get('ASAAS_API_KEY');
+  if (!asaasApiKey) {
+    throw new Error('ASAAS_API_KEY não configurada');
+  }
+
+  const response = await fetch(`${toAsaasBaseUrl()}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      access_token: asaasApiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    const message =
+      payload?.errors?.[0]?.description || payload?.message || 'Erro ao acessar API Asaas';
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
 // =====================================================
 // MAIN HANDLER
 // =====================================================
@@ -39,17 +115,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    if (!stripeSecretKey) {
-      throw new Error('STRIPE_SECRET_KEY não configurada');
-    }
-
-    // 2. Initialize Stripe
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
-      httpClient: Stripe.createFetchHttpClient(),
-    });
-
-    // 3. Initialize Supabase client
+    // 2. Initialize Supabase client
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 4. Get authenticated user from request
@@ -65,19 +131,15 @@ serve(async (req) => {
     }
 
     // 5. Parse request body (aceita snake_case e camelCase)
-    const body = await req.json();
+    const body = (await req.json()) as CheckoutRequest;
     const planParam = body.plan_id || body.planId;
-    const billingCycle = body.billing_cycle || body.billingCycle || 'monthly';
+    const billingCycle = normalizeBillingCycle(body.billing_cycle || body.billingCycle);
     const barbershopId = body.barbershop_id || body.barbershopId;
     const successUrl = body.success_url || body.successUrl;
     const cancelUrl = body.cancel_url || body.cancelUrl;
 
     if (!planParam || !barbershopId) {
       throw new Error('Parâmetros inválidos');
-    }
-
-    if (billingCycle !== 'monthly' && billingCycle !== 'yearly') {
-      throw new Error('billing_cycle inválido');
     }
 
     // 6. Validate user access to barbershop
@@ -97,6 +159,8 @@ serve(async (req) => {
     ) {
       throw new Error('Sem permissão para esta barbearia');
     }
+
+    const provider = await resolveProvider(supabaseAdmin, barbershopId, body.provider);
 
     // 7. Get plan details from database (ID UUID ou slug)
     let planQuery = supabaseAdmin
@@ -129,83 +193,193 @@ serve(async (req) => {
       throw new Error('Barbearia não encontrada');
     }
 
-    // 9. Check if Stripe customer already exists
-    let customerId: string;
-    const { data: existingCustomer } = await supabaseAdmin
-      .from('stripe_customers')
-      .select('stripe_customer_id')
-      .eq('barbershop_id', barbershopId)
-      .single();
+    if (provider === 'stripe') {
+      if (!stripeSecretKey) {
+        throw new Error('STRIPE_SECRET_KEY não configurada');
+      }
 
-    if (existingCustomer) {
-      customerId = existingCustomer.stripe_customer_id;
-    } else {
-      // Create new Stripe customer
-      const customer = await stripe.customers.create({
-        email: barbershop.email || user.email,
-        name: barbershop.name,
-        metadata: {
+      const stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2023-10-16',
+        httpClient: Stripe.createFetchHttpClient(),
+      });
+
+      let customerId: string;
+      const { data: existingCustomer } = await supabaseAdmin
+        .from('stripe_customers')
+        .select('stripe_customer_id')
+        .eq('barbershop_id', barbershopId)
+        .single();
+
+      if (existingCustomer?.stripe_customer_id) {
+        customerId = existingCustomer.stripe_customer_id;
+      } else {
+        const customer = await stripe.customers.create({
+          email: barbershop.email || user.email,
+          name: barbershop.name,
+          metadata: {
+            barbershop_id: barbershopId,
+            user_id: user.id,
+          },
+        });
+
+        customerId = customer.id;
+
+        await supabaseAdmin.from('stripe_customers').insert({
           barbershop_id: barbershopId,
           user_id: user.id,
+          stripe_customer_id: customerId,
+          email: barbershop.email || user.email,
+          name: barbershop.name,
+        });
+      }
+
+      await supabaseAdmin
+        .from('payment_customers')
+        .upsert(
+          {
+            barbershop_id: barbershopId,
+            user_id: user.id,
+            provider: 'stripe',
+            provider_customer_id: customerId,
+            email: barbershop.email || user.email,
+            name: barbershop.name,
+            metadata: { source: 'create-checkout-session' },
+          },
+          { onConflict: 'barbershop_id,provider' }
+        );
+
+      const stripePriceId =
+        billingCycle === 'yearly'
+          ? plan.stripe_price_id_yearly
+          : plan.stripe_price_id_monthly;
+
+      if (!stripePriceId) {
+        throw new Error('Price ID do Stripe não configurado para este plano');
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: stripePriceId,
+            quantity: 1,
+          },
+        ],
+        success_url:
+          successUrl || `${req.headers.get('origin')}/#/dashboard/overview?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: cancelUrl || `${req.headers.get('origin')}/#/pricing?canceled=true`,
+        subscription_data: {
+          trial_period_days: 14,
+          metadata: {
+            barbershop_id: barbershopId,
+            plan_id: plan.id,
+            billing_cycle: billingCycle,
+            provider: 'stripe',
+          },
         },
-      });
-
-      customerId = customer.id;
-
-      // Save to database
-      await supabaseAdmin.from('stripe_customers').insert({
-        barbershop_id: barbershopId,
-        user_id: user.id,
-        stripe_customer_id: customerId,
-        email: barbershop.email || user.email,
-        name: barbershop.name,
-      });
-    }
-
-    // 10. Get Stripe Price ID
-    const stripePriceId =
-      billingCycle === 'yearly'
-        ? plan.stripe_price_id_yearly
-        : plan.stripe_price_id_monthly;
-
-    if (!stripePriceId) {
-      throw new Error('Price ID do Stripe não configurado para este plano');
-    }
-
-    // 11. Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: stripePriceId,
-          quantity: 1,
-        },
-      ],
-      success_url:
-        successUrl || `${req.headers.get('origin')}/#/dashboard/overview?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/#/pricing?canceled=true`,
-      subscription_data: {
-        trial_period_days: 14, // 14 days free trial
         metadata: {
           barbershop_id: barbershopId,
           plan_id: plan.id,
           billing_cycle: billingCycle,
+          provider: 'stripe',
         },
-      },
+      });
+
+      return new Response(
+        JSON.stringify({
+          provider: 'stripe',
+          url: session.url,
+          session_id: session.id,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Provider: Asaas
+    const billingType = body.billing_type || 'CREDIT_CARD';
+    const externalReference = `${barbershopId}:${plan.id}:${billingCycle}`;
+    const { data: existingAsaasCustomer } = await supabaseAdmin
+      .from('payment_customers')
+      .select('provider_customer_id')
+      .eq('barbershop_id', barbershopId)
+      .eq('provider', 'asaas')
+      .maybeSingle();
+
+    let asaasCustomerId = existingAsaasCustomer?.provider_customer_id;
+
+    if (!asaasCustomerId) {
+      const customer = await asaasRequest('/customers', 'POST', {
+        name: barbershop.name,
+        email: barbershop.email || user.email,
+        externalReference: barbershopId,
+      });
+
+      asaasCustomerId = customer.id;
+      await supabaseAdmin
+        .from('payment_customers')
+        .upsert(
+          {
+            barbershop_id: barbershopId,
+            user_id: user.id,
+            provider: 'asaas',
+            provider_customer_id: asaasCustomerId,
+            email: barbershop.email || user.email,
+            name: barbershop.name,
+            metadata: { createdBy: 'create-checkout-session' },
+          },
+          { onConflict: 'barbershop_id,provider' }
+        );
+    }
+
+    const cycle = billingCycle === 'yearly' ? 'YEARLY' : 'MONTHLY';
+    const value = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+    const nextDueDate = new Date(Date.now() + (billingCycle === 'yearly' ? 365 : 30) * 86400000)
+      .toISOString()
+      .slice(0, 10);
+
+    const asaasSubscription = await asaasRequest('/subscriptions', 'POST', {
+      customer: asaasCustomerId,
+      billingType,
+      value,
+      cycle,
+      nextDueDate,
+      description: `Assinatura ${plan.name} (${billingCycle})`,
+      externalReference,
+    });
+
+    await supabaseAdmin.from('subscriptions').insert({
+      barbershop_id: barbershopId,
+      plan_id: plan.id,
+      stripe_customer_id: null,
+      provider: 'asaas',
+      provider_customer_id: asaasCustomerId,
+      provider_subscription_id: asaasSubscription.id,
+      provider_price_id: billingCycle === 'yearly' ? plan.asaas_plan_id_yearly : plan.asaas_plan_id_monthly,
+      billing_cycle: billingCycle,
+      amount: value,
+      currency: 'BRL',
+      status: 'pending',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + (billingCycle === 'yearly' ? 365 : 30) * 86400000).toISOString(),
       metadata: {
-        barbershop_id: barbershopId,
-        plan_id: plan.id,
-        billing_cycle: billingCycle,
+        provider: 'asaas',
+        external_reference: externalReference,
       },
     });
 
-    // 12. Return session URL
     return new Response(
       JSON.stringify({
-        url: session.url,
-        session_id: session.id,
+        provider: 'asaas',
+        url:
+          asaasSubscription.invoiceUrl ||
+          asaasSubscription.bankSlipUrl ||
+          `${req.headers.get('origin')}/#/dashboard/subscription?provider=asaas&subscription_id=${asaasSubscription.id}`,
+        subscription_id: asaasSubscription.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

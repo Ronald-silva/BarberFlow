@@ -19,6 +19,7 @@ import type {
   CheckoutOrderInput,
   CheckoutProviderId,
 } from '../types/barbershopPayments';
+import { supabase } from './supabase';
 
 // ─── Registro de capacidades (o que cada API suporta) ─────────────────────────
 
@@ -356,4 +357,85 @@ export function prepareBarbershopCheckout(
  */
 export function serializePreparedCheckout(prepared: PreparedBarbershopCheckout): string {
   return JSON.stringify(prepared);
+}
+
+/**
+ * Executa checkout preparado via Edge Function segura.
+ * Mantém o front sem exposição de secrets dos gateways.
+ */
+export async function executeBarbershopCheckout(
+  prepared: PreparedBarbershopCheckout,
+  appointmentId: string
+): Promise<{
+  provider: CheckoutProviderId;
+  paymentId: string;
+  paymentUrl?: string;
+  qrCode?: string;
+  pixCode?: string;
+  status: string;
+}> {
+  let providerForBackend: 'stripe' | 'asaas';
+  let method: 'pix' | 'credit_card' | 'debit_card' | 'boleto';
+  let amount: number;
+  let description: string;
+
+  switch (prepared.provider) {
+    case 'stripe':
+      providerForBackend = 'stripe';
+      method = prepared.stripe.paymentMethodTypes.includes('pix') ? 'pix' : 'credit_card';
+      amount = prepared.stripe.amountCents / 100;
+      description = 'Pagamento de serviço';
+      break;
+    case 'asaas':
+      providerForBackend = 'asaas';
+      method =
+        prepared.asaas.billingType === 'PIX'
+          ? 'pix'
+          : prepared.asaas.billingType === 'BOLETO'
+          ? 'boleto'
+          : prepared.asaas.billingType === 'DEBIT_CARD'
+          ? 'debit_card'
+          : 'credit_card';
+      amount = prepared.asaas.body.value;
+      description = prepared.asaas.body.description;
+      break;
+    case 'mercadopago':
+      // Mantemos fallback operacional para Stripe até existir função dedicada de MP.
+      providerForBackend = 'stripe';
+      method = 'credit_card';
+      amount = prepared.mercadoPago.preference.items[0]?.unit_price || 0;
+      description = prepared.mercadoPago.preference.items[0]?.title || 'Pagamento de serviço';
+      break;
+    case 'manual_pix':
+      providerForBackend = 'asaas';
+      method = 'pix';
+      amount = prepared.manualPix.amountBrl;
+      description = prepared.manualPix.description;
+      break;
+    default:
+      throw new Error('Checkout não suportado para execução');
+  }
+
+  const { data, error } = await supabase.functions.invoke('create-booking-payment', {
+    body: {
+      appointment_id: appointmentId,
+      provider: providerForBackend,
+      method,
+      amount,
+      description,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Falha ao executar checkout');
+  }
+
+  return {
+    provider: prepared.provider,
+    paymentId: data.paymentId,
+    paymentUrl: data.paymentUrl,
+    qrCode: data.qrCode,
+    pixCode: data.pixCode,
+    status: data.status,
+  };
 }

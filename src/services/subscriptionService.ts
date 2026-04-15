@@ -9,6 +9,8 @@
 
 import { supabase } from './supabase';
 
+export type BillingProvider = 'stripe' | 'asaas';
+
 // =====================================================
 // 1. TYPES
 // =====================================================
@@ -17,13 +19,15 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description: string | null;
   price_monthly: number;
   price_yearly: number;
   currency: string;
   stripe_price_id_monthly: string;
   stripe_price_id_yearly: string;
   stripe_product_id: string;
+  asaas_plan_id_monthly?: string | null;
+  asaas_plan_id_yearly?: string | null;
   max_professionals: number | null;
   max_services: number | null;
   max_monthly_appointments: number | null;
@@ -35,13 +39,24 @@ export interface SubscriptionPlan {
   updated_at: string;
 }
 
+function normalizePlan(raw: any): SubscriptionPlan {
+  return {
+    ...raw,
+    features: Array.isArray(raw.features) ? raw.features.filter((item: unknown) => typeof item === 'string') : [],
+  } as SubscriptionPlan;
+}
+
 export interface Subscription {
   id: string;
   barbershop_id: string;
   plan_id: string;
-  stripe_customer_id: string;
-  stripe_subscription_id: string;
-  stripe_price_id: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  provider: BillingProvider;
+  provider_customer_id: string | null;
+  provider_subscription_id: string | null;
+  provider_price_id: string | null;
   billing_cycle: 'monthly' | 'yearly';
   amount: number;
   currency: string;
@@ -121,7 +136,7 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     throw new Error('Não foi possível carregar os planos de assinatura');
   }
 
-  return data || [];
+  return (data || []).map(normalizePlan);
 }
 
 /**
@@ -143,7 +158,7 @@ export async function getSubscriptionPlanBySlug(
     return null;
   }
 
-  return data;
+  return data ? normalizePlan(data) : null;
 }
 
 // =====================================================
@@ -203,7 +218,7 @@ export async function getSubscriptionWithPlan(barbershopId: string): Promise<{
     return { subscription, plan: null };
   }
 
-  return { subscription, plan };
+  return { subscription, plan: plan ? normalizePlan(plan) : null };
 }
 
 /**
@@ -370,15 +385,18 @@ export async function getLatestPayment(
 export async function createCheckoutSession(
   planId: string,
   billingCycle: 'monthly' | 'yearly',
-  barbershopId: string
+  barbershopId: string,
+  provider?: BillingProvider
 ): Promise<string> {
   try {
+    const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
     // Call Supabase Edge Function (to be created)
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
       body: {
         plan_id: planId,
         billing_cycle: billingCycle,
         barbershop_id: barbershopId,
+        provider: resolvedProvider,
       },
     });
 
@@ -406,12 +424,15 @@ export async function createCheckoutSession(
  * @returns Customer portal URL
  */
 export async function createCustomerPortalSession(
-  barbershopId: string
+  barbershopId: string,
+  provider?: BillingProvider
 ): Promise<string> {
   try {
+    const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
     const { data, error } = await supabase.functions.invoke('create-portal-session', {
       body: {
         barbershop_id: barbershopId,
+        provider: resolvedProvider,
       },
     });
 
@@ -429,6 +450,23 @@ export async function createCustomerPortalSession(
     console.error('Error creating portal session:', error);
     throw new Error('Erro ao criar sessão do portal. Tente novamente.');
   }
+}
+
+export async function resolveSubscriptionProvider(
+  barbershopId: string
+): Promise<BillingProvider> {
+  const defaultProvider = (import.meta.env.VITE_SUBSCRIPTION_PROVIDER_DEFAULT || 'stripe') as BillingProvider;
+  const { data } = await supabase
+    .from('payment_provider_configs')
+    .select('subscription_provider, rollout_enabled')
+    .eq('barbershop_id', barbershopId)
+    .maybeSingle();
+
+  if (data?.rollout_enabled && data.subscription_provider) {
+    return data.subscription_provider;
+  }
+
+  return defaultProvider === 'asaas' ? 'asaas' : 'stripe';
 }
 
 // =====================================================

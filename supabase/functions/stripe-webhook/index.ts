@@ -22,6 +22,49 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.5.0?target=deno';
 
+type SupabaseAdmin = ReturnType<typeof createClient>;
+
+async function registerWebhookEvent(
+  supabase: SupabaseAdmin,
+  event: Stripe.Event
+): Promise<{ alreadyProcessed: boolean }> {
+  const payload = {
+    provider: 'stripe',
+    event_id: event.id,
+    event_type: event.type,
+    status: 'received',
+    payload: event,
+  };
+
+  const { error } = await supabase.from('webhook_events').insert(payload);
+  if (!error) {
+    return { alreadyProcessed: false };
+  }
+
+  if ((error as { code?: string }).code === '23505') {
+    return { alreadyProcessed: true };
+  }
+
+  throw error;
+}
+
+async function finalizeWebhookEvent(
+  supabase: SupabaseAdmin,
+  eventId: string,
+  status: 'processed' | 'failed',
+  errorMessage?: string
+) {
+  await supabase
+    .from('webhook_events')
+    .update({
+      status,
+      error_message: errorMessage || null,
+      processed_at: new Date().toISOString(),
+    })
+    .eq('provider', 'stripe')
+    .eq('event_id', eventId);
+}
+
 // =====================================================
 // MAIN HANDLER
 // =====================================================
@@ -62,6 +105,13 @@ serve(async (req) => {
     );
 
     console.log(`Received event: ${event.type}`);
+    const { alreadyProcessed } = await registerWebhookEvent(supabaseAdmin, event);
+    if (alreadyProcessed) {
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // 6. Handle different event types
     switch (event.type) {
@@ -100,6 +150,8 @@ serve(async (req) => {
         console.log(`Unhandled event type: ${event.type}`);
     }
 
+    await finalizeWebhookEvent(supabaseAdmin, event.id, 'processed');
+
     // 7. Return success response
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
@@ -107,6 +159,23 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Webhook error:', error);
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+      const parsedBody = await req.clone().text();
+      const eventIdMatch = parsedBody.match(/"id"\s*:\s*"([^"]+)"/);
+      if (eventIdMatch?.[1]) {
+        await finalizeWebhookEvent(
+          supabaseAdmin,
+          eventIdMatch[1],
+          'failed',
+          error instanceof Error ? error.message : 'Webhook error'
+        );
+      }
+    } catch {
+      // noop
+    }
 
     return new Response(
       JSON.stringify({
@@ -190,6 +259,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, supab
   const subscriptionData = {
     barbershop_id: barbershopId,
     plan_id: planId,
+    provider: 'stripe',
+    provider_customer_id: subscription.customer as string,
+    provider_subscription_id: subscription.id,
+    provider_price_id: subscription.items.data[0]?.price.id || null,
     stripe_customer_id: stripeCustomer.id,
     stripe_subscription_id: subscription.id,
     stripe_price_id: subscription.items.data[0]?.price.id || null,
@@ -284,6 +357,11 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   const paymentData = {
     barbershop_id: subscription.barbershop_id,
     subscription_id: subscription.id,
+    provider: 'stripe',
+    provider_customer_id: invoice.customer as string,
+    provider_invoice_id: invoice.id,
+    provider_payment_id: invoice.payment_intent as string,
+    provider_charge_id: invoice.charge as string,
     stripe_customer_id: stripeCustomer?.id || null,
     stripe_invoice_id: invoice.id,
     stripe_payment_intent_id: invoice.payment_intent as string,
@@ -346,6 +424,10 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   const paymentData = {
     barbershop_id: subscription.barbershop_id,
     subscription_id: subscription.id,
+    provider: 'stripe',
+    provider_customer_id: invoice.customer as string,
+    provider_invoice_id: invoice.id,
+    provider_payment_id: invoice.payment_intent as string,
     stripe_customer_id: stripeCustomer?.id || null,
     stripe_invoice_id: invoice.id,
     stripe_payment_intent_id: invoice.payment_intent as string,

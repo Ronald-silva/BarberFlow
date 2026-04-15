@@ -23,6 +23,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+type BillingProvider = 'stripe' | 'asaas';
+
 // =====================================================
 // MAIN HANDLER
 // =====================================================
@@ -68,6 +70,7 @@ serve(async (req) => {
     const body = await req.json();
     const barbershopId = body.barbershop_id || body.barbershopId;
     const returnUrl = body.return_url || body.returnUrl;
+    const requestedProvider = body.provider as BillingProvider | undefined;
 
     if (!barbershopId) {
       throw new Error('barbershop_id é obrigatório');
@@ -91,6 +94,36 @@ serve(async (req) => {
       throw new Error('Sem permissão para esta barbearia');
     }
 
+    let provider: BillingProvider = requestedProvider || 'stripe';
+    if (!requestedProvider) {
+      const { data: cfg } = await supabaseAdmin
+        .from('payment_provider_configs')
+        .select('subscription_provider, rollout_enabled')
+        .eq('barbershop_id', barbershopId)
+        .maybeSingle();
+
+      if (cfg?.rollout_enabled && cfg.subscription_provider) {
+        provider = cfg.subscription_provider as BillingProvider;
+      }
+    }
+
+    if (provider === 'asaas') {
+      // Asaas não possui portal equivalente ao Stripe Billing Portal.
+      // Retornamos a URL de retorno para manter UX consistente.
+      return new Response(
+        JSON.stringify({
+          provider: 'asaas',
+          url: returnUrl || `${req.headers.get('origin')}/#/dashboard/settings`,
+          message:
+            'Portal do Asaas não está disponível nesta versão. Gerencie a assinatura pelo painel administrativo.',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     // 7. Get Stripe customer ID from database
     const { data: stripeCustomer, error: customerError } = await supabaseAdmin
       .from('stripe_customers')
@@ -111,6 +144,7 @@ serve(async (req) => {
     // 9. Return session URL
     return new Response(
       JSON.stringify({
+        provider: 'stripe',
         url: session.url,
       }),
       {
