@@ -256,7 +256,8 @@ export const Flex = styled.div<{
   `}
 `;
 
-// Typographyexport const Heading = styled.h1<{ 
+// Typography
+export const Heading = styled.h1<{ 
   $level?: 1 | 2 | 3 | 4 | 5 | 6;
   $color?: 'primary' | 'secondary' | 'tertiary';
   $gradient?: boolean;
