@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <!-- Gradiente para o fundo -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    
+    <!-- Gradiente para o poste -->
+    <linearGradient id="pole" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e8e8e8"/>
+      <stop offset="50%" style="stop-color:#f5f5f5"/>
+      <stop offset="100%" style="stop-color:#d0d0d0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Fundo -->
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+  
+  <!-- Base inferior do poste -->
+  <ellipse cx="16" cy="26" rx="6" ry="1.5" fill="#c09a5c"/>
+  
+  <!-- Poste principal -->
+  <rect x="13" y="6" width="6" height="20" fill="url(#pole)" rx="3"/>
+  
+  <!-- Listras helicoidais do barbeiro -->
+  <!-- Listra vermelha -->
+  <path d="M13 8 L19 12 L19 14 L13 10 Z" fill="#dc2626"/>
+  <path d="M13 14 L19 18 L19 20 L13 16 Z" fill="#dc2626"/>
+  <path d="M13 20 L19 24 L19 26 L13 22 Z" fill="#dc2626"/>
+  
+  <!-- Listra azul -->
+  <path d="M13 10 L19 14 L19 16 L13 12 Z" fill="#2563eb"/>
+  <path d="M13 16 L19 20 L19 22 L13 18 Z" fill="#2563eb"/>
+  <path d="M13 22 L19 26 L17 26 L13 24 Z" fill="#2563eb"/>
+  
+  <!-- Topo do poste -->
+  <ellipse cx="16" cy="6" rx="3" ry="1.5" fill="#c09a5c"/>
+  
+  <!-- Brilho no poste -->
+  <rect x="14" y="6" width="1" height="20" fill="rgba(255,255,255,0.3)" rx="0.5"/>
+</svg>
