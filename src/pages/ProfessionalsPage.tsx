@@ -3,28 +3,41 @@ import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseApi } from '../services/supabaseApi';
 import { User, UserRole } from '../types';
-import { PageContainer, Heading, Text, Grid, Card, CardContent } from '../components/ui/Container';
+import { DashboardShell, Heading, Text, Card, CardContent } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
 import { TeamIcon } from '../components/icons';
 
 // Styled Components
 const ProfessionalsHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: ${(props) => props.theme.spacing[4]};
   align-items: center;
-  margin-bottom: ${props => props.theme.spacing[6]};
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    flex-direction: column;
-    gap: ${props => props.theme.spacing[4]};
-    align-items: stretch;
+  margin-bottom: ${(props) => props.theme.spacing[6]};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: ${(props) => props.theme.spacing[5]};
+  }
+`;
+
+const ProfessionalsList = styled.div<{ $count: number }>`
+  width: 100%;
+  display: grid;
+  gap: ${(p) => p.theme.spacing[5]};
+  grid-template-columns: 1fr;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
+    grid-template-columns: ${(p) =>
+      p.$count >= 2 ? 'repeat(2, minmax(0, 1fr))' : '1fr'};
   }
 `;
 
 const ProfessionalCard = styled(Card)`
   transition: ${props => props.theme.transitions.base};
-  
+  min-width: 0;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: ${props => props.theme.shadows.xl};
@@ -42,7 +55,11 @@ const Avatar = styled.div`
   width: 48px;
   height: 48px;
   border-radius: ${props => props.theme.radii.full};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bs-brand-main, ${props => props.theme.colors.primary.main}) 0%,
+    var(--bs-brand-light, ${props => props.theme.colors.primary.light}) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,9 +94,9 @@ const RoleBadge = styled.span<{ $role: UserRole }>`
   letter-spacing: 0.05em;
   
   ${props => props.$role === UserRole.ADMIN ? `
-    background-color: ${props.theme.colors.primaryLight}20;
-    color: ${props.theme.colors.primary};
-    border: 1px solid ${props.theme.colors.primary}40;
+    background-color: color-mix(in srgb, var(--bs-brand-main, ${props.theme.colors.primary.main}) 14%, transparent);
+    color: var(--bs-brand-light, ${props.theme.colors.primary.light});
+    border: 1px solid color-mix(in srgb, var(--bs-brand-main, ${props.theme.colors.primary.main}) 35%, transparent);
   ` : `
     background-color: ${props.theme.colors.infoLight};
     color: ${props.theme.colors.info};
@@ -104,14 +121,24 @@ const WorkHoursTitle = styled.h4`
 
 const WorkHoursList = styled.div`
   display: grid;
-  gap: ${props => props.theme.spacing[1]};
+  gap: ${(props) => props.theme.spacing[2]};
+  grid-template-columns: 1fr;
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: ${(props) => props.theme.spacing[6]};
+  }
 `;
 
 const WorkHourItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: ${props => props.theme.typography.fontSizes.xs};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.secondary};
+  padding: ${(props) => props.theme.spacing[2]} 0;
+  border-bottom: 1px solid ${(props) => props.theme.colors.border.primary};
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 const ProfessionalActions = styled.div`
@@ -401,17 +428,17 @@ const ProfessionalsPage: React.FC = () => {
 
     if (loading) {
         return (
-            <PageContainer>
+            <DashboardShell>
                 <LoadingContainer>
                     <LoadingSpinner />
                     <Text $color="tertiary">Carregando profissionais...</Text>
                 </LoadingContainer>
-            </PageContainer>
+            </DashboardShell>
         );
     }
 
     return (
-        <PageContainer className="fade-in">
+        <DashboardShell className="fade-in">
             <ProfessionalsHeader>
                 <div>
                     <Heading $level={1} $gradient>
@@ -449,7 +476,10 @@ const ProfessionalsPage: React.FC = () => {
                     </Text>
                 </EmptyState>
             ) : (
-                <Grid $columns={2} className="slide-in">
+                <ProfessionalsList
+                  $count={professionals.length}
+                  className="slide-in"
+                >
                     {professionals.map(professional => (
                         <ProfessionalCard key={professional.id} $variant="elevated">
                             <CardContent>
@@ -496,7 +526,7 @@ const ProfessionalsPage: React.FC = () => {
                             </CardContent>
                         </ProfessionalCard>
                     ))}
-                </Grid>
+                </ProfessionalsList>
             )}
 
             {/* Modal */}
@@ -580,7 +610,7 @@ const ProfessionalsPage: React.FC = () => {
                     </ModalForm>
                 </ModalContent>
             </Modal>
-        </PageContainer>
+        </DashboardShell>
     );
 };
 

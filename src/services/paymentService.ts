@@ -39,7 +39,7 @@ class PaymentService {
   async createPixPayment(data: PaymentData): Promise<PaymentResponse> {
     try {
       const provider =
-        (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'stripe';
+        (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
 
       const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
         body: {
@@ -357,7 +357,7 @@ class PaymentService {
       case 'credit_card':
       case 'debit_card': {
         const provider =
-          (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'stripe';
+          (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
         const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
           body: {
             appointment_id: data.appointmentId,

@@ -368,8 +368,28 @@ const BarbershopRegistrationPage: React.FC = () => {
     setError("");
 
     try {
-      const { data: existingSlug } = await supabase.from("barbershops").select("slug").eq("slug", shop.slug).maybeSingle();
-      if (existingSlug) { setError("Esta URL já está em uso. Escolha outra."); setLoading(false); return; }
+      // Cadastro público: insert em barbershops só passa RLS como anônimo (ou política estendida).
+      await supabase.auth.signOut();
+
+      const { data: slugRows, error: slugCheckErr } = await supabase
+        .from("barbershops")
+        .select("id")
+        .eq("slug", shop.slug)
+        .limit(1);
+
+      if (slugCheckErr) {
+        console.error(slugCheckErr);
+        setError("Não foi possível verificar se a URL está disponível. Tente de novo.");
+        setLoading(false);
+        return;
+      }
+      if (slugRows && slugRows.length > 0) {
+        setError(
+          "Esta URL (slug) já está em uso — muitas vezes por um cadastro anterior que parou no meio. Altere o nome da barbearia/slug ou apague a linha órfã em public.barbershops no Supabase e tente de novo."
+        );
+        setLoading(false);
+        return;
+      }
 
       const insertBarbershop: Database['public']['Tables']['barbershops']['Insert'] = {
         name: shop.name,
@@ -423,9 +443,23 @@ const BarbershopRegistrationPage: React.FC = () => {
 
       navigate("/login", { state: { message: "Barbearia criada com sucesso! Faça login.", email: admin.email } });
     } catch (err: any) {
-      if (err.message?.includes("User already registered")) setError("Este email já tem cadastro. Faça login ou use outro email.");
+      const msg = String(err?.message || "");
+      if (msg.includes("User already registered")) setError("Este email já tem cadastro. Faça login ou use outro email.");
       else if (err.code === "23505") setError("URL ou email já cadastrado. Verifique os dados.");
-      else setError(err.message || "Erro ao criar barbearia. Tente novamente.");
+      else if (msg.includes("row-level security") && msg.includes("barbershops")) {
+        setError(
+          "Permissão negada ao criar a barbearia (RLS). Saia da conta no app ou execute no SQL Editor: supabase/migrations/20260419_rls_barbershops_insert_registration.sql — depois tente de novo."
+        );
+      } else if (msg.includes("row-level security") && msg.includes("users")) {
+        setError(
+          "Permissão negada ao criar seu perfil (RLS em users). No Supabase SQL Editor execute: supabase/migrations/20260418_rls_users_insert_own_profile.sql — depois tente cadastrar de novo."
+        );
+      }
+      else if (msg.includes("barbershops") && msg.includes("schema cache")) {
+        setError(
+          "O schema da tabela barbershops no Supabase está desatualizado em relação ao app. No SQL Editor, execute os arquivos: supabase/migrations/20260416_barbershops_email_column.sql e supabase/migrations/20260417_barbershops_phone_address.sql (ou o trecho equivalente em database/SETUP_COMPLETO.sql) e tente de novo."
+        );
+      } else setError(msg || "Erro ao criar barbearia. Tente novamente.");
     } finally {
       setLoading(false);
     }

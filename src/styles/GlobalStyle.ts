@@ -6,9 +6,6 @@ export const GlobalStyle = createGlobalStyle`
    * Mobile-first, premium dark design
    * =================================================== */
 
-  /* Import Inter font */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
   /* Reset moderno */
   *, *::before, *::after {
     box-sizing: border-box;
@@ -35,7 +32,7 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: 400;
     line-height: 1.55;
     background-color: #0D0D0D;
-    color: #ABABAB;
+    color: #D2D2D2;
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -76,11 +73,32 @@ export const GlobalStyle = createGlobalStyle`
     &:disabled { cursor: not-allowed; }
   }
 
-  input, textarea {
+  /* Texto: reset. Não aplicar a checkbox/radio/color (some a aparência nativa). */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="hidden"]):not([type="file"]),
+  textarea {
     outline: none;
     border: none;
     background: none;
-    &::placeholder { color: #6B6B6B; }
+    &::placeholder { color: #9A9A9A; }
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--bs-brand-main, #c8922a);
+  }
+
+  input[type="color"] {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    padding: 2px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    background: #1a1a1a;
+    cursor: pointer;
   }
 
   /* ================ Scrollbar Premium ================= */
@@ -182,7 +200,11 @@ export const GlobalStyle = createGlobalStyle`
   /* ================ Mobile específico ================= */
   @media (max-width: 1023px) {
     button, a { min-height: 44px; }
-    input, select, textarea { min-height: 44px; }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="hidden"]):not([type="file"]),
+    select,
+    textarea {
+      min-height: 44px;
+    }
   }
 
   /* ================ iOS Safe Area ================= */
@@ -207,7 +229,7 @@ export const GlobalStyle = createGlobalStyle`
     border: 1px solid #2A2A2A;
     border-radius: 12px;
     background-color: #141414;
-    color: #ABABAB;
+    color: #D2D2D2;
     font-family: "Inter", sans-serif;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     padding: 12px;
@@ -252,7 +274,7 @@ export const GlobalStyle = createGlobalStyle`
     text-transform: uppercase;
     font-weight: 600;
     font-size: 0.7rem;
-    color: #6B6B6B;
+    color: #9A9A9A;
     margin-bottom: 8px;
     letter-spacing: 0.06em;
   }
@@ -266,7 +288,7 @@ export const GlobalStyle = createGlobalStyle`
     background: none;
     border: none;
     border-radius: 8px;
-    color: #ABABAB;
+    color: #D2D2D2;
     font-size: 0.875rem;
     font-weight: 500;
     padding: 8px;

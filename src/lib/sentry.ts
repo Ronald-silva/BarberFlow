@@ -4,55 +4,75 @@ import * as Sentry from '@sentry/react';
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT || 'development';
 
+function isValidConfiguredDsn(dsn: string | undefined): dsn is string {
+  if (!dsn) return false;
+  const normalized = dsn.trim();
+  if (!normalized) return false;
+
+  // Ignore common placeholder values from .env.example/templates
+  const placeholderTokens = ['seu_sentry_dsn_aqui', 'your_sentry_dsn_here', '<sentry_dsn>'];
+  if (placeholderTokens.some((token) => normalized.toLowerCase().includes(token))) {
+    return false;
+  }
+
+  return /^https?:\/\/.+@.+\/\d+$/i.test(normalized);
+}
+
 export function initSentry() {
   // Só inicializar Sentry em produção ou se DSN estiver configurado
-  if (!SENTRY_DSN) {
-    console.log('🔕 Sentry não configurado (VITE_SENTRY_DSN não definido)');
+  if (!isValidConfiguredDsn(SENTRY_DSN)) {
+    if (import.meta.env.DEV) {
+      console.debug('[Sentry] ignorado: defina VITE_SENTRY_DSN para ativar em dev/prod.');
+    }
     return;
   }
 
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: ENVIRONMENT,
+  try {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      environment: ENVIRONMENT,
 
-    // Percentual de sessões para rastreamento de performance
-    tracesSampleRate: ENVIRONMENT === 'production' ? 0.1 : 1.0,
+      // Percentual de sessões para rastreamento de performance
+      tracesSampleRate: ENVIRONMENT === 'production' ? 0.1 : 1.0,
 
-    // Replay de sessões com erros
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
+      // Replay de sessões com erros
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
 
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
-    ],
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
+      ],
 
-    // Filtrar eventos sensíveis
-    beforeSend(event, hint) {
-      // Não enviar erros em desenvolvimento
-      if (ENVIRONMENT === 'development') {
-        console.log('Sentry Event (dev):', event);
-        return null;
-      }
+      // Filtrar eventos sensíveis
+      beforeSend(event, hint) {
+        // Não enviar erros em desenvolvimento
+        if (ENVIRONMENT === 'development') {
+          console.log('Sentry Event (dev):', event);
+          return null;
+        }
 
-      // Filtrar informações sensíveis
-      if (event.request) {
-        delete event.request.cookies;
-        delete event.request.headers;
-      }
+        // Filtrar informações sensíveis
+        if (event.request) {
+          delete event.request.cookies;
+          delete event.request.headers;
+        }
 
-      return event;
-    },
+        return event;
+      },
 
-    // Ignorar erros conhecidos
-    ignoreErrors: [
-      'ResizeObserver loop limit exceeded',
-      'Non-Error promise rejection captured',
-      'Network request failed',
-    ],
-  });
+      // Ignorar erros conhecidos
+      ignoreErrors: [
+        'ResizeObserver loop limit exceeded',
+        'Non-Error promise rejection captured',
+        'Network request failed',
+      ],
+    });
 
-  console.log(`✅ Sentry inicializado (${ENVIRONMENT})`);
+    console.log(`✅ Sentry inicializado (${ENVIRONMENT})`);
+  } catch (error) {
+    console.warn('🔕 Sentry desabilitado por DSN inválido:', error);
+  }
 }
 
 // Helper para capturar exceções manualmente

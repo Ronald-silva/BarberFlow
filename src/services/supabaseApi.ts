@@ -25,7 +25,27 @@ export function mapDbBarbershop(row: DbBarbershop): Barbershop {
     slug: row.slug,
     address: row.address || '',
     logoUrl: row.logo_url || '',
+    phone: row.phone ?? null,
+    email: row.email ?? null,
+    brandPrimaryColor: row.brand_primary_color?.trim() || null,
   };
+}
+
+/** Mensagem legível para exibir ao usuário (ex.: erro ao salvar). */
+export function formatPostgrestError(err: unknown): string {
+  if (!err || typeof err !== 'object') return 'Erro desconhecido.';
+  const e = err as { message?: string; details?: string; hint?: string; code?: string };
+  const parts = [e.message, e.details, e.hint].filter(Boolean);
+  return parts.length ? parts.join(' — ') : e.code || 'Erro desconhecido.';
+}
+
+function isMissingBrandPrimaryColumnError(error: { message?: string; code?: string }): boolean {
+  const msg = (error.message || '').toLowerCase();
+  const code = error.code || '';
+  if (msg.includes('brand_primary_color')) return true;
+  if (code === 'PGRST204' && msg.includes('brand_primary')) return true;
+  if (msg.includes('schema cache') && msg.includes('brand_primary')) return true;
+  return false;
 }
 
 function dbStatusToAppointmentStatus(s: string): AppointmentStatus {
@@ -98,8 +118,7 @@ export const api = {
       });
 
       if (authError) {
-        console.error('Erro de autenticação:', authError.message);
-        return null;
+        throw authError;
       }
 
       if (!authData.user) {
@@ -115,14 +134,16 @@ export const api = {
         .single();
 
       if (userError || !userData) {
-        console.error('Erro ao buscar dados do usuário:', userError?.message);
-        return null;
+        if (userError?.code === 'PGRST116') {
+          throw new Error('Perfil de usuário não encontrado. Verifique se o usuário foi criado corretamente na tabela public.users.');
+        }
+        throw new Error(userError?.message || 'Perfil de usuário não encontrado após autenticação.');
       }
 
       return mapDbUser(userData);
     } catch (error) {
       console.error('Erro inesperado no login:', error);
-      return null;
+      throw error;
     }
   },
 
@@ -139,27 +160,59 @@ export const api = {
 
   getBarbershopById: async (id: string | null): Promise<Barbershop | null> => {
     if (!id) return null;
-    const { data, error } = await supabase.from('barbershops').select('*').eq('id', id).single();
-    if (error || !data) return null;
-    return mapDbBarbershop(data);
+    const { data, error } = await supabase.from('barbershops').select('*').eq('id', id).maybeSingle();
+    if (error) {
+      console.error('getBarbershopById', error);
+      return null;
+    }
+    return data ? mapDbBarbershop(data) : null;
   },
 
+  /**
+   * Atualiza barbearia. `brandSaved: false` quando o banco ainda não tem a coluna
+   * `brand_primary_color` (migração não aplicada); demais campos são gravados.
+   */
   updateBarbershop: async (
     id: string,
-    payload: { name?: string; address?: string; slug?: string; phone?: string; email?: string; logoUrl?: string }
-  ): Promise<void> => {
-    const { error } = await supabase
-      .from('barbershops')
-      .update({
-        name: payload.name,
-        address: payload.address,
-        slug: payload.slug,
-        phone: payload.phone,
-        email: payload.email,
-        logo_url: payload.logoUrl,
-      })
-      .eq('id', id);
+    payload: {
+      name?: string;
+      address?: string;
+      slug?: string;
+      phone?: string;
+      email?: string;
+      logoUrl?: string;
+      /** null remove a cor e volta ao modo automático */
+      brandPrimaryColor?: string | null;
+    }
+  ): Promise<{ brandSaved: boolean }> => {
+    const row: Record<string, string | null> = {};
+    if (payload.name !== undefined) row.name = payload.name;
+    if (payload.address !== undefined) row.address = payload.address;
+    if (payload.slug !== undefined) row.slug = payload.slug;
+    if (payload.phone !== undefined) row.phone = payload.phone;
+    if (payload.email !== undefined) row.email = payload.email;
+    if (payload.logoUrl !== undefined) row.logo_url = payload.logoUrl;
+
+    const wantsBrand = Object.prototype.hasOwnProperty.call(payload, 'brandPrimaryColor');
+    const withBrand = wantsBrand
+      ? { ...row, brand_primary_color: payload.brandPrimaryColor }
+      : { ...row };
+
+    let { error } = await supabase.from('barbershops').update(withBrand).eq('id', id);
+
+    if (error && wantsBrand && isMissingBrandPrimaryColumnError(error)) {
+      const { error: err2 } = await supabase.from('barbershops').update(row).eq('id', id);
+      if (!err2) {
+        console.warn(
+          '[barbershop] Coluna brand_primary_color ausente. Aplique supabase/migrations/20260420_barbershops_brand_primary_color.sql'
+        );
+        return { brandSaved: false };
+      }
+      error = err2;
+    }
+
     if (error) throw error;
+    return { brandSaved: true };
   },
 
   uploadBarbershopLogo: async (barbershopId: string, file: File): Promise<string | null> => {
@@ -584,10 +637,10 @@ export const api = {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get today's appointments
+    // Agendamentos do dia (sem embed em services: não há FK — service_ids é array)
     const { data: appointments } = await supabase
       .from('appointments')
-      .select('*, services(*), clients(*)')
+      .select('*')
       .eq('barbershop_id', barbershopId)
       .gte('start_datetime', startOfDay.toISOString())
       .lte('start_datetime', endOfDay.toISOString());
@@ -610,19 +663,26 @@ export const api = {
       });
     }
 
-    // Next client
+    // Próximo agendamento — maybeSingle evita 406 quando não há linhas (.single() exige exatamente 1)
     const now = new Date();
     const { data: nextAppointment } = await supabase
       .from('appointments')
-      .select('*, clients(*)')
+      .select('*')
       .eq('barbershop_id', barbershopId)
       .gte('start_datetime', now.toISOString())
       .order('start_datetime', { ascending: true })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    // @ts-ignore
-    const nextClientName = nextAppointment?.clients?.name || 'Nenhum';
+    let nextClientName = 'Nenhum';
+    if (nextAppointment?.client_id) {
+      const { data: nextClient } = await supabase
+        .from('clients')
+        .select('name')
+        .eq('id', nextAppointment.client_id)
+        .maybeSingle();
+      if (nextClient?.name) nextClientName = nextClient.name;
+    }
 
     return {
       totalAppointments,

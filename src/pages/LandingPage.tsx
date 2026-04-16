@@ -22,8 +22,10 @@ const gradientShift = keyframes`
 
 const Page = styled.div`
   min-height: 100vh;
-  background: #0D0D0D;
+  background: linear-gradient(180deg, #101010 0%, #0f0f0f 100%);
+  color: #F5F5F5;
   overflow-x: hidden;
+  position: relative;
 `;
 
 /* ===== NAV ===== */
@@ -38,7 +40,7 @@ const Nav = styled.nav`
   justify-content: space-between;
   padding: 0 1rem;
   height: 60px;
-  background: rgba(13, 13, 13, 0.85);
+  background: rgba(18, 18, 18, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(200, 146, 42, 0.12);
@@ -95,7 +97,7 @@ const NavActions = styled.div`
 const NavLink = styled.button`
   background: none;
   border: none;
-  color: #ABABAB;
+  color: #D2D2D2;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -137,6 +139,7 @@ const HeroSection = styled.section`
     background-size: 40px 40px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
     pointer-events: none;
+    z-index: 0;
   }
 
   /* Glow central */
@@ -148,8 +151,14 @@ const HeroSection = styled.section`
     transform: translateX(-50%);
     width: 600px;
     height: 400px;
-    background: radial-gradient(ellipse, rgba(200, 146, 42, 0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(200, 146, 42, 0.12) 0%, transparent 70%);
     pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -217,7 +226,7 @@ const TitleAccent = styled.span`
 const HeroSubtitle = styled.p`
   font-size: clamp(0.9375rem, 3vw, 1.125rem);
   font-weight: 400;
-  color: #6B6B6B;
+  color: #D2D2D2;
   line-height: 1.7;
   max-width: 560px;
   margin-bottom: 2.5rem;
@@ -232,22 +241,40 @@ const HeroSubtitle = styled.p`
 const CTAGroup = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   position: relative;
   z-index: 1;
 
   @media (min-width: 480px) {
     flex-direction: row;
     justify-content: center;
-    max-width: none;
+    align-items: stretch;
+    gap: 1rem;
+    max-width: 560px;
   }
 `;
 
 const CTAButton = styled(Button)`
-  flex: 1;
-  max-width: 240px;
+  width: 100%;
+  max-width: 360px;
+
+  @media (min-width: 480px) {
+    flex: 0 1 auto;
+    width: clamp(180px, 35vw, 250px);
+    max-width: 250px;
+  }
+`;
+
+const FinalCTAButton = styled(Button)`
+  width: min(100%, 320px);
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    width: 280px;
+  }
 `;
 
 const SocialProof = styled.div`
@@ -270,7 +297,7 @@ const ProofItem = styled.div`
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8125rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
 
   span:first-child {
     color: #22C55E;
@@ -318,7 +345,7 @@ const StatNumber = styled.div`
 
 const StatLabel = styled.div`
   font-size: 0.8125rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
   margin-top: 0.25rem;
   font-weight: 500;
 `;
@@ -354,7 +381,7 @@ const SectionTitle = styled.h2`
 
 const SectionSubtitle = styled.p`
   font-size: clamp(0.9375rem, 2vw, 1.0625rem);
-  color: #6B6B6B;
+  color: #D2D2D2;
   line-height: 1.7;
   max-width: 560px;
 `;
@@ -430,7 +457,7 @@ const FeatureTitle = styled.h3`
 
 const FeatureDesc = styled.p`
   font-size: 0.875rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
   line-height: 1.65;
 `;
 
@@ -502,7 +529,7 @@ const PricingBadge = styled.div`
 const PlanName = styled.div`
   font-size: 0.875rem;
   font-weight: 700;
-  color: #6B6B6B;
+  color: #D2D2D2;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.75rem;
@@ -519,14 +546,14 @@ const PlanPrice = styled.div`
   span {
     font-size: 1rem;
     font-weight: 500;
-    color: #6B6B6B;
+    color: #D2D2D2;
     letter-spacing: 0;
   }
 `;
 
 const PlanDesc = styled.p`
   font-size: 0.8125rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
   margin-bottom: 1.75rem;
   padding-bottom: 1.75rem;
   border-bottom: 1px solid #1E1E1E;
@@ -545,7 +572,7 @@ const PlanFeature = styled.li`
   align-items: flex-start;
   gap: 0.625rem;
   font-size: 0.875rem;
-  color: #ABABAB;
+  color: #D2D2D2;
 
   &::before {
     content: '✓';
@@ -638,7 +665,7 @@ const PixTitle = styled.div`
 
 const PixSubtitle = styled.div`
   font-size: 0.875rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
   margin-top: 0.5rem;
 `;
 
@@ -667,7 +694,7 @@ const PixStatusValue = styled.div`
 
 const PixStatusTime = styled.div`
   font-size: 0.8125rem;
-  color: #6B6B6B;
+  color: #D2D2D2;
   margin-top: 0.25rem;
 `;
 
@@ -684,7 +711,7 @@ const PixBenefit = styled.li`
   align-items: center;
   gap: 0.75rem;
   font-size: 0.9375rem;
-  color: #ABABAB;
+  color: #D2D2D2;
 
   span:first-child { font-size: 1.125rem; }
 `;
@@ -715,13 +742,13 @@ const FinalTitle = styled(SectionTitle)`
 `;
 
 const FinalDescription = styled.p`
-  color: #6B6B6B;
+  color: #D2D2D2;
   margin-bottom: 2.5rem;
   font-size: 1.0625rem;
 `;
 
 const FinalHint = styled.p`
-  color: #3D3D3D;
+  color: #BDBDBD;
   font-size: 0.8125rem;
   margin-top: 1.25rem;
 `;
@@ -744,7 +771,7 @@ const FooterBar = styled.footer`
 `;
 
 const Copyright = styled.div`
-  color: #3D3D3D;
+  color: #BDBDBD;
   font-size: 0.8125rem;
 `;
 
@@ -756,11 +783,11 @@ const FooterLinks = styled.div`
 const FooterLink = styled.button`
   background: none;
   border: none;
-  color: #6B6B6B;
+  color: #D2D2D2;
   font-size: 0.8125rem;
   cursor: pointer;
   transition: color 150ms;
-  &:hover { color: #ABABAB; }
+  &:hover { color: #D2D2D2; }
 `;
 
 /* ===== COMPONENT ===== */
@@ -958,9 +985,9 @@ const LandingPage: React.FC = () => {
         <FinalDescription>
           Junte-se a mais de 500 barbearias que já usam o Shafar.
         </FinalDescription>
-        <Button $size="xl" onClick={() => navigate('/register')}>
+        <FinalCTAButton $size="xl" onClick={() => navigate('/register')}>
           Criar conta grátis
-        </Button>
+        </FinalCTAButton>
         <FinalHint>
           Sem cartão de crédito • Cancele quando quiser
         </FinalHint>

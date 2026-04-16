@@ -1,0 +1,21 @@
+# Gateway das Edge Functions não valida bem JWT ES256 (Auth novo).
+# Estas funções continuam a exigir Bearer e validam o utilizador no código (getUser / regras de negócio).
+# https://github.com/supabase/supabase/issues/42810
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.create-portal-session]
+verify_jwt = false
+
+[functions.create-booking-payment]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false

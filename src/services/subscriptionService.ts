@@ -7,6 +7,7 @@
 // Created: 2025-12-30
 // =====================================================
 
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
 export type BillingProvider = 'stripe' | 'asaas';
@@ -373,6 +374,69 @@ export async function getLatestPayment(
 // 6. CHECKOUT (Frontend → Backend)
 // =====================================================
 
+/** JWT do utilizador autenticado; Edge Functions com verify_jwt rejeitam anon / token expirado (401). */
+async function getUserAccessTokenForFunctions(): Promise<string> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const expiresAtMs = session?.expires_at ? session.expires_at * 1000 : 0;
+  const needsRefresh = !session?.access_token || expiresAtMs < Date.now() + 120_000;
+
+  if (needsRefresh) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session?.access_token) {
+      throw new Error('Sessão expirada. Faça login novamente para continuar com o pagamento.');
+    }
+    return refreshed.session.access_token;
+  }
+
+  return session.access_token;
+}
+
+async function invokeSubscriptionFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const run = () =>
+    getUserAccessTokenForFunctions().then((accessToken) =>
+      supabase.functions.invoke(name, {
+        body,
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+    );
+
+  let { data, error } = await run();
+
+  if (error instanceof FunctionsHttpError && error.context?.status === 401) {
+    await supabase.auth.refreshSession();
+    ({ data, error } = await run());
+  }
+
+  if (error) {
+    let detail = '';
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const j = await (error.context as Response).clone().json();
+        if (typeof j?.error === 'string') detail = j.error;
+        else if (typeof j?.message === 'string') detail = j.message;
+      } catch {
+        /* corpo não-JSON */
+      }
+    }
+    console.error(`Edge function ${name}:`, error, detail || undefined);
+    if (error instanceof FunctionsHttpError && error.context?.status === 401) {
+      const hint = `${detail} ${error.message || ''}`;
+      if (/ES256|Unsupported JWT|Invalid JWT/i.test(hint)) {
+        throw new Error(
+          'A função de pagamento está a rejeitar o token no servidor (JWT ES256). No Supabase: Edge Functions → create-checkout-session → desliga a verificação JWT, grava, e espera ~1 min. Ou: supabase functions deploy create-checkout-session --no-verify-jwt',
+        );
+      }
+      throw new Error('Sessão inválida ou expirada. Faça login novamente e tente assinar de novo.');
+    }
+    throw new Error(detail || 'Não foi possível contactar o servidor de pagamento.');
+  }
+
+  return data as T;
+}
+
 /**
  * Create Stripe checkout session
  * This should call an Edge Function or API endpoint
@@ -388,32 +452,19 @@ export async function createCheckoutSession(
   barbershopId: string,
   provider?: BillingProvider
 ): Promise<string> {
-  try {
-    const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
-    // Call Supabase Edge Function (to be created)
-    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-      body: {
-        plan_id: planId,
-        billing_cycle: billingCycle,
-        barbershop_id: barbershopId,
-        provider: resolvedProvider,
-      },
-    });
+  const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
+  const data = await invokeSubscriptionFunction<{ url?: string }>('create-checkout-session', {
+    plan_id: planId,
+    billing_cycle: billingCycle,
+    barbershop_id: barbershopId,
+    provider: resolvedProvider,
+  });
 
-    if (error) {
-      console.error('Error creating checkout session:', error);
-      throw new Error('Não foi possível criar a sessão de pagamento');
-    }
-
-    if (!data?.url) {
-      throw new Error('URL de checkout não retornada');
-    }
-
-    return data.url;
-  } catch (error) {
-    console.error('Error creating checkout session:', error);
-    throw new Error('Erro ao criar sessão de checkout. Tente novamente.');
+  if (!data?.url) {
+    throw new Error('O servidor não devolveu o link de pagamento. Tente de novo em instantes.');
   }
+
+  return data.url;
 }
 
 /**
@@ -427,35 +478,23 @@ export async function createCustomerPortalSession(
   barbershopId: string,
   provider?: BillingProvider
 ): Promise<string> {
-  try {
-    const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
-    const { data, error } = await supabase.functions.invoke('create-portal-session', {
-      body: {
-        barbershop_id: barbershopId,
-        provider: resolvedProvider,
-      },
-    });
+  const resolvedProvider = provider || (await resolveSubscriptionProvider(barbershopId));
+  const data = await invokeSubscriptionFunction<{ url?: string }>('create-portal-session', {
+    barbershop_id: barbershopId,
+    provider: resolvedProvider,
+  });
 
-    if (error) {
-      console.error('Error creating portal session:', error);
-      throw new Error('Não foi possível criar a sessão do portal');
-    }
-
-    if (!data?.url) {
-      throw new Error('URL do portal não retornada');
-    }
-
-    return data.url;
-  } catch (error) {
-    console.error('Error creating portal session:', error);
-    throw new Error('Erro ao criar sessão do portal. Tente novamente.');
+  if (!data?.url) {
+    throw new Error('O servidor não devolveu o link do portal de cobrança.');
   }
+
+  return data.url;
 }
 
 export async function resolveSubscriptionProvider(
   barbershopId: string
 ): Promise<BillingProvider> {
-  const defaultProvider = (import.meta.env.VITE_SUBSCRIPTION_PROVIDER_DEFAULT || 'stripe') as BillingProvider;
+  const defaultProvider = (import.meta.env.VITE_SUBSCRIPTION_PROVIDER_DEFAULT || 'asaas') as BillingProvider;
   const { data } = await supabase
     .from('payment_provider_configs')
     .select('subscription_provider, rollout_enabled')

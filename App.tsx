@@ -43,26 +43,36 @@ const TermsOfServicePage = lazy(() => import('./src/pages/TermsOfServicePage'));
 
 // Protected Route Components
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D2D2D2', background: '#0D0D0D' }}>Carregando sessão...</div>;
+  }
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   return children;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D2D2D2', background: '#0D0D0D' }}>Carregando sessão...</div>;
+  }
   if (user?.role !== 'admin') {
-    return <Navigate to="/dashboard/schedule" />;
+    return <Navigate to="/dashboard/schedule" replace />;
   }
   return children;
 };
 
 const PlatformAdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D2D2D2', background: '#0D0D0D' }}>Carregando sessão...</div>;
+  }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   // Verificar se é platform admin
@@ -82,7 +92,12 @@ const App: React.FC = () => {
         <ToastProvider>
           <ThemeProvider theme={theme}>
             <GlobalStyle />
-            <HashRouter>
+            <HashRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
               <AuthProvider>
                 <LazyLoad>
                   <Routes>

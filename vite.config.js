@@ -4,6 +4,11 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'node',
+    globals: false,
+    include: ['src/**/*.test.ts'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

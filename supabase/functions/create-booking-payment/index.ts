@@ -16,6 +16,16 @@ function asaasBaseUrl() {
     : 'https://sandbox.asaas.com/api/v3';
 }
 
+function assertAsaasKeyMatchesEnv(asaasApiKey: string) {
+  const env = (Deno.env.get('ASAAS_ENV') || 'sandbox').toLowerCase();
+  const k = asaasApiKey.trim();
+  if (env !== 'production' && (/\$aact_prod|_prod_/i.test(k))) {
+    throw new Error(
+      'Asaas: chave de PRODUÇÃO com ASAAS_ENV=sandbox. Use chave SANDBOX e ASAAS_ENV=sandbox para não cobrar de verdade.',
+    );
+  }
+}
+
 function toAsaasBillingType(method: Method) {
   if (method === 'pix') return 'PIX';
   if (method === 'boleto') return 'BOLETO';
@@ -128,6 +138,7 @@ serve(async (req) => {
     // Provider Asaas
     const asaasApiKey = Deno.env.get('ASAAS_API_KEY');
     if (!asaasApiKey) throw new Error('ASAAS_API_KEY não configurada');
+    assertAsaasKeyMatchesEnv(asaasApiKey);
 
     const customerResponse = await fetch(`${asaasBaseUrl()}/customers`, {
       method: 'POST',

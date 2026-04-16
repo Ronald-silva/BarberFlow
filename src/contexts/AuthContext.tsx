@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { User, Barbershop, Subscription } from '../types';
 import { api, mapDbBarbershop } from '../services/supabaseApi';
 import { supabase } from '../services/supabase';
@@ -11,6 +11,8 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
+  /** Recarrega dados da barbearia (ex.: após salvar cor ou logo em Configurações). */
+  reloadBarbershop: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('barbershops')
         .select('*')
         .eq('id', currentUser.barbershopId)
-        .single();
+        .maybeSingle();
       
       if (barbershopError) console.error('Failed to fetch barbershop', barbershopError);
       else if (barbershopData) setBarbershop(mapDbBarbershop(barbershopData));
@@ -38,76 +40,70 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('subscriptions')
         .select('*')
         .eq('barbershop_id', currentUser.barbershopId)
-        .in('status', ['active', 'trialing'])
-        .single();
+        .in('status', ['active', 'trialing', 'pending'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (subError && subError.code !== 'PGRST116') { // Ignore 'no rows found'
+      if (subError) {
         console.error('Failed to fetch subscription', subError);
       } else if (subData) {
-        setSubscription({
-          ...subData,
-          status: subData.status as Subscription['status'],
-        });
+        setSubscription(subData as unknown as Subscription);
       } else {
         setSubscription(null);
       }
     }
-  }
+  };
+
+  const reloadBarbershop = useCallback(async () => {
+    const uid = user?.barbershopId;
+    if (!uid) return;
+    const { data, error } = await supabase
+      .from('barbershops')
+      .select('*')
+      .eq('id', uid)
+      .maybeSingle();
+    if (error) {
+      console.error('Falha ao recarregar barbearia', error);
+      return;
+    }
+    if (data) setBarbershop(mapDbBarbershop(data));
+  }, [user?.barbershopId]);
 
   useEffect(() => {
+    const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
+      const timeoutPromise = new Promise<null>((resolve) => {
+        window.setTimeout(() => resolve(null), timeoutMs);
+      });
+      return Promise.race([promise, timeoutPromise]);
+    };
+
     const initializeAuth = async () => {
       setLoading(true);
-      
-      // Verificar sessão do Supabase Auth
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // Buscar dados completos do usuário
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (userData && !userError) {
-          const currentUser: User = {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            barbershopId: userData.barbershop_id,
-            role: userData.role as User['role'],
-            workHours: Array.isArray(userData.work_hours) ? userData.work_hours : [],
-          };
-          
-          setUser(currentUser);
-          localStorage.setItem('shafar_user', JSON.stringify(currentUser));
-          await fetchAndSetData(currentUser);
-        }
-      } else {
-        // Limpar dados se não houver sessão
-        setUser(null);
-        setBarbershop(null);
-        setSubscription(null);
-        localStorage.removeItem('shafar_user');
-      }
-      
-      setLoading(false);
-    };
-    
-    initializeAuth();
+      const bootstrapGuardId = window.setTimeout(() => {
+        console.warn('Auth bootstrap timed out; forcing loading=false');
+        setLoading(false);
+      }, 20000);
 
-    // Listener para mudanças de autenticação
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Buscar dados do usuário
-          const { data: userData } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+      try {
+        // Verificar sessão do Supabase Auth
+        const sessionResponse = await withTimeout(supabase.auth.getSession(), 8000);
+        const session = sessionResponse?.data?.session ?? null;
+        
+        if (session?.user) {
+          // Buscar dados completos do usuário
+          const userQueryResponse = await withTimeout(
+            supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single(),
+            12000
+          );
+          const userData = userQueryResponse?.data ?? null;
+          const userError = userQueryResponse?.error ?? null;
           
-          if (userData) {
+          if (userData && !userError) {
             const currentUser: User = {
               id: userData.id,
               name: userData.name,
@@ -119,17 +115,81 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             setUser(currentUser);
             localStorage.setItem('shafar_user', JSON.stringify(currentUser));
-            await fetchAndSetData(currentUser);
+            // Não bloquear o bootstrap por dados secundários.
+            void fetchAndSetData(currentUser).catch((error) => {
+              console.error('Falha ao buscar dados complementares no bootstrap:', error);
+            });
+          } else {
+            setUser(null);
+            setBarbershop(null);
+            setSubscription(null);
+            localStorage.removeItem('shafar_user');
           }
-        } else if (event === 'SIGNED_OUT') {
+        } else {
+          // Limpar dados se não houver sessão
           setUser(null);
           setBarbershop(null);
           setSubscription(null);
           localStorage.removeItem('shafar_user');
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Token foi renovado automaticamente, nada a fazer
-          console.log('Token refreshed successfully');
         }
+      } catch (error) {
+        console.error('Falha ao inicializar autenticação:', error);
+        setUser(null);
+        setBarbershop(null);
+        setSubscription(null);
+        localStorage.removeItem('shafar_user');
+      } finally {
+        window.clearTimeout(bootstrapGuardId);
+        // Nunca deixar a aplicação presa em loading (tela preta)
+        setLoading(false);
+      }
+    };
+    
+    initializeAuth();
+
+    // Listener para mudanças de autenticação
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Nunca bloquear o canal interno do Supabase Auth.
+        void (async () => {
+          try {
+            if (event === 'SIGNED_IN' && session?.user) {
+              const userResponse = await withTimeout(
+                supabase
+                  .from('users')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single(),
+                12000
+              );
+              const userData = userResponse?.data ?? null;
+
+              if (userData) {
+                const currentUser: User = {
+                  id: userData.id,
+                  name: userData.name,
+                  email: userData.email,
+                  barbershopId: userData.barbershop_id,
+                  role: userData.role as User['role'],
+                  workHours: Array.isArray(userData.work_hours) ? userData.work_hours : [],
+                };
+
+                setUser(currentUser);
+                localStorage.setItem('shafar_user', JSON.stringify(currentUser));
+                void fetchAndSetData(currentUser).catch((error) => {
+                  console.error('Falha ao buscar dados complementares após SIGNED_IN:', error);
+                });
+              }
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
+              setBarbershop(null);
+              setSubscription(null);
+              localStorage.removeItem('shafar_user');
+            }
+          } catch (error) {
+            console.error('Falha no handler de onAuthStateChange:', error);
+          }
+        })();
       }
     );
 
@@ -142,23 +202,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
 
-    // Limpar sessão anterior antes de fazer login
-    await supabase.auth.signOut();
+    try {
+      const loggedInUser = await api.login(email, pass);
+      if (loggedInUser) {
+        setUser(loggedInUser);
+        localStorage.setItem('shafar_user', JSON.stringify(loggedInUser));
 
-    const loggedInUser = await api.login(email, pass);
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      localStorage.setItem('shafar_user', JSON.stringify(loggedInUser));
-      await fetchAndSetData(loggedInUser);
+        // Dados complementares não devem travar o fluxo de autenticação.
+        void fetchAndSetData(loggedInUser).catch((error) => {
+          console.error('Falha ao carregar dados complementares após login:', error);
+        });
+        return true;
+      }
+
+      setUser(null);
+      setBarbershop(null);
+      setSubscription(null);
+      localStorage.removeItem('shafar_user');
+      return false;
+    } catch (error) {
+      // Permite a LoginPage exibir a causa real (credencial, rede, perfil, etc.).
+      throw error;
+    } finally {
       setLoading(false);
-      return true;
     }
-    setUser(null);
-    setBarbershop(null);
-    setSubscription(null);
-    localStorage.removeItem('shafar_user');
-    setLoading(false);
-    return false;
   };
 
   const logout = async () => {
@@ -171,8 +238,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, barbershop, subscription, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider
+      value={{ user, barbershop, subscription, login, logout, loading, reloadBarbershop }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };

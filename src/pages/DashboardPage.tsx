@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseApi } from '../services/supabaseApi';
-import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { DashboardShell, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
 
 interface DashboardData {
     totalAppointments: number;
@@ -29,7 +29,11 @@ const StatsCard = styled(Card)`
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    background: linear-gradient(
+      90deg,
+      var(--bs-brand-main, ${props => props.theme.colors.primary.main}) 0%,
+      var(--bs-brand-light, ${props => props.theme.colors.primary.light}) 100%
+    );
   }
 `;
 
@@ -48,7 +52,11 @@ const StatsValue = styled.div`
   }
   
   &.appointments {
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    background: linear-gradient(
+      135deg,
+      var(--bs-brand-main, ${props => props.theme.colors.primary.main}) 0%,
+      var(--bs-brand-light, ${props => props.theme.colors.primary.light}) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -83,7 +91,7 @@ const LoadingSpinner = styled.div`
   width: 40px;
   height: 40px;
   border: 3px solid ${props => props.theme.colors.border.primary};
-  border-top: 3px solid ${props => props.theme.colors.primary};
+  border-top: 3px solid var(--bs-brand-main, ${props => props.theme.colors.primary.main});
   border-radius: 50%;
   animation: spin 1s linear infinite;
   
@@ -145,17 +153,17 @@ const DashboardPage: React.FC = () => {
 
     if (loading) {
         return (
-            <PageContainer>
+            <DashboardShell>
                 <LoadingContainer>
                     <LoadingSpinner />
                     <Text $color="tertiary">Carregando dados do dashboard...</Text>
                 </LoadingContainer>
-            </PageContainer>
+            </DashboardShell>
         );
     }
 
     return (
-        <PageContainer className="fade-in">
+        <DashboardShell className="fade-in">
             <WelcomeSection>
                 <Flex $justify="between" $align="center" $responsive>
                     <div>
@@ -215,7 +223,7 @@ const DashboardPage: React.FC = () => {
                     </CardContent>
                 </StatsCard>
             </Grid>
-        </PageContainer>
+        </DashboardShell>
     );
 };
 

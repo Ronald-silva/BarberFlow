@@ -44,6 +44,13 @@ export const PageContainer = styled.div`
   }
 `;
 
+/** Largura e ritmo vertical únicos do painel da barbearia (rotas /dashboard/*). */
+export const DashboardShell = styled(PageContainer)`
+  max-width: 1100px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
 // Cards
 export const Card = styled.div<{ $variant?: 'default' | 'elevated' | 'outlined' }>`
   background: linear-gradient(
@@ -376,7 +383,11 @@ export const Heading = styled.h1<{
   }}
   
   ${props => props.$gradient && css`
-    background: linear-gradient(135deg, ${props.theme.colors.primary.main} 0%, ${props.theme.colors.primary.light} 100%);
+    background: linear-gradient(
+      135deg,
+      var(--bs-brand-main, ${props.theme.colors.primary.main}) 0%,
+      var(--bs-brand-light, ${props.theme.colors.primary.light}) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

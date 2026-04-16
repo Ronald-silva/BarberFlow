@@ -12,6 +12,8 @@
     "ci:check": "npm run type-check && npm run build && npm run pre-deploy",
     "type-check": "npx tsc --noEmit",
     "pre-deploy": "node scripts/pre-deploy-check.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "api:mock": "node scripts/toggle-api.js mock",
     "api:supabase": "node scripts/toggle-api.js supabase"
   },
@@ -36,6 +38,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
-    "vite": "^6.4.2"
+    "vite": "^6.4.2",
+    "vitest": "^3.2.4"
   }
 }

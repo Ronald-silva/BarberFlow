@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
-  PageContainer,
+  DashboardShell,
   Heading,
   Text,
   Card,
   CardContent,
-  Grid,
 } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { Input, Label, FormGroup } from "../components/ui/Input";
 import { SettingsIcon } from "../components/icons";
 import { useAuth } from "../contexts/AuthContext";
-import { supabaseApi } from "../services/supabaseApi";
+import { supabaseApi, formatPostgrestError } from "../services/supabaseApi";
+import {
+  DEFAULT_BRAND_MAIN_HEX,
+  defaultBrandMainHex,
+  normalizeBrandHex,
+} from "../lib/barbershopBranding";
 
 // Styled Components
 const SettingsContainer = styled.div`
-  max-width: 800px;
+  width: 100%;
+  max-width: 100%;
 `;
 
 const SettingsSection = styled(Card)`
@@ -48,13 +53,65 @@ const SectionDescription = styled.p`
 `;
 
 const SectionContent = styled.div`
-  padding: ${(props) => props.theme.spacing[6]};
+  padding: ${(props) => props.theme.spacing[5]};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.md}) {
+    padding: ${(props) => props.theme.spacing[7]};
+  }
 `;
 
-const SettingsForm = styled.form`
+/** Ocupa as duas colunas do formulário em desktop. */
+const FormRowFull = styled.div`
+  grid-column: 1 / -1;
+`;
+
+const BarbershopForm = styled.form`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: ${(props) => props.theme.spacing[4]}
+    ${(props) => props.theme.spacing[5]};
+  align-items: start;
+
+  @media (min-width: ${(props) => props.theme.breakpoints.md}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: ${(props) => props.theme.spacing[5]}
+      ${(props) => props.theme.spacing[6]};
+  }
+`;
+
+const WorkingHoursForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: ${(props) => props.theme.spacing[4]};
+`;
+
+const LinkFieldRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${(props) => props.theme.spacing[3]};
+  align-items: stretch;
+  margin-top: ${(props) => props.theme.spacing[2]};
+
+  input {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+`;
+
+const LinkTipBox = styled.div`
+  margin-top: ${(props) => props.theme.spacing[5]};
+  padding: ${(props) => props.theme.spacing[4]};
+  border-radius: ${(props) => props.theme.radii.lg};
+  border: 1px solid ${(props) => props.theme.colors.success.border};
+  background: ${(props) => props.theme.colors.success.light};
+`;
+
+const LinkTipList = styled.ul`
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.secondary};
+  line-height: 1.55;
 `;
 
 const FileInputContainer = styled.div`
@@ -81,8 +138,8 @@ const FileInput = styled.input`
   &::file-selector-button {
     background: linear-gradient(
       135deg,
-      ${(props) => props.theme.colors.primary} 0%,
-      ${(props) => props.theme.colors.primaryDark} 100%
+      var(--bs-brand-main, ${(props) => props.theme.colors.primary.main}) 0%,
+      var(--bs-brand-light, ${(props) => props.theme.colors.primary.light}) 100%
     );
     color: ${(props) => props.theme.colors.text.inverse};
     border: none;
@@ -98,8 +155,8 @@ const FileInput = styled.input`
     &:hover {
       background: linear-gradient(
         135deg,
-        ${(props) => props.theme.colors.primaryHover} 0%,
-        ${(props) => props.theme.colors.primaryDark} 100%
+        var(--bs-brand-light, ${(props) => props.theme.colors.primary.light}) 0%,
+        var(--bs-brand-main, ${(props) => props.theme.colors.primary.main}) 100%
       );
     }
   }
@@ -186,7 +243,7 @@ const SaveButton = styled(Button)`
   min-width: 200px;
 `;
 
-const SuccessMessage = styled.div<{ show: boolean }>`
+const SuccessMessage = styled.div<{ $show: boolean }>`
   padding: ${(props) => props.theme.spacing[3]}
     ${(props) => props.theme.spacing[4]};
   background-color: ${(props) => props.theme.colors.successLight};
@@ -196,12 +253,12 @@ const SuccessMessage = styled.div<{ show: boolean }>`
   font-size: ${(props) => props.theme.typography.fontSizes.sm};
   font-weight: ${(props) => props.theme.typography.fontWeights.medium};
   margin-top: ${(props) => props.theme.spacing[4]};
-  opacity: ${(props) => (props.show ? 1 : 0)};
-  transform: translateY(${(props) => (props.show ? "0" : "-10px")});
+  opacity: ${(props) => (props.$show ? 1 : 0)};
+  transform: translateY(${(props) => (props.$show ? "0" : "-10px")});
   transition: ${(props) => props.theme.transitions.base};
 `;
 
-const ErrorMessage = styled.div<{ show: boolean }>`
+const ErrorMessage = styled.div<{ $show: boolean }>`
   padding: ${(props) => props.theme.spacing[3]}
     ${(props) => props.theme.spacing[4]};
   background-color: ${(props) => props.theme.colors.errorLight};
@@ -211,8 +268,24 @@ const ErrorMessage = styled.div<{ show: boolean }>`
   font-size: ${(props) => props.theme.typography.fontSizes.sm};
   font-weight: ${(props) => props.theme.typography.fontWeights.medium};
   margin-top: ${(props) => props.theme.spacing[4]};
-  opacity: ${(props) => (props.show ? 1 : 0)};
-  transform: translateY(${(props) => (props.show ? "0" : "-10px")});
+  opacity: ${(props) => (props.$show ? 1 : 0)};
+  transform: translateY(${(props) => (props.$show ? "0" : "-10px")});
+  transition: ${(props) => props.theme.transitions.base};
+`;
+
+const NoteMessage = styled.div<{ $show: boolean }>`
+  padding: ${(props) => props.theme.spacing[3]}
+    ${(props) => props.theme.spacing[4]};
+  margin-top: ${(props) => props.theme.spacing[3]};
+  border-radius: ${(props) => props.theme.radii.md};
+  border: 1px solid ${(props) => props.theme.colors.warning.border};
+  background: ${(props) => props.theme.colors.warningLight};
+  color: ${(props) => props.theme.colors.warning.main};
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  line-height: 1.45;
+  opacity: ${(props) => (props.$show ? 1 : 0)};
+  max-height: ${(props) => (props.$show ? "240px" : "0")};
+  overflow: hidden;
   transition: ${(props) => props.theme.transitions.base};
 `;
 
@@ -243,8 +316,23 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+function normalizeBarbershopSlug(slug: string, businessName: string): string {
+  const fromField = slug
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  if (fromField) return fromField.slice(0, 50);
+  const fromName = businessName
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  return (fromName || "barbearia").slice(0, 50);
+}
+
 const SettingsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, reloadBarbershop } = useAuth();
   const [barbershopData, setBarbershopData] = useState({
     name: "Navalha Dourada",
     address: "Rua das Tesouras, 123",
@@ -258,6 +346,9 @@ const SettingsPage: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  const [useCustomBrandColor, setUseCustomBrandColor] = useState(false);
+  const [brandColorHex, setBrandColorHex] = useState(DEFAULT_BRAND_MAIN_HEX);
+
   const [workingHours, setWorkingHours] = useState([
     { day: "Segunda-feira", start: "09:00", end: "18:00", enabled: true },
     { day: "Terça-feira", start: "09:00", end: "18:00", enabled: true },
@@ -269,6 +360,7 @@ const SettingsPage: React.FC = () => {
   ]);
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showBrandMigrationNote, setShowBrandMigrationNote] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -283,12 +375,28 @@ const SettingsPage: React.FC = () => {
             setBarbershopData({
               name: barbershop.name,
               address: barbershop.address || "",
-              phone: "",
-              email: "",
-              slug: barbershop.slug || barbershop.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+              phone: barbershop.phone || "",
+              email: barbershop.email || "",
+              slug:
+                barbershop.slug ||
+                barbershop.name
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")
+                  .replace(/[^a-z0-9-]/g, ""),
               logoUrl: barbershop.logoUrl || "",
             });
             setLogoPreview(barbershop.logoUrl || "");
+            const saved = normalizeBrandHex(barbershop.brandPrimaryColor ?? undefined);
+            if (saved) {
+              setUseCustomBrandColor(true);
+              setBrandColorHex(saved);
+            } else if (user?.barbershopId) {
+              setUseCustomBrandColor(false);
+              setBrandColorHex(defaultBrandMainHex(user.barbershopId));
+            } else {
+              setUseCustomBrandColor(false);
+              setBrandColorHex(DEFAULT_BRAND_MAIN_HEX);
+            }
           }
         } catch (error) {
           console.error("Erro ao carregar dados da barbearia:", error);
@@ -306,17 +414,46 @@ const SettingsPage: React.FC = () => {
 
     setSubmitting(true);
     setError("");
+    setShowBrandMigrationNote(false);
     try {
-      await supabaseApi.updateBarbershop(user.barbershopId, barbershopData);
+      const normalizedCustom = useCustomBrandColor
+        ? normalizeBrandHex(brandColorHex)
+        : null;
+      if (useCustomBrandColor && !normalizedCustom) {
+        setError("Cor inválida. Use um formato como #C8922A ou escolha no seletor.");
+        return;
+      }
+      const slug = normalizeBarbershopSlug(
+        barbershopData.slug,
+        barbershopData.name
+      );
+      if (!slug) {
+        setError("Informe o nome da barbearia para gerar o link de agendamento.");
+        return;
+      }
+      const { brandSaved } = await supabaseApi.updateBarbershop(user.barbershopId, {
+        ...barbershopData,
+        slug,
+        brandPrimaryColor: useCustomBrandColor ? normalizedCustom : null,
+      });
+      await reloadBarbershop();
+      setBarbershopData((prev) => ({ ...prev, slug }));
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setShowBrandMigrationNote(!brandSaved);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setShowBrandMigrationNote(false);
+      }, brandSaved ? 3000 : 8000);
     } catch (error) {
       console.error("Erro ao salvar dados da barbearia:", error);
-      setError("Erro ao salvar dados da barbearia. Tente novamente.");
+      setError(formatPostgrestError(error));
     } finally {
       setSubmitting(false);
     }
   };
+
+  const colorPickerValue =
+    normalizeBrandHex(brandColorHex) ?? DEFAULT_BRAND_MAIN_HEX;
 
   const handleWorkingHoursSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,6 +518,7 @@ const SettingsPage: React.FC = () => {
       if (logoUrl) {
         setBarbershopData(prev => ({ ...prev, logoUrl }));
         setLogoFile(null);
+        await reloadBarbershop();
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
@@ -404,6 +542,7 @@ const SettingsPage: React.FC = () => {
         setBarbershopData(prev => ({ ...prev, logoUrl: '' }));
         setLogoPreview('');
         setLogoFile(null);
+        await reloadBarbershop();
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
@@ -419,17 +558,17 @@ const SettingsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <PageContainer>
+      <DashboardShell>
         <LoadingContainer>
           <LoadingSpinner />
           <Text $color="tertiary">Carregando configurações...</Text>
         </LoadingContainer>
-      </PageContainer>
+      </DashboardShell>
     );
   }
 
   return (
-    <PageContainer className="fade-in">
+    <DashboardShell className="fade-in">
       <div style={{ marginBottom: "2rem" }}>
         <Heading $level={1} $gradient>
           Configurações
@@ -449,43 +588,42 @@ const SettingsPage: React.FC = () => {
             </SectionDescription>
           </SectionHeader>
           <SectionContent>
-            <SettingsForm onSubmit={handleBarbershopSubmit}>
-              <Grid $columns={2} $responsive>
-                <FormGroup>
-                  <Label htmlFor="barbershopName" $required>
-                    Nome da Barbearia
-                  </Label>
-                  <Input
-                    id="barbershopName"
-                    type="text"
-                    value={barbershopData.name}
-                    onChange={(e) =>
-                      setBarbershopData({
-                        ...barbershopData,
-                        name: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </FormGroup>
+            <BarbershopForm onSubmit={handleBarbershopSubmit}>
+              <FormGroup>
+                <Label htmlFor="barbershopName" $required>
+                  Nome da Barbearia
+                </Label>
+                <Input
+                  id="barbershopName"
+                  type="text"
+                  value={barbershopData.name}
+                  onChange={(e) =>
+                    setBarbershopData({
+                      ...barbershopData,
+                      name: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </FormGroup>
 
-                <FormGroup>
-                  <Label htmlFor="barbershopPhone">Telefone</Label>
-                  <Input
-                    id="barbershopPhone"
-                    type="tel"
-                    value={barbershopData.phone}
-                    onChange={(e) =>
-                      setBarbershopData({
-                        ...barbershopData,
-                        phone: e.target.value,
-                      })
-                    }
-                    placeholder="(11) 99999-9999"
-                  />
-                </FormGroup>
-              </Grid>
+              <FormGroup>
+                <Label htmlFor="barbershopPhone">Telefone</Label>
+                <Input
+                  id="barbershopPhone"
+                  type="tel"
+                  value={barbershopData.phone}
+                  onChange={(e) =>
+                    setBarbershopData({
+                      ...barbershopData,
+                      phone: e.target.value,
+                    })
+                  }
+                  placeholder="(11) 99999-9999"
+                />
+              </FormGroup>
 
+              <FormRowFull>
               <FormGroup>
                 <Label htmlFor="barbershopAddress">Endereço</Label>
                 <Input
@@ -500,7 +638,9 @@ const SettingsPage: React.FC = () => {
                   }
                 />
               </FormGroup>
+              </FormRowFull>
 
+              <FormRowFull>
               <FormGroup>
                 <Label htmlFor="barbershopEmail">Email</Label>
                 <Input
@@ -515,7 +655,82 @@ const SettingsPage: React.FC = () => {
                   }
                 />
               </FormGroup>
+              </FormRowFull>
 
+              <FormRowFull>
+              <FormGroup>
+                <Label htmlFor="brandColor">Cor de destaque do painel</Label>
+                <Text
+                  $size="sm"
+                  $color="tertiary"
+                  style={{ marginBottom: "0.75rem" }}
+                >
+                  Aplicada na barra lateral, menu ativo e visão geral. Com a opção
+                  desligada, usamos uma cor automática estável para a sua conta.
+                </Text>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    cursor: "pointer",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={useCustomBrandColor}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setUseCustomBrandColor(on);
+                      if (!on && user?.barbershopId) {
+                        setBrandColorHex(defaultBrandMainHex(user.barbershopId));
+                      }
+                    }}
+                  />
+                  <Text $size="sm" $color="secondary">
+                    Usar cor personalizada
+                  </Text>
+                </label>
+                {useCustomBrandColor && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <input
+                      id="brandColor"
+                      type="color"
+                      value={colorPickerValue}
+                      onChange={(e) => setBrandColorHex(e.target.value)}
+                      aria-label="Seletor de cor"
+                      style={{
+                        width: 48,
+                        height: 40,
+                        padding: 0,
+                        border: "1px solid var(--color-border-primary, #2a2a2a)",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        background: "transparent",
+                      }}
+                    />
+                    <Input
+                      type="text"
+                      value={brandColorHex}
+                      onChange={(e) => setBrandColorHex(e.target.value)}
+                      placeholder="#C8922A"
+                      style={{ maxWidth: 140 }}
+                      aria-label="Código hexadecimal da cor"
+                    />
+                  </div>
+                )}
+              </FormGroup>
+              </FormRowFull>
+
+              <FormRowFull>
               <FormGroup>
                 <Label htmlFor="barbershopLogo">Logo da Barbearia</Label>
                 
@@ -602,7 +817,9 @@ const SettingsPage: React.FC = () => {
                   Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB.
                 </Text>
               </FormGroup>
+              </FormRowFull>
 
+              <FormRowFull>
               <SaveButton
                 type="submit"
                 $variant="primary"
@@ -612,12 +829,22 @@ const SettingsPage: React.FC = () => {
                 {submitting ? "Salvando..." : "Salvar Informações"}
               </SaveButton>
 
-              <SuccessMessage show={showSuccess}>
+              <SuccessMessage $show={showSuccess}>
                 ✓ Configurações salvas com sucesso!
               </SuccessMessage>
 
-              <ErrorMessage show={!!error}>✗ {error}</ErrorMessage>
-            </SettingsForm>
+              <NoteMessage $show={showBrandMigrationNote}>
+                Os dados foram salvos, mas a <strong>cor personalizada</strong> não pôde
+                ser gravada: o banco ainda não tem a coluna{" "}
+                <code style={{ wordBreak: "break-all" }}>brand_primary_color</code>.
+                No Supabase, execute o SQL da migração{" "}
+                <code>20260420_barbershops_brand_primary_color.sql</code> e salve de
+                novo.
+              </NoteMessage>
+
+              <ErrorMessage $show={!!error}>✗ {error}</ErrorMessage>
+              </FormRowFull>
+            </BarbershopForm>
           </SectionContent>
         </SettingsSection>
 
@@ -634,70 +861,44 @@ const SettingsPage: React.FC = () => {
             </SectionDescription>
           </SectionHeader>
           <SectionContent>
-            <div style={{ padding: "1.5rem" }}>
-              <FormGroup>
-                <Label>Seu Link de Agendamento</Label>
-                <div style={{ 
-                  display: "flex", 
-                  gap: "0.75rem", 
-                  alignItems: "center",
-                  marginTop: "0.5rem"
-                }}>
-                  <Input
-                    type="text"
-                    value={`${window.location.origin}/#/book/${barbershopData.slug}`}
-                    readOnly
-                    style={{ 
-                      flex: 1,
-                      backgroundColor: "var(--color-background-secondary)",
-                      color: "var(--color-text-primary)",
-                      cursor: "text",
-                      border: "1px solid var(--color-border-primary)"
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    $variant="secondary"
-                    onClick={() => {
-                      const link = `${window.location.origin}/#/book/${barbershopData.slug}`;
-                      navigator.clipboard.writeText(link);
-                      alert('Link copiado para a área de transferência!');
-                    }}
-                    style={{ minWidth: "100px" }}
-                  >
-                    📋 Copiar
-                  </Button>
-                </div>
-              </FormGroup>
-              
-              <div style={{ 
-                marginTop: "1.5rem",
-                padding: "1rem",
-                backgroundColor: "#e8f5e8",
-                borderRadius: "8px",
-                border: "1px solid #4ade80"
-              }}>
-                <Text style={{ 
-                  fontSize: "0.875rem",
-                  color: "#166534",
-                  fontWeight: "500",
-                  marginBottom: "0.5rem"
-                }}>
-                  💡 Como usar seu link:
-                </Text>
-                <ul style={{ 
-                  margin: 0,
-                  paddingLeft: "1.25rem",
-                  fontSize: "0.875rem",
-                  color: "#166534"
-                }}>
-                  <li>Compartilhe nas suas redes sociais</li>
-                  <li>Adicione no seu WhatsApp Business</li>
-                  <li>Coloque no Google Meu Negócio</li>
-                  <li>Use em cartões de visita digitais</li>
-                </ul>
-              </div>
-            </div>
+            <FormGroup>
+              <Label>Seu link de agendamento</Label>
+              <LinkFieldRow>
+                <Input
+                  type="text"
+                  value={`${window.location.origin}/#/book/${barbershopData.slug}`}
+                  readOnly
+                />
+                <Button
+                  type="button"
+                  $variant="secondary"
+                  onClick={() => {
+                    const link = `${window.location.origin}/#/book/${barbershopData.slug}`;
+                    navigator.clipboard.writeText(link);
+                  }}
+                  style={{ flex: "0 0 auto" }}
+                >
+                  Copiar
+                </Button>
+              </LinkFieldRow>
+            </FormGroup>
+
+            <LinkTipBox>
+              <Text
+                $size="sm"
+                $weight="semibold"
+                $color="secondary"
+                style={{ marginBottom: "0.5rem" }}
+              >
+                Como usar
+              </Text>
+              <LinkTipList>
+                <li>Redes sociais e bio</li>
+                <li>WhatsApp Business</li>
+                <li>Google Meu Negócio</li>
+                <li>Cartão digital</li>
+              </LinkTipList>
+            </LinkTipBox>
           </SectionContent>
         </SettingsSection>
 
@@ -714,7 +915,7 @@ const SettingsPage: React.FC = () => {
             </SectionDescription>
           </SectionHeader>
           <SectionContent>
-            <SettingsForm onSubmit={handleWorkingHoursSubmit}>
+            <WorkingHoursForm onSubmit={handleWorkingHoursSubmit}>
               <WorkingHoursGrid>
                 {workingHours.map((schedule, index) => (
                   <DayRow key={schedule.day}>
@@ -759,11 +960,11 @@ const SettingsPage: React.FC = () => {
               >
                 {submitting ? "Salvando..." : "Salvar Horários"}
               </SaveButton>
-            </SettingsForm>
+            </WorkingHoursForm>
           </SectionContent>
         </SettingsSection>
       </SettingsContainer>
-    </PageContainer>
+    </DashboardShell>
   );
 };
 

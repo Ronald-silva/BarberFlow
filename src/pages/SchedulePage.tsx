@@ -5,7 +5,7 @@ import { supabaseApi as api } from '../services/supabaseApi';
 import { User, Service } from '../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { PageContainer, Heading, Text, Flex } from '../components/ui/Container';
+import { DashboardShell, Heading, Text, Flex } from '../components/ui/Container';
 import { Input } from '../components/ui/Input';
 import { CalendarIcon } from '../components/icons';
 
@@ -20,15 +20,15 @@ interface AppointmentWithDetails {
 
 // Styled Components
 const ScheduleHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: ${(props) => props.theme.spacing[4]};
   align-items: center;
-  margin-bottom: ${props => props.theme.spacing[6]};
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    flex-direction: column;
-    gap: ${props => props.theme.spacing[4]};
-    align-items: stretch;
+  margin-bottom: ${(props) => props.theme.spacing[6]};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: ${(props) => props.theme.spacing[5]};
   }
 `;
 
@@ -57,7 +57,7 @@ const GridContainer = styled.div<{ $columns: number }>`
   }
 `;
 
-const HeaderCell = styled.div<{ isTime?: boolean }>`
+const HeaderCell = styled.div<{ $isTime?: boolean }>`
   padding: ${props => props.theme.spacing[4]};
   background: linear-gradient(135deg, ${props => props.theme.colors.background.tertiary} 0%, ${props => props.theme.colors.background.elevated} 100%);
   border-bottom: 1px solid ${props => props.theme.colors.border.primary};
@@ -66,7 +66,7 @@ const HeaderCell = styled.div<{ isTime?: boolean }>`
   color: ${props => props.theme.colors.text.primary};
   text-align: center;
   
-  ${props => props.isTime && `
+  ${props => props.$isTime && `
     background: ${props.theme.colors.background.secondary};
   `}
 `;
@@ -229,17 +229,17 @@ const SchedulePage: React.FC = () => {
 
     if (loading) {
         return (
-            <PageContainer>
+            <DashboardShell>
                 <LoadingContainer>
                     <LoadingSpinner />
                     <Text $color="tertiary">Carregando agenda...</Text>
                 </LoadingContainer>
-            </PageContainer>
+            </DashboardShell>
         );
     }
 
     return (
-        <PageContainer className="fade-in">
+        <DashboardShell className="fade-in">
             <ScheduleHeader>
                 <div>
                     <Heading $level={1} $gradient>
@@ -271,7 +271,7 @@ const SchedulePage: React.FC = () => {
                 <ScheduleGrid className="slide-in">
                     <GridContainer $columns={professionals.length}>
                         {/* Header */}
-                        <HeaderCell isTime />
+                        <HeaderCell $isTime />
                         {professionals.map(prof => (
                             <HeaderCell key={prof.id}>
                                 {prof.name}
@@ -322,7 +322,7 @@ const SchedulePage: React.FC = () => {
                     </Text>
                 </EmptyState>
             )}
-        </PageContainer>
+        </DashboardShell>
     );
 };
 

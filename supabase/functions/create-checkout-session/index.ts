@@ -74,11 +74,24 @@ function toAsaasBaseUrl(): string {
     : 'https://sandbox.asaas.com/api/v3';
 }
 
+/** Chave de produção ($aact_prod / _prod_) com ASAAS_ENV≠production → risco de cobrança real ou config errada. */
+function assertAsaasKeyMatchesEnv(asaasApiKey: string) {
+  const env = (Deno.env.get('ASAAS_ENV') || 'sandbox').toLowerCase();
+  const k = asaasApiKey.trim();
+  const looksProdKey = /\$aact_prod|_prod_/i.test(k);
+  if (env !== 'production' && looksProdKey) {
+    throw new Error(
+      'Asaas: ASAAS_API_KEY parece de PRODUÇÃO, mas ASAAS_ENV não é production. Para testes sem cobranças reais, use a chave da conta SANDBOX do Asaas e mantenha ASAAS_ENV=sandbox nos secrets (supabase secrets set …).',
+    );
+  }
+}
+
 async function asaasRequest(path: string, method: string, body: Record<string, unknown>) {
   const asaasApiKey = Deno.env.get('ASAAS_API_KEY');
   if (!asaasApiKey) {
     throw new Error('ASAAS_API_KEY não configurada');
   }
+  assertAsaasKeyMatchesEnv(asaasApiKey);
 
   const response = await fetch(`${toAsaasBaseUrl()}${path}`, {
     method,

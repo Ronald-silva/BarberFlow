@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { DashboardIcon, UsersIcon, SettingsIcon, LogoutIcon } from '../components/icons';
 import { Text } from '../components/ui/Container';
@@ -142,7 +142,7 @@ const Logo = styled.div`
 
 const PlatformBadge = styled.div`
   background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
-  color: ${props => props.theme.colors.text.inverse};
+  color: #F8F8F8;
   padding: ${props => props.theme.spacing[1]} ${props => props.theme.spacing[3]};
   border-radius: ${props => props.theme.radii.full};
   font-size: ${props => props.theme.typography.fontSizes.xs};
@@ -188,14 +188,14 @@ const NavItem = styled(NavLink)`
   }
   
   &:hover {
-    background-color: ${props => props.theme.colors.interactive.hover};
-    color: ${props => props.theme.colors.text.primary};
+    background-color: rgba(200, 146, 42, 0.16);
+    color: #F5F5F5;
     transform: translateX(2px);
   }
   
   &.active {
     background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
-    color: ${props => props.theme.colors.text.inverse};
+    color: #F8F8F8;
     box-shadow: ${props => props.theme.shadows.md};
     
     &::before {
@@ -351,8 +351,7 @@ const PlatformLayout: React.FC = () => {
     }, []);
 
     if (!user) {
-        navigate('/login');
-        return null;
+        return <Navigate to="/login" replace />;
     }
     
     const navItems = [

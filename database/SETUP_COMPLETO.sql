@@ -141,7 +141,11 @@ CREATE POLICY "barbershops_select_public"
 
 CREATE POLICY "barbershops_insert_public"
   ON barbershops FOR INSERT
-  WITH CHECK (auth.uid() IS NULL OR is_platform_admin());
+  WITH CHECK (
+    auth.uid() IS NULL
+    OR is_platform_admin()
+    OR NOT EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid())
+  );
 
 CREATE POLICY "barbershops_update_admin"
   ON barbershops FOR UPDATE
@@ -167,9 +171,9 @@ CREATE POLICY "users_select_same_barbershop"
 CREATE POLICY "users_insert_registration_or_admin"
   ON users FOR INSERT
   WITH CHECK (
-    auth.uid() IS NULL OR
-    is_barbershop_admin(barbershop_id) OR
-    is_platform_admin()
+    id = auth.uid()
+    OR is_barbershop_admin(barbershop_id)
+    OR is_platform_admin()
   );
 
 CREATE POLICY "users_update_self_or_admin"
@@ -804,6 +808,28 @@ VALUES
      '["customer_name", "plan_name", "amount"]'::jsonb,
      'payment')
 ON CONFLICT (template_key) DO NOTHING;
+
+-- =====================================================
+-- SCHEMA: barbershops.email (cadastro público)
+-- =====================================================
+ALTER TABLE public.barbershops
+  ADD COLUMN IF NOT EXISTS email text;
+
+COMMENT ON COLUMN public.barbershops.email IS 'Email de contato público da barbearia';
+
+ALTER TABLE public.barbershops
+  ADD COLUMN IF NOT EXISTS phone text;
+
+ALTER TABLE public.barbershops
+  ADD COLUMN IF NOT EXISTS address text;
+
+COMMENT ON COLUMN public.barbershops.phone IS 'Telefone de contato da barbearia';
+COMMENT ON COLUMN public.barbershops.address IS 'Endereço da barbearia';
+
+ALTER TABLE public.barbershops
+  ADD COLUMN IF NOT EXISTS brand_primary_color text;
+
+COMMENT ON COLUMN public.barbershops.brand_primary_color IS 'Cor principal da marca no dashboard (#RRGGBB). NULL = paleta automática por barbearia.';
 
 -- =====================================================
 -- VERIFICAÇÃO FINAL

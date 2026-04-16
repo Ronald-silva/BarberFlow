@@ -5,22 +5,22 @@ import { supabaseApi } from '../services/supabaseApi';
 import { Client } from '../types';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { PageContainer, Heading, Text, Flex } from '../components/ui/Container';
+import { DashboardShell, Heading, Text, Flex } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { UsersIcon } from '../components/icons';
 
 // Styled Components
 const ClientsHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: ${(props) => props.theme.spacing[4]};
   align-items: center;
-  margin-bottom: ${props => props.theme.spacing[6]};
-  
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    flex-direction: column;
-    gap: ${props => props.theme.spacing[4]};
-    align-items: stretch;
+  margin-bottom: ${(props) => props.theme.spacing[6]};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: ${(props) => props.theme.spacing[5]};
   }
 `;
 
@@ -308,17 +308,17 @@ const ClientsPage: React.FC = () => {
 
     if (loading) {
         return (
-            <PageContainer>
+            <DashboardShell>
                 <LoadingContainer>
                     <LoadingSpinner />
                     <Text $color="tertiary">Carregando clientes...</Text>
                 </LoadingContainer>
-            </PageContainer>
+            </DashboardShell>
         );
     }
 
     return (
-        <PageContainer className="fade-in">
+        <DashboardShell className="fade-in">
             <ClientsHeader>
                 <div>
                     <Heading $level={1} $gradient>
@@ -437,7 +437,7 @@ const ClientsPage: React.FC = () => {
                     })
                 )}
             </ClientsTable>
-        </PageContainer>
+        </DashboardShell>
     );
 };
 

@@ -5,10 +5,20 @@
 // Neurociência: Alto contraste foca atenção, dourado ativa confiança
 // ============================================================
 
+const withLegacyColorString = <T extends { main: string }>(palette: T) => ({
+  ...palette,
+  toString() {
+    return palette.main;
+  },
+  valueOf() {
+    return palette.main;
+  },
+});
+
 export const theme = {
   colors: {
     // Brand — Âmbar profundo: poder, exclusividade, luxo artesanal
-    primary: {
+    primary: withLegacyColorString({
       main: '#C8922A',       // Âmbar mais sóbrio — Premium
       light: '#E8B84B',      // Hover states
       lighter: '#F5D78E',    // Backgrounds sutis
@@ -17,50 +27,50 @@ export const theme = {
       gradientReverse: 'linear-gradient(135deg, #E8B84B 0%, #C8922A 100%)',
       glow: '0 0 24px rgba(200, 146, 42, 0.35)',
       glowStrong: '0 0 40px rgba(200, 146, 42, 0.5)',
-    },
+    }),
 
     // Backgrounds — Escala de carvão premium
     bg: {
       base: '#0D0D0D',       // Preto carvão — base absoluta
       card: '#141414',       // Cards e painéis
-      elevated: '#1C1C1C',   // Cards elevados
-      overlay: '#242424',    // Overlays, dropdowns
-      border: '#2A2A2A',     // Borders sutis
-      hover: '#1F1F1F',      // Hover em items de lista
+      elevated: '#242424',   // Cards elevados (mais contraste)
+      overlay: '#2B2B2B',    // Overlays, dropdowns
+      border: '#3A3A3A',     // Borders mais visíveis
+      hover: '#303030',      // Hover em items de lista
     },
 
     // Text — Hierarquia perfeita de legibilidade
     text: {
       primary: '#F5F5F5',    // Títulos — alta legibilidade
-      secondary: '#ABABAB',  // Corpo de texto
-      muted: '#6B6B6B',      // Placeholders, labels
-      tertiary: '#6B6B6B',   // Alias (legado)
-      disabled: '#3D3D3D',   // Disabled states
+      secondary: '#D2D2D2',  // Corpo de texto
+      muted: '#A6A6A6',      // Placeholders, labels
+      tertiary: '#A6A6A6',   // Alias (legado)
+      disabled: '#747474',   // Disabled states
       inverse: '#0D0D0D',    // Texto em fundos claros
       brand: '#E8B84B',      // Texto com cor de marca
     },
 
     // Status — Paleta semântica premium
-    success: {
+    success: withLegacyColorString({
       main: '#22C55E',
       light: 'rgba(34, 197, 94, 0.12)',
       border: 'rgba(34, 197, 94, 0.3)',
-    },
-    warning: {
+    }),
+    warning: withLegacyColorString({
       main: '#F59E0B',
       light: 'rgba(245, 158, 11, 0.12)',
       border: 'rgba(245, 158, 11, 0.3)',
-    },
-    error: {
+    }),
+    error: withLegacyColorString({
       main: '#EF4444',
       light: 'rgba(239, 68, 68, 0.12)',
       border: 'rgba(239, 68, 68, 0.3)',
-    },
-    info: {
+    }),
+    info: withLegacyColorString({
       main: '#3B82F6',
       light: 'rgba(59, 130, 246, 0.12)',
       border: 'rgba(59, 130, 246, 0.3)',
-    },
+    }),
 
     // Chaves planas (legado) — usadas em vários styled-components
     primaryLight: '#E8B84B',
@@ -75,15 +85,15 @@ export const theme = {
     background: {
       primary: '#0D0D0D',
       secondary: '#141414',
-      tertiary: '#1C1C1C',
-      elevated: '#202020',
+      tertiary: '#242424',
+      elevated: '#2B2B2B',
     },
     border: {
-      primary: '#2A2A2A',
-      secondary: '#363636',
+      primary: '#3A3A3A',
+      secondary: '#4A4A4A',
       focus: '#C8922A',
       error: '#EF4444',
-      main: '#2A2A2A',
+      main: '#3A3A3A',
     },
     interactive: {
       hover: 'rgba(200, 146, 42, 0.08)',

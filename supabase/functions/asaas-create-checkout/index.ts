@@ -13,9 +13,20 @@ function asaasBaseUrl() {
     : 'https://sandbox.asaas.com/api/v3';
 }
 
+function assertAsaasKeyMatchesEnv(asaasApiKey: string) {
+  const env = (Deno.env.get('ASAAS_ENV') || 'sandbox').toLowerCase();
+  const k = asaasApiKey.trim();
+  if (env !== 'production' && (/\$aact_prod|_prod_/i.test(k))) {
+    throw new Error(
+      'Asaas: chave de PRODUÇÃO com ASAAS_ENV=sandbox. Use chave SANDBOX e ASAAS_ENV=sandbox.',
+    );
+  }
+}
+
 async function asaasRequest(path: string, body: Record<string, unknown>) {
   const key = Deno.env.get('ASAAS_API_KEY');
   if (!key) throw new Error('ASAAS_API_KEY não configurada');
+  assertAsaasKeyMatchesEnv(key);
 
   const response = await fetch(`${asaasBaseUrl()}${path}`, {
     method: 'POST',

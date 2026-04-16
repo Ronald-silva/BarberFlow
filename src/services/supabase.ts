@@ -41,6 +41,7 @@ export interface Database {
           address: string | null;
           phone: string | null;
           email: string | null;
+          brand_primary_color?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -52,6 +53,7 @@ export interface Database {
           address?: string | null;
           phone?: string | null;
           email?: string | null;
+          brand_primary_color?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -63,6 +65,7 @@ export interface Database {
           address?: string | null;
           phone?: string | null;
           email?: string | null;
+          brand_primary_color?: string | null;
           created_at?: string;
           updated_at?: string;
         };

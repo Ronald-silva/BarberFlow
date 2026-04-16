@@ -8,7 +8,8 @@ Este runbook define como habilitar Asaas gradualmente sem interromper cobrança 
 - Secrets configurados no Supabase:
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
-  - `ASAAS_API_KEY`
+  - `ASAAS_API_KEY` (use a chave da **conta sandbox** do Asaas para testes)
+  - `ASAAS_ENV` = `sandbox` (padrão seguro; só `production` + chave de produção após validação)
   - `ASAAS_WEBHOOK_SECRET` (opcional, recomendado)
 - Deploy das funções:
   - `create-checkout-session`
@@ -16,6 +17,13 @@ Este runbook define como habilitar Asaas gradualmente sem interromper cobrança 
   - `stripe-webhook`
   - `asaas-webhook`
   - `create-booking-payment`
+
+### Asaas: sandbox (sem cobrança real)
+
+- Crie / use a conta em [sandbox.asaas.com](https://sandbox.asaas.com) e copie a **API key de sandbox** (não use token com `$aact_prod` em dev).
+- Nos secrets: `ASAAS_ENV=sandbox` (ou omita; o código assume sandbox).
+- As Edge Functions chamam `https://sandbox.asaas.com/api/v3` quando `ASAAS_ENV` ≠ `production`.
+- Se `ASAAS_ENV=sandbox` e a chave parecer de produção (`$aact_prod` / `_prod_`), a função **recusa** o pedido com erro explícito, para evitar confusão.
 
 ## 2) Feature Flags por tenant
 

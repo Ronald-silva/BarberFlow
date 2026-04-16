@@ -244,9 +244,20 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    let timeoutId: number | undefined;
 
     try {
-      const success = await login(email, password);
+      const loginWithGuard = Promise.race<boolean>([
+        login(email, password),
+        new Promise<boolean>((_, reject) => {
+          timeoutId = window.setTimeout(
+            () => reject(new Error('Tempo de conexão esgotado. Verifique sua internet e tente novamente.')),
+            20000
+          );
+        }),
+      ]);
+
+      const success = await loginWithGuard;
       if (success) {
         const userData = JSON.parse(localStorage.getItem('shafar_user') || '{}');
         if (userData.role === 'platform_admin') {
@@ -258,8 +269,16 @@ const LoginPage: React.FC = () => {
         setError('Email ou senha incorretos. Verifique suas credenciais.');
       }
     } catch (err: any) {
-      setError(err?.message || 'Erro ao fazer login. Tente novamente.');
+      const message = String(err?.message || '');
+      if (message.toLowerCase().includes('invalid login credentials')) {
+        setError('Email ou senha incorretos. Verifique suas credenciais.');
+      } else {
+        setError(message || 'Erro ao fazer login. Tente novamente.');
+      }
     } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
       setLoading(false);
     }
   };

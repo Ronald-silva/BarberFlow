@@ -13,22 +13,30 @@ interface ButtonProps {
 
 const buttonVariants = {
   primary: css`
-    background: linear-gradient(135deg, #C8922A 0%, #E8B84B 100%);
-    color: #0D0D0D;
+    background: linear-gradient(
+      135deg,
+      var(--bs-brand-main, #c8922a) 0%,
+      var(--bs-brand-light, #e8b84b) 100%
+    );
+    color: #0d0d0d;
     border: 1px solid transparent;
     font-weight: 700;
     letter-spacing: -0.01em;
-    box-shadow: 0 8px 20px rgba(200, 146, 42, 0.24);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--bs-brand-main, #c8922a) 28%, transparent);
 
     &:hover:not(:disabled) {
-      background: linear-gradient(135deg, #E8B84B 0%, #C8922A 100%);
-      box-shadow: 0 12px 26px rgba(200, 146, 42, 0.35);
+      background: linear-gradient(
+        135deg,
+        var(--bs-brand-light, #e8b84b) 0%,
+        var(--bs-brand-main, #c8922a) 100%
+      );
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--bs-brand-main, #c8922a) 38%, transparent);
       transform: translateY(-2px);
     }
 
     &:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(200, 146, 42, 0.3);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--bs-brand-main, #c8922a) 32%, transparent);
     }
   `,
 
@@ -52,31 +60,31 @@ const buttonVariants = {
 
   ghost: css`
     background-color: transparent;
-    color: #ABABAB;
+    color: #ababab;
     border: 1px solid transparent;
     font-weight: 500;
 
     &:hover:not(:disabled) {
-      background-color: rgba(200, 146, 42, 0.08);
-      color: #E8B84B;
-      border-color: rgba(200, 146, 42, 0.2);
+      background-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 10%, transparent);
+      color: var(--bs-brand-light, #e8b84b);
+      border-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 22%, transparent);
     }
 
     &:active:not(:disabled) {
-      background-color: rgba(200, 146, 42, 0.15);
+      background-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 16%, transparent);
     }
   `,
 
   outline: css`
     background-color: transparent;
-    color: #C8922A;
-    border: 1px solid #C8922A;
+    color: var(--bs-brand-main, #c8922a);
+    border: 1px solid var(--bs-brand-main, #c8922a);
     font-weight: 600;
 
     &:hover:not(:disabled) {
-      background-color: rgba(200, 146, 42, 0.1);
-      border-color: #E8B84B;
-      color: #E8B84B;
+      background-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 10%, transparent);
+      border-color: var(--bs-brand-light, #e8b84b);
+      color: var(--bs-brand-light, #e8b84b);
       transform: translateY(-1px);
     }
   `,
@@ -185,7 +193,7 @@ export const Button = styled.button<ButtonProps>`
   `}
 
   &:focus-visible {
-    outline: 2px solid #C8922A;
+    outline: 2px solid var(--bs-brand-main, #c8922a);
     outline-offset: 3px;
   }
 `;

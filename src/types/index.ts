@@ -23,6 +23,10 @@ export interface Barbershop {
   logoUrl: string;
   address: string;
   slug: string;
+  phone?: string | null;
+  email?: string | null;
+  /** Cor do painel (#RRGGBB). Ausente/null = paleta automática por barbearia. */
+  brandPrimaryColor?: string | null;
 }
 
 export interface User {

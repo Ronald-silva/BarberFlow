@@ -190,5 +190,13 @@ export const CreditCardIcon: React.FC<IconProps> = ({ size = 24, className }) =>
   </svg>
 );
 
+export const MoreHorizIcon: React.FC<IconProps> = ({ size = 24, className }) => (
+  <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <circle cx="6" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="18" cy="12" r="2" />
+  </svg>
+);
+
 // Export PIX Image component
 export { PixImage } from './icons/PixImage';

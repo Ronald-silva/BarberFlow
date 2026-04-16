@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabaseApi } from "../services/supabaseApi";
 import { Service } from "../types";
 import {
-  PageContainer,
+  DashboardShell,
   Heading,
   Text,
   Grid,
@@ -17,15 +17,15 @@ import { ScissorsIcon } from "../components/icons";
 
 // Styled Components
 const ServicesHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: ${(props) => props.theme.spacing[4]};
   align-items: center;
   margin-bottom: ${(props) => props.theme.spacing[6]};
 
-  @media (max-width: ${(props) => props.theme.breakpoints.md}) {
-    flex-direction: column;
-    gap: ${(props) => props.theme.spacing[4]};
-    align-items: stretch;
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: ${(props) => props.theme.spacing[5]};
   }
 `;
 
@@ -328,17 +328,17 @@ const ServicesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <PageContainer>
+      <DashboardShell>
         <LoadingContainer>
           <LoadingSpinner />
           <Text $color="tertiary">Carregando serviços...</Text>
         </LoadingContainer>
-      </PageContainer>
+      </DashboardShell>
     );
   }
 
   return (
-    <PageContainer className="fade-in">
+    <DashboardShell className="fade-in">
       <ServicesHeader>
         <div>
           <Heading $level={1} $gradient>
@@ -504,7 +504,7 @@ const ServicesPage: React.FC = () => {
           </ModalForm>
         </ModalContent>
       </Modal>
-    </PageContainer>
+    </DashboardShell>
   );
 };
 
