@@ -8,7 +8,7 @@
 // =====================================================
 
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase, type Database } from './supabase';
 
 export type BillingProvider = 'stripe' | 'asaas';
 
@@ -302,7 +302,7 @@ export async function updateStripeCustomer(
 ): Promise<StripeCustomer | null> {
   const { data, error } = await supabase
     .from('stripe_customers')
-    .update(customerData as Record<string, unknown>)
+    .update(customerData as Database['public']['Tables']['stripe_customers']['Update'])
     .eq('id', customerId)
     .select()
     .single();

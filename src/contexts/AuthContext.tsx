@@ -71,11 +71,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [user?.barbershopId]);
 
   useEffect(() => {
-    const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
+    const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T | null> => {
       const timeoutPromise = new Promise<null>((resolve) => {
         window.setTimeout(() => resolve(null), timeoutMs);
       });
-      return Promise.race([promise, timeoutPromise]);
+      return Promise.race([Promise.resolve(promise), timeoutPromise]);
     };
 
     const initializeAuth = async () => {

@@ -185,7 +185,7 @@ export const api = {
       brandPrimaryColor?: string | null;
     }
   ): Promise<{ brandSaved: boolean }> => {
-    const row: Record<string, string | null> = {};
+    const row: Database['public']['Tables']['barbershops']['Update'] = {};
     if (payload.name !== undefined) row.name = payload.name;
     if (payload.address !== undefined) row.address = payload.address;
     if (payload.slug !== undefined) row.slug = payload.slug;
