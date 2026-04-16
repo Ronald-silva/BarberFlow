@@ -536,7 +536,9 @@ const SidebarTree: React.FC<SidebarTreeProps> = ({
             <PlanChipStatus $status={planStatus}>
               {planStatus === 'active' ? 'Ativo' :
                planStatus === 'trialing' ? 'Teste grátis' :
-               planStatus === 'pending' ? 'Aguardando pgto.' : planStatus}
+                 planStatus === 'pending' ? 'Aguardando pgto.' :
+                 planStatus === 'past_due' ? 'Pagamento pendente' :
+                 planStatus === 'canceled' ? 'Cancelado' : planStatus}
             </PlanChipStatus>
           </PlanChipText>
         </PlanChip>

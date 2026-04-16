@@ -131,7 +131,21 @@ const PricingPage: React.FC = () => {
     if (status === 'active') return { text: 'Ativo', color: '#22c55e' };
     if (status === 'trialing') return { text: 'Teste grátis', color: '#3b82f6' };
     if (status === 'pending') return { text: 'Aguardando pagamento', color: '#f59e0b' };
+    if (status === 'past_due') return { text: 'Pagamento pendente', color: '#f97316' };
+    if (status === 'canceled') return { text: 'Cancelado', color: '#ef4444' };
+    if (status === 'incomplete') return { text: 'Incompleto', color: '#6b7280' };
     return { text: status ?? '', color: '#6b7280' };
+  };
+
+  const isBlockingCurrentStatus = (status?: string) =>
+    status === 'active' || status === 'trialing' || status === 'pending';
+
+  const getCurrentPlanButtonLabel = (status?: string) => {
+    if (status === 'pending') return '⏳ Aguardando pagamento';
+    if (status === 'active' || status === 'trialing') return '✓ Plano ativo';
+    if (status === 'past_due') return 'Regularizar pagamento';
+    if (status === 'canceled') return 'Reativar este plano';
+    return 'Assinar este plano';
   };
 
   return (
@@ -222,16 +236,14 @@ const PricingPage: React.FC = () => {
                   <CtaBlock>
                     <Button
                       onClick={() => handleSelectPlan(plan.id)}
-                      disabled={loading || isCurrentPlan}
+                      disabled={loading || (isCurrentPlan && isBlockingCurrentStatus(subStatus))}
                       $variant={isPopular ? 'primary' : 'secondary'}
                       $fullWidth
                     >
                       {loading && selectedPlan === plan.id
                         ? 'Abrindo checkout…'
                         : isCurrentPlan
-                          ? subStatus === 'pending'
-                            ? '⏳ Aguardando pagamento'
-                            : '✓ Plano ativo'
+                          ? getCurrentPlanButtonLabel(subStatus)
                           : 'Assinar este plano'}
                     </Button>
                   </CtaBlock>
