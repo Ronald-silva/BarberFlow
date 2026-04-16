@@ -327,7 +327,7 @@ const ErrorAlert = styled.div`
 
 /* ===== COMPONENT ===== */
 interface BarbershopData {
-  name: string; slug: string; address: string; phone: string; email: string;
+  name: string; slug: string; address: string; phone: string; email: string; cpfCnpj: string;
 }
 interface AdminData {
   name: string; email: string; password: string;
@@ -341,7 +341,7 @@ const BarbershopRegistrationPage: React.FC = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
-  const [shop, setShop] = useState<BarbershopData>({ name: "", slug: "", address: "", phone: "", email: "" });
+  const [shop, setShop] = useState<BarbershopData>({ name: "", slug: "", address: "", phone: "", email: "", cpfCnpj: "" });
   const [admin, setAdmin] = useState<AdminData>({ name: "", email: "", password: "" });
 
   const generateSlug = (name: string) =>
@@ -359,7 +359,9 @@ const BarbershopRegistrationPage: React.FC = () => {
     });
   };
 
-  const step1Valid = shop.name && shop.slug && shop.address && shop.phone && shop.email;
+  const cpfCnpjClean = shop.cpfCnpj.replace(/\D/g, '');
+  const cpfCnpjValid = cpfCnpjClean.length === 11 || cpfCnpjClean.length === 14;
+  const step1Valid = shop.name && shop.slug && shop.address && shop.phone && shop.email && cpfCnpjValid;
   const step2Valid = admin.name && admin.email && admin.password.length >= 6 && acceptedTerms && acceptedPrivacy;
 
   const handleSubmit = async () => {
@@ -397,6 +399,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         address: shop.address,
         phone: shop.phone,
         email: shop.email,
+        cpf_cnpj: cpfCnpjClean,
       };
       const { data: barbershop, error: bErr } = await supabase
         .from('barbershops')
@@ -528,6 +531,15 @@ const BarbershopRegistrationPage: React.FC = () => {
                 <Label htmlFor="shopEmail">Email da barbearia</Label>
                 <Input id="shopEmail" type="email" placeholder="contato@barbearia.com" value={shop.email}
                   autoComplete="email" onChange={e => handleShopChange("email", e.target.value)} />
+              </Field>
+
+              <Field>
+                <Label htmlFor="shopCpfCnpj">CPF / CNPJ do responsável</Label>
+                <Input id="shopCpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0001-00" value={shop.cpfCnpj}
+                  onChange={e => handleShopChange("cpfCnpj", e.target.value)} />
+                {shop.cpfCnpj && !cpfCnpjValid && (
+                  <HelperText style={{ color: '#EF4444' }}>CPF (11 dígitos) ou CNPJ (14 dígitos)</HelperText>
+                )}
               </Field>
             </FieldGroup>
           </FormBody>

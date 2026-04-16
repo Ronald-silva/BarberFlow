@@ -27,7 +27,7 @@ export const Container = styled.div<{ $maxWidth?: string; $padding?: boolean }>`
 export const PageContainer = styled.div`
   max-width: 1280px;
   margin: 0 auto;
-  padding: ${props => props.theme.spacing[5]} ${props => props.theme.spacing[4]};
+  padding: ${props => props.theme.spacing[6]} ${props => props.theme.spacing[4]};
   min-height: calc(100vh - 80px); /* Account for mobile header */
   
   @media (min-width: ${props => props.theme.breakpoints.sm}) {
@@ -52,59 +52,69 @@ export const DashboardShell = styled(PageContainer)`
 `;
 
 // Cards
-export const Card = styled.div<{ $variant?: 'default' | 'elevated' | 'outlined' }>`
-  background: linear-gradient(
-    180deg,
-    ${props => props.theme.colors.background.elevated} 0%,
-    ${props => props.theme.colors.background.tertiary} 100%
-  );
+export const Card = styled.div<{ $variant?: 'default' | 'elevated' | 'outlined' | 'glass' }>`
+  background: ${props => props.theme.colors.bg.card};
   border-radius: ${props => props.theme.radii.xl};
+  border: 1px solid ${props => props.theme.colors.bg.border};
   overflow: hidden;
-  transition: border-color ${props => props.theme.transitions.base}, box-shadow ${props => props.theme.transitions.base}, transform ${props => props.theme.transitions.base};
+  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
   
   ${props => props.$variant === 'elevated' && css`
     box-shadow: ${props => props.theme.shadows.lg};
-    border: 1px solid ${props => props.theme.colors.border.primary};
     
     &:hover {
-      border-color: ${props => props.theme.colors.border.secondary};
+      border-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 30%, ${props => props.theme.colors.bg.border});
       box-shadow: ${props => props.theme.shadows.xl};
-      transform: translateY(-3px);
+      transform: translateY(-4px);
     }
   `}
   
   ${props => props.$variant === 'outlined' && css`
-    border: 1px solid ${props => props.theme.colors.border.primary};
+    background: transparent;
+    border: 1px solid ${props => props.theme.colors.bg.border};
     
     &:hover {
       border-color: ${props => props.theme.colors.border.secondary};
+      background: ${props => props.theme.colors.bg.hover};
+    }
+  `}
+
+  ${props => props.$variant === 'glass' && css`
+    background: ${props => props.theme.colors.bg.glass};
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid ${props => props.theme.colors.bg.glassBorder};
+    box-shadow: ${props => props.theme.shadows.base};
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: ${props => props.theme.shadows.md};
     }
   `}
   
-  ${props => props.$variant === 'default' && css`
+  ${props => (props.$variant === 'default' || !props.$variant) && css`
     box-shadow: ${props => props.theme.shadows.base};
+    &:hover {
+      border-color: ${props => props.theme.colors.border.secondary};
+      box-shadow: ${props => props.theme.shadows.md};
+    }
   `}
 `;
 
 export const CardHeader = styled.div<{ $withBorder?: boolean }>`
-  padding: ${props => props.theme.spacing[4]};
-  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+  padding: ${props => props.theme.spacing[5]};
+  background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: ${props => props.theme.spacing[3]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    padding: ${props => props.theme.spacing[5]};
-    gap: ${props => props.theme.spacing[4]};
-  }
+  gap: ${props => props.theme.spacing[4]};
   
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     padding: ${props => props.theme.spacing[6]};
   }
   
   ${props => props.$withBorder && css`
-    border-bottom: 1px solid ${props => props.theme.colors.border.primary};
+    border-bottom: 1px solid ${props => props.theme.colors.bg.border};
   `}
 `;
 
@@ -246,130 +256,38 @@ export const Flex = styled.div<{
   `}
 `;
 
-// Typography
-export const Heading = styled.h1<{ 
+// Typographyexport const Heading = styled.h1<{ 
   $level?: 1 | 2 | 3 | 4 | 5 | 6;
   $color?: 'primary' | 'secondary' | 'tertiary';
   $gradient?: boolean;
 }>`
   font-weight: ${props => props.theme.typography.fontWeights.bold};
   line-height: ${props => props.theme.typography.lineHeights.tight};
-  letter-spacing: ${props => props.theme.typography.letterSpacings.tight};
+  letter-spacing: ${props => props.theme.typography.letterSpacings.tighter};
   margin: 0;
   
   ${props => {
     const level = props.$level || 1;
     
-    // Mobile-first responsive font sizes
     switch (level) {
       case 1: 
         return css`
-          font-size: ${props.theme.typography.fontSizes['2xl']};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes['3xl']};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes['4xl']};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['4xl']};
-          }
+          font-size: ${props.theme.typography.fontSizes['3xl']};
+          @media (min-width: 768px) { font-size: ${props.theme.typography.fontSizes['4xl']}; }
+          @media (min-width: 1280px) { font-size: 56px; }
         `;
       case 2: 
         return css`
-          font-size: ${props.theme.typography.fontSizes.xl};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['3xl']};
-          }
+          font-size: ${props.theme.typography.fontSizes['2xl']};
+          @media (min-width: 768px) { font-size: ${props.theme.typography.fontSizes['3xl']}; }
         `;
       case 3: 
         return css`
-          font-size: ${props.theme.typography.fontSizes.lg};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes.xl};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes.xl};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
-          }
-        `;
-      case 4: 
-        return css`
-          font-size: ${props.theme.typography.fontSizes.base};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes.lg};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes.xl};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
-          }
-        `;
-      case 5: 
-        return css`
-          font-size: ${props.theme.typography.fontSizes.sm};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes.base};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes.lg};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes.xl};
-          }
-        `;
-      case 6: 
-        return css`
-          font-size: ${props.theme.typography.fontSizes.xs};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes.sm};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.md}) {
-            font-size: ${props.theme.typography.fontSizes.base};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes.lg};
-          }
+          font-size: ${props.theme.typography.fontSizes.xl};
+          @media (min-width: 768px) { font-size: ${props.theme.typography.fontSizes['2xl']}; }
         `;
       default: 
-        return css`
-          font-size: ${props.theme.typography.fontSizes.xl};
-          
-          @media (min-width: ${props.theme.breakpoints.sm}) {
-            font-size: ${props.theme.typography.fontSizes['2xl']};
-          }
-          
-          @media (min-width: ${props.theme.breakpoints.lg}) {
-            font-size: ${props.theme.typography.fontSizes['3xl']};
-          }
-        `;
+        return css`font-size: ${props.theme.typography.fontSizes.xl};`;
     }
   }}
   
@@ -391,6 +309,7 @@ export const Heading = styled.h1<{
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    display: inline-block;
   `}
 `;
 
@@ -424,13 +343,8 @@ export const Text = styled.p<{
   }}
   
   ${props => {
-    switch (props.$weight) {
-      case 'light': return `font-weight: ${props.theme.typography.fontWeights.light};`;
-      case 'normal': return `font-weight: ${props.theme.typography.fontWeights.normal};`;
-      case 'medium': return `font-weight: ${props.theme.typography.fontWeights.medium};`;
-      case 'semibold': return `font-weight: ${props.theme.typography.fontWeights.semibold};`;
-      case 'bold': return `font-weight: ${props.theme.typography.fontWeights.bold};`;
-      default: return `font-weight: ${props.theme.typography.fontWeights.normal};`;
-    }
+    const weight = props.$weight || 'normal';
+    return `font-weight: ${props.theme.typography.fontWeights[weight]};`;
   }}
 `;
+;

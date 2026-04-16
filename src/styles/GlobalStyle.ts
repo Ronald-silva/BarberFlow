@@ -14,15 +14,14 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    font-size: 14px;
+    font-size: 15px;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
 
-    @media (min-width: 480px) { font-size: 15px; }
     @media (min-width: 768px) { font-size: 16px; }
   }
 
@@ -30,17 +29,18 @@ export const GlobalStyle = createGlobalStyle`
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 1rem;
     font-weight: 400;
-    line-height: 1.55;
-    background-color: #0D0D0D;
-    color: #D2D2D2;
+    line-height: 1.6;
+    background-color: #0A0A0A;
+    color: #E0E0E0;
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
     max-width: 100vw;
     -webkit-overflow-scrolling: touch;
     background-image:
-      radial-gradient(circle at 20% -10%, rgba(200, 146, 42, 0.08) 0%, transparent 35%),
-      radial-gradient(circle at 80% 120%, rgba(200, 146, 42, 0.06) 0%, transparent 40%);
+      radial-gradient(circle at 10% -10%, rgba(200, 146, 42, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 90% 110%, rgba(200, 146, 42, 0.03) 0%, transparent 50%);
+    background-attachment: fixed;
   }
 
   ::selection {
@@ -114,8 +114,9 @@ export const GlobalStyle = createGlobalStyle`
   /* ================ Focus Global ================= */
   *:focus-visible {
     outline: 2px solid #C8922A;
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline-offset: 3px;
+    border-radius: 6px;
+    transition: outline-offset 150ms ease;
   }
 
   /* ================ Utilitários ================= */
@@ -183,19 +184,19 @@ export const GlobalStyle = createGlobalStyle`
     100% { background-position: 0% 50%; }
   }
 
-  .fade-in { animation: fadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
-  .fade-in-scale { animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
-  .slide-in { animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
-  .slide-up { animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .fade-in-scale { animation: fadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-in { animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-up { animation: slideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
   /* Staggered children */
-  .stagger > * { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .stagger > * { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
   .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 60ms; }
-  .stagger > *:nth-child(3) { animation-delay: 120ms; }
-  .stagger > *:nth-child(4) { animation-delay: 180ms; }
-  .stagger > *:nth-child(5) { animation-delay: 240ms; }
-  .stagger > *:nth-child(6) { animation-delay: 300ms; }
+  .stagger > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger > *:nth-child(3) { animation-delay: 160ms; }
+  .stagger > *:nth-child(4) { animation-delay: 240ms; }
+  .stagger > *:nth-child(5) { animation-delay: 320ms; }
+  .stagger > *:nth-child(6) { animation-delay: 400ms; }
 
   /* ================ Mobile específico ================= */
   @media (max-width: 1023px) {

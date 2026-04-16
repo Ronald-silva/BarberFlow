@@ -8,47 +8,50 @@ interface InputProps {
 
 const inputVariants = {
   default: css`
-    background-color: ${props => props.theme.colors.background.secondary};
-    border: 1px solid ${props => props.theme.colors.border.primary};
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    background-color: ${props => props.theme.colors.bg.card};
+    border: 1px solid ${props => props.theme.colors.bg.border};
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 
     &:hover:not(:focus):not(:disabled) {
       border-color: ${props => props.theme.colors.border.secondary};
-      background-color: ${props => props.theme.colors.background.tertiary};
+      background-color: ${props => props.theme.colors.bg.hover};
     }
 
     &:focus {
-      border-color: ${props => props.theme.colors.border.focus};
-      box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus}, ${props => props.theme.shadows.base};
-      background-color: ${props => props.theme.colors.background.tertiary};
+      border-color: ${props => props.theme.colors.primary.main};
+      box-shadow: 
+        0 0 0 4px color-mix(in srgb, var(--bs-brand-main, #c8922a) 15%, transparent),
+        ${props => props.theme.shadows.md};
+      background-color: ${props => props.theme.colors.bg.hover};
     }
   `,
 
   filled: css`
-    background-color: ${props => props.theme.colors.background.tertiary};
+    background-color: ${props => props.theme.colors.bg.elevated};
     border: 1px solid transparent;
 
     &:hover:not(:focus):not(:disabled) {
-      background-color: ${props => props.theme.colors.background.elevated};
+      background-color: ${props => props.theme.colors.bg.overlay};
     }
 
     &:focus {
-      border-color: ${props => props.theme.colors.border.focus};
-      box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
+      border-color: ${props => props.theme.colors.primary.main};
+      background-color: ${props => props.theme.colors.bg.overlay};
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--bs-brand-main, #c8922a) 15%, transparent);
     }
   `,
 
   outlined: css`
     background-color: transparent;
-    border: 2px solid ${props => props.theme.colors.border.primary};
+    border: 1px solid ${props => props.theme.colors.bg.border};
 
     &:hover:not(:focus):not(:disabled) {
       border-color: ${props => props.theme.colors.border.secondary};
     }
 
     &:focus {
-      border-color: ${props => props.theme.colors.border.focus};
-      box-shadow: 0 0 0 3px ${props => props.theme.colors.interactive.focus};
+      border-color: ${props => props.theme.colors.primary.main};
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--bs-brand-main, #c8922a) 15%, transparent);
     }
   `,
 };
@@ -91,10 +94,11 @@ export const Input = styled.input<InputProps>`
   }
 
   ${props => props.$error && css`
-    border-color: ${props => props.theme.colors.error} !important;
+    border-color: ${props => props.theme.colors.error.main} !important;
+    background-color: color-mix(in srgb, ${props => props.theme.colors.error.main} 5%, transparent);
 
     &:focus {
-      box-shadow: 0 0 0 3px ${props => props.theme.colors.errorLight};
+      box-shadow: 0 0 0 4px color-mix(in srgb, ${props => props.theme.colors.error.main} 20%, transparent);
     }
   `}
 
@@ -110,9 +114,10 @@ export const Label = styled.label<{ $required?: boolean; $error?: boolean }>`
   display: block;
   font-size: ${props => props.theme.typography.fontSizes.sm};
   font-weight: ${props => props.theme.typography.fontWeights.semibold};
-  color: ${props => props.$error ? props.theme.colors.error : props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing[2]};
+  color: ${props => props.$error ? props.theme.colors.error.main : props.theme.colors.text.secondary};
+  margin-bottom: ${props => props.theme.spacing[1.5]};
   letter-spacing: ${props => props.theme.typography.letterSpacings.wide};
+  transition: color 200ms ease;
 
   ${props => props.$required && css`
     &::after {

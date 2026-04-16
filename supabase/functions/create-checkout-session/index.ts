@@ -198,7 +198,7 @@ serve(async (req) => {
     // 8. Get barbershop details
     const { data: barbershop, error: barbershopError } = await supabaseAdmin
       .from('barbershops')
-      .select('name, email')
+      .select('name, email, cpf_cnpj')
       .eq('id', barbershopId)
       .single();
 
@@ -326,11 +326,15 @@ serve(async (req) => {
     let asaasCustomerId = existingAsaasCustomer?.provider_customer_id;
 
     if (!asaasCustomerId) {
-      const customer = await asaasRequest('/customers', 'POST', {
+      const customerPayload: Record<string, unknown> = {
         name: barbershop.name,
         email: barbershop.email || user.email,
         externalReference: barbershopId,
-      });
+      };
+      if (barbershop.cpf_cnpj) {
+        customerPayload.cpfCnpj = barbershop.cpf_cnpj;
+      }
+      const customer = await asaasRequest('/customers', 'POST', customerPayload);
 
       asaasCustomerId = customer.id;
       await supabaseAdmin

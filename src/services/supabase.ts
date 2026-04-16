@@ -42,6 +42,7 @@ export interface Database {
           phone: string | null;
           email: string | null;
           brand_primary_color?: string | null;
+          cpf_cnpj?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -54,6 +55,7 @@ export interface Database {
           phone?: string | null;
           email?: string | null;
           brand_primary_color?: string | null;
+          cpf_cnpj?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -66,6 +68,7 @@ export interface Database {
           phone?: string | null;
           email?: string | null;
           brand_primary_color?: string | null;
+          cpf_cnpj?: string | null;
           created_at?: string;
           updated_at?: string;
         };
