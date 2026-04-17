@@ -376,12 +376,17 @@ export const api = {
   ): Promise<Appointment> => {
     // 1. Find or create client
     let clientId: string;
-    const { data: existingClient } = await supabase
+    const { data: existingClient, error: existingClientErr } = await supabase
       .from('clients')
       .select('*')
       .eq('whatsapp', data.client.whatsapp)
       .eq('barbershop_id', data.barbershopId)
-      .single();
+      .maybeSingle();
+
+    if (existingClientErr) {
+      console.error('[createAppointment] busca cliente:', existingClientErr);
+      throw new Error(existingClientErr.message || 'Erro ao buscar cliente');
+    }
 
     if (existingClient) {
       clientId = existingClient.id;
@@ -432,7 +437,18 @@ export const api = {
       .select()
       .single();
 
-    if (createAppError || !newAppointment) throw new Error('Failed to create appointment');
+    if (createAppError || !newAppointment) {
+      console.error('[createAppointment] insert appointments:', createAppError);
+      const msg =
+        (createAppError as { message?: string; details?: string; hint?: string })?.message ||
+        (createAppError as { details?: string })?.details ||
+        'Failed to create appointment';
+      throw new Error(
+        msg.includes('column') || msg.includes('schema cache')
+          ? `${msg} — Execute no Supabase: supabase/migrations/20260421_appointments_payment_columns.sql`
+          : msg
+      );
+    }
 
     const appointment = mapRowToAppointment(newAppointment);
 
