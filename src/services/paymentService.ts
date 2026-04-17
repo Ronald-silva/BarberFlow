@@ -3,9 +3,12 @@ import { supabase } from './supabase';
 
 export interface PaymentData {
   appointmentId: string;
+  /** Obrigatório para create-booking-payment (provedor e RLS por barbearia). */
+  barbershopId: string;
   amount: number;
   clientName: string;
-  clientEmail: string;
+  /** Se vazio, a Edge Function gera e-mail técnico estável por barbearia + WhatsApp (Asaas). */
+  clientEmail?: string;
   clientPhone: string;
   description: string;
 }
@@ -38,16 +41,21 @@ class PaymentService {
   // Criar pagamento PIX
   async createPixPayment(data: PaymentData): Promise<PaymentResponse> {
     try {
+      if (!data.barbershopId?.trim()) {
+        throw new Error('barbershopId é obrigatório para gerar PIX');
+      }
+
       const provider =
         (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
 
       const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
         body: {
           appointment_id: data.appointmentId,
+          barbershop_id: data.barbershopId,
           amount: data.amount,
           description: data.description,
           customer_name: data.clientName,
-          customer_email: data.clientEmail,
+          customer_email: data.clientEmail?.trim() || undefined,
           customer_phone: data.clientPhone,
           method: 'pix',
           provider,
@@ -55,21 +63,34 @@ class PaymentService {
       });
 
       if (error) {
-        throw error;
+        throw new Error(error.message || 'Falha na Edge Function create-booking-payment');
+      }
+
+      const body = response as {
+        error?: string;
+        paymentId?: string;
+        paymentUrl?: string;
+        qrCode?: string;
+        pixCode?: string;
+        status?: PaymentResponse['status'];
+      };
+      if (body?.error) {
+        throw new Error(body.error);
       }
 
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       return {
-        paymentId: response.paymentId,
-        paymentUrl: response.paymentUrl,
-        qrCode: response.qrCode,
-        pixCode: response.pixCode,
-        status: response.status || 'pending',
+        paymentId: body.paymentId as string,
+        paymentUrl: body.paymentUrl,
+        qrCode: body.qrCode,
+        pixCode: body.pixCode,
+        status: body.status || 'pending',
         expiresAt,
       };
     } catch (error) {
       console.error('Erro ao criar pagamento PIX:', error);
-      throw new Error('Falha ao processar pagamento PIX');
+      const msg = error instanceof Error ? error.message : 'Falha ao processar pagamento PIX';
+      throw new Error(msg);
     }
   }
 
@@ -356,51 +377,63 @@ class PaymentService {
         return this.createBitcoinPayment(data);
       case 'credit_card':
       case 'debit_card': {
+        if (!data.barbershopId?.trim()) {
+          throw new Error('barbershopId é obrigatório para checkout');
+        }
         const provider =
           (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
         const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
           body: {
             appointment_id: data.appointmentId,
+            barbershop_id: data.barbershopId,
             amount: data.amount,
             description: data.description,
             customer_name: data.clientName,
-            customer_email: data.clientEmail,
+            customer_email: data.clientEmail?.trim() || undefined,
             customer_phone: data.clientPhone,
             method,
             provider,
           },
         });
         if (error) {
-          throw error;
+          throw new Error(error.message || 'Falha na Edge Function create-booking-payment');
         }
+        const body = response as { error?: string; paymentId?: string; paymentUrl?: string; status?: string };
+        if (body?.error) throw new Error(body.error);
         return {
-          paymentId: response.paymentId,
-          paymentUrl: response.paymentUrl,
-          status: response.status || 'pending',
+          paymentId: body.paymentId as string,
+          paymentUrl: body.paymentUrl,
+          status: (body.status || 'pending') as PaymentResponse['status'],
         };
       }
       case 'boleto': {
+        if (!data.barbershopId?.trim()) {
+          throw new Error('barbershopId é obrigatório para boleto');
+        }
         const provider =
           (import.meta.env.VITE_BOOKING_PROVIDER_DEFAULT as 'stripe' | 'asaas' | undefined) || 'asaas';
         const { data: response, error } = await supabase.functions.invoke('create-booking-payment', {
           body: {
             appointment_id: data.appointmentId,
+            barbershop_id: data.barbershopId,
             amount: data.amount,
             description: data.description,
             customer_name: data.clientName,
-            customer_email: data.clientEmail,
+            customer_email: data.clientEmail?.trim() || undefined,
             customer_phone: data.clientPhone,
             method: 'boleto',
             provider,
           },
         });
         if (error) {
-          throw error;
+          throw new Error(error.message || 'Falha na Edge Function create-booking-payment');
         }
+        const body = response as { error?: string; paymentId?: string; paymentUrl?: string; status?: string };
+        if (body?.error) throw new Error(body.error);
         return {
-          paymentId: response.paymentId,
-          paymentUrl: response.paymentUrl,
-          status: response.status || 'pending',
+          paymentId: body.paymentId as string,
+          paymentUrl: body.paymentUrl,
+          status: (body.status || 'pending') as PaymentResponse['status'],
         };
       }
       default:

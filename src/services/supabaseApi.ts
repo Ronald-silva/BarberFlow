@@ -413,6 +413,8 @@ export const api = {
     const endDateTime = addMinutes(new Date(data.startDateTime), totalDuration).toISOString();
     const totalPrice = data.totalPrice ?? services?.reduce((acc, s) => acc + s.price, 0) ?? 0;
 
+    const paymentStatusRow = data.paymentMethod === 'pix' ? 'pending' : null;
+
     // 3. Create appointment
     const { data: newAppointment, error: createAppError } = await supabase
       .from('appointments')
@@ -423,7 +425,9 @@ export const api = {
         service_ids: data.serviceIds,
         start_datetime: data.startDateTime,
         end_datetime: endDateTime,
-        status: 'confirmed'
+        status: 'confirmed',
+        total_amount: totalPrice,
+        ...(paymentStatusRow ? { payment_status: paymentStatusRow } : {}),
       })
       .select()
       .single();

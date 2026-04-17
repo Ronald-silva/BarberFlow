@@ -33,6 +33,59 @@ function toAsaasBillingType(method: Method) {
   return 'CREDIT_CARD';
 }
 
+/** Dígitos do telefone/WhatsApp — chave estável para externalReference do cliente (Asaas). */
+function phoneDigits(phone: string | undefined): string {
+  const d = (phone || '').replace(/\D/g, '');
+  return d.length > 0 ? d : '0';
+}
+
+/** Referência externa do cliente na Asaas: reutiliza o mesmo cadastro por barbearia + contato (evita duplicar customer). */
+function asaasBookingCustomerExternalRef(barbershopId: string, phone: string | undefined): string {
+  return `bf-cust:${barbershopId}:${phoneDigits(phone)}`;
+}
+
+async function asaasFetchJson(
+  asaasApiKey: string,
+  method: 'GET' | 'POST',
+  pathWithLeadingSlash: string,
+  body?: Record<string, unknown>
+): Promise<unknown> {
+  const response = await fetch(`${asaasBaseUrl()}${pathWithLeadingSlash}`, {
+    method,
+    headers: {
+      ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+      access_token: asaasApiKey,
+    },
+    ...(method === 'POST' && body ? { body: JSON.stringify(body) } : {}),
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    const msg =
+      (payload as { errors?: { description?: string }[] })?.errors?.[0]?.description ||
+      (payload as { message?: string })?.message ||
+      'Erro API Asaas';
+    throw new Error(msg);
+  }
+  return payload;
+}
+
+type AsaasCustomerRow = { id?: string; deleted?: boolean };
+
+/** Lista cliente existente por externalReference (API Asaas: GET /customers?externalReference=). */
+async function findAsaasCustomerByExternalRef(
+  asaasApiKey: string,
+  externalReference: string
+): Promise<string | null> {
+  const q = encodeURIComponent(externalReference);
+  const list = (await asaasFetchJson(
+    asaasApiKey,
+    'GET',
+    `/customers?externalReference=${q}&limit=10`
+  )) as { data?: AsaasCustomerRow[] };
+  const row = (list.data || []).find((c) => c.id && !c.deleted);
+  return row?.id ?? null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -48,6 +101,7 @@ serve(async (req) => {
     const requestedProvider = body.provider as Provider | undefined;
     const customerName = body.customer_name || body.customerName || 'Cliente';
     const customerEmail = body.customer_email || body.customerEmail;
+    const customerPhone = body.customer_phone || body.customerPhone || body.customer_whatsapp || '';
     const successUrl = body.success_url || body.successUrl;
     const cancelUrl = body.cancel_url || body.cancelUrl;
 
@@ -140,43 +194,69 @@ serve(async (req) => {
     if (!asaasApiKey) throw new Error('ASAAS_API_KEY não configurada');
     assertAsaasKeyMatchesEnv(asaasApiKey);
 
-    const customerResponse = await fetch(`${asaasBaseUrl()}/customers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        access_token: asaasApiKey,
-      },
-      body: JSON.stringify({
+    // Idempotência: mesma cobrança pendente Asaas já registrada para este agendamento
+    const { data: existingPay } = await supabaseAdmin
+      .from('payments')
+      .select('payment_id, payment_data, status')
+      .eq('appointment_id', appointmentId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const existingPd = existingPay?.payment_data as
+      | { provider?: string; invoice_url?: string | null; pix_qr_code?: string | null; pix_copy_paste?: string | null }
+      | null
+      | undefined;
+    if (existingPay && existingPd?.provider === 'asaas') {
+      return new Response(
+        JSON.stringify({
+          provider: 'asaas',
+          paymentId: existingPay.payment_id,
+          paymentUrl: existingPd.invoice_url || null,
+          qrCode: existingPd.pix_qr_code || null,
+          pixCode: existingPd.pix_copy_paste || null,
+          status: 'pending',
+          duplicate: true,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const customerExtRef = asaasBookingCustomerExternalRef(barbershopId, customerPhone);
+    let asaasCustomerId = await findAsaasCustomerByExternalRef(asaasApiKey, customerExtRef);
+
+    const emailTrim = typeof customerEmail === 'string' ? customerEmail.trim() : '';
+    const emailForAsaas =
+      emailTrim.length > 0
+        ? emailTrim
+        : `booking.${barbershopId.replace(/-/g, '').slice(0, 12)}.${phoneDigits(customerPhone)}@invalid`;
+
+    if (!asaasCustomerId) {
+      const customerPayload = (await asaasFetchJson(asaasApiKey, 'POST', '/customers', {
         name: customerName,
-        email: customerEmail,
-        externalReference: `${barbershopId}:${appointmentId}`,
-      }),
-    });
-    const customerPayload = await customerResponse.json();
-    if (!customerResponse.ok) {
-      throw new Error(customerPayload?.errors?.[0]?.description || 'Falha ao criar customer Asaas');
+        email: emailForAsaas,
+        mobilePhone: phoneDigits(customerPhone) !== '0' ? phoneDigits(customerPhone) : undefined,
+        externalReference: customerExtRef,
+      })) as { id: string };
+      asaasCustomerId = customerPayload.id;
     }
 
     const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const paymentResponse = await fetch(`${asaasBaseUrl()}/payments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        access_token: asaasApiKey,
-      },
-      body: JSON.stringify({
-        customer: customerPayload.id,
-        billingType: toAsaasBillingType(method),
-        value: Number(amount.toFixed(2)),
-        dueDate,
-        description,
-        externalReference: `${barbershopId}:${appointmentId}`,
-      }),
-    });
-    const paymentPayload = await paymentResponse.json();
-    if (!paymentResponse.ok) {
-      throw new Error(paymentPayload?.errors?.[0]?.description || 'Falha ao criar cobrança Asaas');
-    }
+    const paymentPayload = (await asaasFetchJson(asaasApiKey, 'POST', '/payments', {
+      customer: asaasCustomerId,
+      billingType: toAsaasBillingType(method),
+      value: Number(amount.toFixed(2)),
+      dueDate,
+      description,
+      externalReference: `${barbershopId}:${appointmentId}`,
+    })) as {
+      id: string;
+      invoiceUrl?: string | null;
+      bankSlipUrl?: string | null;
+      encodedImage?: string | null;
+      payload?: string | null;
+    };
 
     await supabaseAdmin.from('payments').insert({
       payment_id: paymentPayload.id,

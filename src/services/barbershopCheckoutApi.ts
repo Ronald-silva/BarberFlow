@@ -365,7 +365,8 @@ export function serializePreparedCheckout(prepared: PreparedBarbershopCheckout):
  */
 export async function executeBarbershopCheckout(
   prepared: PreparedBarbershopCheckout,
-  appointmentId: string
+  appointmentId: string,
+  barbershopId: string
 ): Promise<{
   provider: CheckoutProviderId;
   paymentId: string;
@@ -419,6 +420,7 @@ export async function executeBarbershopCheckout(
   const { data, error } = await supabase.functions.invoke('create-booking-payment', {
     body: {
       appointment_id: appointmentId,
+      barbershop_id: barbershopId,
       provider: providerForBackend,
       method,
       amount,

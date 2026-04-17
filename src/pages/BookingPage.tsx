@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Barbershop, Service, User } from '../types';
 import { supabaseApi } from '../services/supabaseApi';
+import { paymentService, type PaymentResponse } from '../services/paymentService';
 import { useToastContext } from '../contexts/ToastContext';
 import Calendar from 'react-calendar';
 import { addDays, format, isBefore } from 'date-fns';
@@ -103,7 +104,10 @@ const BookingPage: React.FC = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
   const [clientWhatsapp, setClientWhatsapp] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('in_person');
+  /** PIX Asaas gerado após criar o agendamento (exibido na etapa de sucesso). */
+  const [pixBookingPayment, setPixBookingPayment] = useState<PaymentResponse | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -166,6 +170,7 @@ const BookingPage: React.FC = () => {
     if (!barbershop || !selectedTime || professionals.length === 0) return;
 
     setSubmitting(true);
+    setPixBookingPayment(null);
     try {
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const bookingDateTime = new Date(selectedDate);
@@ -173,21 +178,42 @@ const BookingPage: React.FC = () => {
 
       const professionalToBook = selectedProfessional === 'any' ? professionals[0].id : selectedProfessional;
 
-      await supabaseApi.createAppointment({
+      const appointment = await supabaseApi.createAppointment({
         client: { name: clientName, whatsapp: clientWhatsapp },
         barbershopId: barbershop.id,
         professionalId: professionalToBook,
         serviceIds: selectedServices,
         startDateTime: bookingDateTime.toISOString(),
+        totalPrice: discountedPrice,
         paymentRequired: paymentMethod !== 'in_person',
         paymentStatus: paymentMethod === 'in_person' ? 'pending' : 'pending',
-        paymentMethod
+        paymentMethod,
       });
+
+      if (paymentMethod === 'pix') {
+        const serviceNames = selectedServices
+          .map((id) => services.find((s) => s.id === id)?.name)
+          .filter(Boolean)
+          .join(', ');
+        const pix = await paymentService.createPixPayment({
+          appointmentId: appointment.id,
+          barbershopId: barbershop.id,
+          amount: discountedPrice,
+          clientName,
+          clientEmail: clientEmail.trim() || undefined,
+          clientPhone: clientWhatsapp,
+          description: `${barbershop.name} — ${serviceNames || 'Serviços'} — ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })} ${selectedTime}`,
+        });
+        setPixBookingPayment(pix);
+      } else {
+        setPixBookingPayment(null);
+      }
 
       setStep(7); // Success step
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
-      toast.error('Erro ao criar agendamento. Tente novamente.');
+      const msg = error instanceof Error ? error.message : 'Erro ao criar agendamento. Tente novamente.';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -436,6 +462,18 @@ const BookingPage: React.FC = () => {
                     disabled={submitting}
                   />
                 </FormGroup>
+
+                <FormGroup>
+                  <Label htmlFor="email">E-mail (opcional)</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                    placeholder="para recibo / PIX — recomendado se pagar com PIX"
+                    disabled={submitting}
+                  />
+                </FormGroup>
               </ClientForm>
 
               <StepNavigation>
@@ -523,12 +561,21 @@ const BookingPage: React.FC = () => {
                     <ReviewLabel>WhatsApp</ReviewLabel>
                     <ReviewValue>{clientWhatsapp}</ReviewValue>
                   </ReviewItem>
+                  {clientEmail.trim() ? (
+                    <ReviewItem>
+                      <ReviewLabel>E-mail</ReviewLabel>
+                      <ReviewValue>{clientEmail.trim()}</ReviewValue>
+                    </ReviewItem>
+                  ) : null}
                 </ReviewSection>
 
                 <ReviewTotalSection>
                   <ReviewTotal>
                     <ReviewTotalLabel>Total</ReviewTotalLabel>
-                    <ReviewTotalValue>R$ {totalPrice.toFixed(2)}</ReviewTotalValue>
+                    <ReviewTotalValue>
+                      R$ {(paymentMethod === 'pix' ? discountedPrice : totalPrice).toFixed(2)}
+                      {paymentMethod === 'pix' ? ' (PIX com desconto)' : ''}
+                    </ReviewTotalValue>
                   </ReviewTotal>
                 </ReviewTotalSection>
               </ReviewContainer>
@@ -697,6 +744,65 @@ const BookingPage: React.FC = () => {
                 <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
                   📱 Você receberá um lembrete no seu WhatsApp 24h antes
                 </Text>
+
+                {paymentMethod === 'pix' && pixBookingPayment && (
+                  <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                    <Text $color="primary" $weight="semibold" style={{ marginBottom: '0.75rem' }}>
+                      Pague com PIX agora
+                    </Text>
+                    {pixBookingPayment.qrCode ? (
+                      <img
+                        src={
+                          pixBookingPayment.qrCode.startsWith('data:') ||
+                          pixBookingPayment.qrCode.startsWith('http')
+                            ? pixBookingPayment.qrCode
+                            : `data:image/png;base64,${pixBookingPayment.qrCode}`
+                        }
+                        alt="QR Code PIX"
+                        style={{ maxWidth: 260, width: '100%', borderRadius: 8, margin: '0 auto 1rem' }}
+                      />
+                    ) : null}
+                    {pixBookingPayment.paymentUrl ? (
+                      <Text $size="sm" $color="secondary" style={{ marginBottom: '0.75rem' }}>
+                        <a href={pixBookingPayment.paymentUrl} target="_blank" rel="noopener noreferrer">
+                          Abrir link de pagamento
+                        </a>
+                      </Text>
+                    ) : null}
+                    {pixBookingPayment.pixCode ? (
+                      <>
+                        <Text $size="sm" $color="tertiary" style={{ marginBottom: '0.35rem' }}>
+                          Copia e cola (PIX)
+                        </Text>
+                        <textarea
+                          readOnly
+                          value={pixBookingPayment.pixCode}
+                          rows={4}
+                          style={{
+                            width: '100%',
+                            maxWidth: 420,
+                            margin: '0 auto 0.75rem',
+                            fontSize: '0.75rem',
+                            padding: '0.5rem',
+                            borderRadius: 6,
+                            border: '1px solid #e5e7eb',
+                            fontFamily: 'monospace',
+                          }}
+                        />
+                        <Button
+                          $variant="secondary"
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(pixBookingPayment.pixCode!);
+                            toast.success('Código PIX copiado.');
+                          }}
+                        >
+                          Copiar código PIX
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                )}
               </SuccessDetails>
             </SuccessContainer>
           )}
