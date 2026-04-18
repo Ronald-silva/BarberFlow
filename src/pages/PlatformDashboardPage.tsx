@@ -38,7 +38,7 @@ const StatsCard = styled(Card)`
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    background: linear-gradient(90deg, var(--bs-brand-main, #c8922a) 0%, var(--bs-brand-light, #e8b84b) 100%);
   }
 `;
 
@@ -57,7 +57,7 @@ const StatsValue = styled.div`
   }
   
   &.barbershops {
-    background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+    background: linear-gradient(135deg, var(--bs-brand-main, #c8922a) 0%, var(--bs-brand-light, #e8b84b) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -103,7 +103,7 @@ const BarbershopItem = styled.div`
   transition: ${props => props.theme.transitions.base};
   
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
+    border-color: var(--bs-brand-main, #c8922a);
     transform: translateY(-2px);
     box-shadow: ${props => props.theme.shadows.md};
   }
@@ -171,10 +171,25 @@ const RevenueValue = styled.div`
 
 const WelcomeSection = styled.div`
   margin-bottom: ${props => props.theme.spacing[8]};
-  padding: ${props => props.theme.spacing[6]};
+  padding: ${props => props.theme.spacing[5]} ${props => props.theme.spacing[6]};
   background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
   border-radius: ${props => props.theme.radii.xl};
   border: 1px solid ${props => props.theme.colors.border.primary};
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--bs-brand-main, #c8922a) 8%, transparent) 0%,
+      transparent 70%);
+    pointer-events: none;
+  }
 `;
 
 const PlatformDashboardPage: React.FC = () => {

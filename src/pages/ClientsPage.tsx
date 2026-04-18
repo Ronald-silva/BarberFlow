@@ -99,6 +99,26 @@ const ClientName = styled.div`
 
 const ClientInfo = styled.div`
   display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+`;
+
+const ClientAvatar = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--bs-brand-main, #c8922a), var(--bs-brand-light, #e8b84b));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${props => props.theme.typography.fontSizes.xs};
+  font-weight: ${props => props.theme.typography.fontWeights.bold};
+  color: #fff;
+  flex-shrink: 0;
+`;
+
+const ClientDetails = styled.div`
+  display: flex;
   flex-direction: column;
 `;
 
@@ -174,26 +194,58 @@ const StatsContainer = styled.div`
   margin-bottom: ${props => props.theme.spacing[6]};
 `;
 
-const StatCard = styled.div`
+const StatCard = styled.div<{ $accent?: 'gold' | 'green' | 'red' }>`
   background-color: ${props => props.theme.colors.background.elevated};
-  border-radius: ${props => props.theme.radii.lg};
-  padding: ${props => props.theme.spacing[4]};
+  border-radius: ${props => props.theme.radii.xl};
+  padding: ${props => props.theme.spacing[5]};
   border: 1px solid ${props => props.theme.colors.border.primary};
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 300ms ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: ${props =>
+      props.$accent === 'green'
+        ? 'linear-gradient(90deg, #22c55e, #16a34a)'
+        : props.$accent === 'red'
+        ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+        : 'linear-gradient(90deg, var(--bs-brand-main,#c8922a), var(--bs-brand-light,#e8b84b))'};
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: ${props => props.theme.shadows.lg};
+    border-color: ${props => props.theme.colors.border.secondary};
+  }
 `;
 
-const StatValue = styled.div`
-  font-size: ${props => props.theme.typography.fontSizes['2xl']};
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  color: ${props => props.theme.colors.primary};
-  margin-bottom: ${props => props.theme.spacing[1]};
+const StatValue = styled.div<{ $accent?: 'gold' | 'green' | 'red' }>`
+  font-size: ${props => props.theme.typography.fontSizes['3xl']};
+  font-weight: ${props => props.theme.typography.fontWeights.extrabold};
+  line-height: 1;
+  margin: ${props => props.theme.spacing[2]} 0 ${props => props.theme.spacing[1]};
+  background: ${props =>
+    props.$accent === 'green'
+      ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+      : props.$accent === 'red'
+      ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+      : 'linear-gradient(135deg, var(--bs-brand-main,#c8922a), var(--bs-brand-light,#e8b84b))'};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const StatLabel = styled.div`
-  font-size: ${props => props.theme.typography.fontSizes.sm};
+  font-size: ${props => props.theme.typography.fontSizes.xs};
   color: ${props => props.theme.colors.text.tertiary};
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  font-weight: ${props => props.theme.typography.fontWeights.semibold};
 `;
 
 const SuccessMessage = styled.div<{ $show: boolean }>`
@@ -240,7 +292,7 @@ const ClientsPage: React.FC = () => {
             if (user) {
                 setLoading(true);
                 try {
-                    const result = await supabaseApi.getClientsByBarbershop(user.barbershopId);
+                    const result = await supabaseApi.getClientsByBarbershop(user.barbershopId!);
                     setClients(result);
                 } catch (error) {
                     console.error('Erro ao carregar clientes:', error);
@@ -343,16 +395,16 @@ const ClientsPage: React.FC = () => {
             </ClientsHeader>
 
             <StatsContainer>
-                <StatCard>
-                    <StatValue>{clientStats.total}</StatValue>
+                <StatCard $accent="gold">
+                    <StatValue $accent="gold">{clientStats.total}</StatValue>
                     <StatLabel>Total de Clientes</StatLabel>
                 </StatCard>
-                <StatCard>
-                    <StatValue>{clientStats.active}</StatValue>
+                <StatCard $accent="green">
+                    <StatValue $accent="green">{clientStats.active}</StatValue>
                     <StatLabel>Clientes Ativos</StatLabel>
                 </StatCard>
-                <StatCard>
-                    <StatValue>{clientStats.inactive}</StatValue>
+                <StatCard $accent="red">
+                    <StatValue $accent="red">{clientStats.inactive}</StatValue>
                     <StatLabel>Clientes Inativos</StatLabel>
                 </StatCard>
             </StatsContainer>
@@ -402,7 +454,12 @@ const ClientsPage: React.FC = () => {
                             <TableRow key={client.id} $inactive={daysSince > 90}>
                                 <TableCell>
                                     <ClientInfo>
-                                        <ClientName>{client.name}</ClientName>
+                                        <ClientAvatar>
+                                            {client.name.trim().split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                                        </ClientAvatar>
+                                        <ClientDetails>
+                                            <ClientName>{client.name}</ClientName>
+                                        </ClientDetails>
                                     </ClientInfo>
                                 </TableCell>
                                 <TableCell>

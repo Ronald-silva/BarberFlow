@@ -112,16 +112,17 @@ const AppointmentCard = styled.div<{ top: number; height: number }>`
   left: 2px;
   right: 2px;
   height: ${props => props.height}px;
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryDark} 100%);
-  color: ${props => props.theme.colors.text.inverse};
+  background: linear-gradient(135deg, var(--bs-brand-main, #c8922a) 0%, var(--bs-brand-light, #e8b84b) 100%);
+  color: #fff;
   border-radius: ${props => props.theme.radii.md};
   padding: ${props => props.theme.spacing[2]};
   font-size: ${props => props.theme.typography.fontSizes.xs};
   overflow: hidden;
   box-shadow: ${props => props.theme.shadows.md};
-  border: 1px solid ${props => props.theme.colors.primaryLight};
+  border: 1px solid color-mix(in srgb, var(--bs-brand-light, #e8b84b) 50%, transparent);
   z-index: 10;
-  
+  transition: ${props => props.theme.transitions.base};
+
   &:hover {
     transform: scale(1.02);
     box-shadow: ${props => props.theme.shadows.lg};
@@ -170,8 +171,12 @@ const LoadingSpinner = styled.div`
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: ${props => props.theme.spacing[8]};
+  padding: ${props => props.theme.spacing[12]} ${props => props.theme.spacing[8]};
   color: ${props => props.theme.colors.text.tertiary};
+  background-color: ${props => props.theme.colors.background.elevated};
+  border-radius: ${props => props.theme.radii.xl};
+  border: 1px dashed ${props => props.theme.colors.border.primary};
+  margin-top: ${props => props.theme.spacing[4]};
 `;
 
 const SchedulePage: React.FC = () => {
@@ -191,8 +196,8 @@ const SchedulePage: React.FC = () => {
                 setLoading(true);
                 try {
                     const [profs, apps] = await Promise.all([
-                        api.getProfessionalsByBarbershop(user.barbershopId),
-                        api.getAppointmentsForDate(user.barbershopId, selectedDate)
+                        api.getProfessionalsByBarbershop(user.barbershopId!),
+                        api.getAppointmentsForDate(user.barbershopId!, selectedDate)
                     ]);
                     
                     if(user.role === 'member') {
@@ -267,8 +272,12 @@ const SchedulePage: React.FC = () => {
 
             {professionals.length === 0 ? (
                 <EmptyState>
-                    <Text $size="lg" $color="tertiary">
+                    <CalendarIcon size={48} />
+                    <Text $size="lg" $color="tertiary" style={{ marginTop: '1rem' }}>
                         Nenhum profissional encontrado
+                    </Text>
+                    <Text $size="sm" $color="disabled" style={{ marginTop: '0.5rem' }}>
+                        Cadastre profissionais para visualizar a agenda
                     </Text>
                 </EmptyState>
             ) : (

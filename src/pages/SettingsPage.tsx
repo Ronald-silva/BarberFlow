@@ -5,12 +5,10 @@ import {
   Heading,
   Text,
   Card,
-  CardContent,
 } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { Input, Label, FormGroup } from "../components/ui/Input";
 import { BackButton } from "../components/ui/BackButton";
-import { SettingsIcon } from "../components/icons";
 import { useAuth } from "../contexts/AuthContext";
 import { supabaseApi, formatPostgrestError } from "../services/supabaseApi";
 import { maskPhone } from "../utils/formatters";
@@ -208,7 +206,7 @@ const ToggleSlider = styled.input`
   height: 0;
 
   &:checked + span {
-    background-color: ${(props) => props.theme.colors.primary};
+    background-color: var(--bs-brand-main, #c8922a);
   }
 
   &:checked + span:before {
@@ -304,7 +302,7 @@ const LoadingSpinner = styled.div`
   width: 32px;
   height: 32px;
   border: 3px solid ${(props) => props.theme.colors.border.primary};
-  border-top: 3px solid ${(props) => props.theme.colors.primary};
+  border-top: 3px solid var(--bs-brand-main, #c8922a);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 
@@ -433,7 +431,7 @@ const SettingsPage: React.FC = () => {
         setError("Informe o nome da barbearia para gerar o link de agendamento.");
         return;
       }
-      const { brandSaved } = await supabaseApi.updateBarbershop(user.barbershopId, {
+      const { brandSaved } = await supabaseApi.updateBarbershop(user.barbershopId!, {
         ...barbershopData,
         slug,
         brandPrimaryColor: useCustomBrandColor ? normalizedCustom : null,
@@ -516,7 +514,7 @@ const SettingsPage: React.FC = () => {
 
     setUploadingLogo(true);
     try {
-      const logoUrl = await supabaseApi.uploadBarbershopLogo(user.barbershopId, logoFile);
+      const logoUrl = await supabaseApi.uploadBarbershopLogo(user.barbershopId!, logoFile);
       if (logoUrl) {
         setBarbershopData(prev => ({ ...prev, logoUrl }));
         setLogoFile(null);
@@ -539,7 +537,7 @@ const SettingsPage: React.FC = () => {
 
     setUploadingLogo(true);
     try {
-      const success = await supabaseApi.removeBarbershopLogo(user.barbershopId, barbershopData.logoUrl);
+      const success = await supabaseApi.removeBarbershopLogo(user.barbershopId!, barbershopData.logoUrl);
       if (success) {
         setBarbershopData(prev => ({ ...prev, logoUrl: '' }));
         setLogoPreview('');

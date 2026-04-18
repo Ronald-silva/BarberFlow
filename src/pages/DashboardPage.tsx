@@ -103,18 +103,35 @@ const LoadingSpinner = styled.div`
 `;
 
 const WelcomeSection = styled.div`
-  margin-bottom: ${props => props.theme.spacing[8]};
-  padding: ${props => props.theme.spacing[6]};
-  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
+  margin-bottom: ${props => props.theme.spacing[7]};
+  padding: ${props => props.theme.spacing[5]} ${props => props.theme.spacing[6]};
+  background: linear-gradient(135deg,
+    ${props => props.theme.colors.background.elevated} 0%,
+    ${props => props.theme.colors.background.tertiary} 100%);
   border-radius: ${props => props.theme.radii.xl};
   border: 1px solid ${props => props.theme.colors.border.primary};
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--bs-brand-main, #c8922a) 8%, transparent) 0%,
+      transparent 70%);
+    pointer-events: none;
+  }
 `;
 
 const DateDisplay = styled.div`
   font-size: ${props => props.theme.typography.fontSizes.lg};
   color: ${props => props.theme.colors.text.secondary};
   font-weight: ${props => props.theme.typography.fontWeights.medium};
-  margin-top: ${props => props.theme.spacing[2]};
+  margin-top: ${props => props.theme.spacing[2] ?? '0.5rem'};
 `;
 
 const SectionHeader = styled.div`
@@ -131,7 +148,7 @@ const DashboardPage: React.FC = () => {
             if (user) {
                 setLoading(true);
                 try {
-                    const result = await supabaseApi.getDashboardData(user.barbershopId, new Date());
+                    const result = await supabaseApi.getDashboardData(user.barbershopId!, new Date());
                     setData(result);
                 } catch (error) {
                     console.error('Erro ao carregar dados do dashboard:', error);

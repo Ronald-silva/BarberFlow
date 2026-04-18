@@ -29,7 +29,7 @@ const BarbershopLogo = styled.div`
   width: 48px;
   height: 48px;
   border-radius: ${props => props.theme.radii.lg};
-  background: linear-gradient(135deg, ${props => props.theme.colors.primary} 0%, ${props => props.theme.colors.primaryLight} 100%);
+  background: linear-gradient(135deg, var(--bs-brand-main, #c8922a) 0%, var(--bs-brand-light, #e8b84b) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,8 +123,8 @@ const SearchBar = styled.input`
   
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
-    box-shadow: 0 0 0 3px ${props => props.theme.colors.primaryLight}20;
+    border-color: var(--bs-brand-main, #c8922a);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--bs-brand-main, #c8922a) 20%, transparent);
   }
   
   &::placeholder {

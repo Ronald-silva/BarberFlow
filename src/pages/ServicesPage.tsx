@@ -34,6 +34,16 @@ const ServicesHeader = styled.div`
 
 const ServiceCard = styled(Card)`
   transition: ${(props) => props.theme.transitions.base};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--bs-brand-main, #c8922a), var(--bs-brand-light, #e8b84b));
+  }
 
   &:hover {
     transform: translateY(-4px);
@@ -92,7 +102,9 @@ const Modal = styled.div<{ $isOpen: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: ${(props) => (props.$isOpen ? "flex" : "none")};
   align-items: center;
   justify-content: center;
@@ -125,17 +137,26 @@ const ModalTitle = styled.h2`
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
+  background: ${(props) => props.theme.colors.background.tertiary};
+  border: 1px solid ${(props) => props.theme.colors.border.primary};
   color: ${(props) => props.theme.colors.text.tertiary};
-  font-size: ${(props) => props.theme.typography.fontSizes.xl};
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: ${(props) => props.theme.spacing[1]};
-  border-radius: ${(props) => props.theme.radii.md};
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: ${(props) => props.theme.radii.full};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: ${(props) => props.theme.transitions.base};
+  flex-shrink: 0;
 
   &:hover {
     background-color: ${(props) => props.theme.colors.interactive.hover};
     color: ${(props) => props.theme.colors.text.primary};
+    border-color: ${(props) => props.theme.colors.border.secondary};
   }
 `;
 
@@ -235,7 +256,7 @@ const ServicesPage: React.FC = () => {
       if (user) {
         setLoading(true);
         try {
-          const result = await supabaseApi.getServicesByBarbershop(user.barbershopId);
+          const result = await supabaseApi.getServicesByBarbershop(user.barbershopId!);
           setServices(result);
         } catch (error) {
           console.error("Erro ao carregar serviços:", error);
@@ -289,7 +310,7 @@ const ServicesPage: React.FC = () => {
       } else {
         const newService = await supabaseApi.createService({
           ...serviceData,
-          barbershopId: user.barbershopId
+          barbershopId: user.barbershopId!
         });
         setServices(prev => [...prev, newService]);
         setSuccessMessage('Serviço criado com sucesso!');
