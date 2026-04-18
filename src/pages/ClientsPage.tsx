@@ -3,12 +3,14 @@ import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseApi } from '../services/supabaseApi';
 import { Client } from '../types';
-import { format, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardShell, Heading, Text, Flex } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { BackButton } from '../components/ui/BackButton';
 import { UsersIcon } from '../components/icons';
+import { formatDateBR, formatPhone } from '../utils/formatters';
 
 // Styled Components
 const ClientsHeader = styled.div`
@@ -319,6 +321,9 @@ const ClientsPage: React.FC = () => {
 
     return (
         <DashboardShell className="fade-in">
+            <div style={{ marginBottom: '1rem' }}>
+                <BackButton to="/dashboard/overview" label="Dashboard" />
+            </div>
             <ClientsHeader>
                 <div>
                     <Heading $level={1} $gradient>
@@ -412,7 +417,7 @@ const ClientsPage: React.FC = () => {
                                 <TableCell>
                                     <div>
                                         <div style={{ marginBottom: '0.25rem' }}>
-                                            {format(new Date(client.lastVisit), 'dd/MM/yyyy', { locale: ptBR })}
+                                            {formatDateBR(client.lastVisit)}
                                         </div>
                                         <LastVisitBadge $daysSince={daysSince}>
                                             {daysSince === 0 ? 'Hoje' : 

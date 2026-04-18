@@ -6,6 +6,7 @@ import { User, UserRole } from '../types';
 import { DashboardShell, Heading, Text, Card, CardContent } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
+import { BackButton } from '../components/ui/BackButton';
 import { TeamIcon } from '../components/icons';
 
 // Styled Components
@@ -439,6 +440,9 @@ const ProfessionalsPage: React.FC = () => {
 
     return (
         <DashboardShell className="fade-in">
+            <div style={{ marginBottom: '1rem' }}>
+                <BackButton to="/dashboard/overview" label="Dashboard" />
+            </div>
             <ProfessionalsHeader>
                 <div>
                     <Heading $level={1} $gradient>

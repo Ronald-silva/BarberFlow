@@ -4,6 +4,7 @@ import { Barbershop, Service, User } from '../types';
 import { supabaseApi } from '../services/supabaseApi';
 import { paymentService, type PaymentResponse } from '../services/paymentService';
 import { useToastContext } from '../contexts/ToastContext';
+import { maskPhone, formatBRL, formatDateBR, formatDateTimeBR } from '../utils/formatters';
 import Calendar from 'react-calendar';
 import { addDays, format, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
@@ -295,7 +296,7 @@ const BookingPage: React.FC = () => {
                   >
                     <ServiceInfo>
                       <ServiceName>{service.name}</ServiceName>
-                      <ServicePrice>R$ {service.price.toFixed(2)}</ServicePrice>
+                      <ServicePrice>{formatBRL(service.price)}</ServicePrice>
                     </ServiceInfo>
                     <ServiceDuration>{service.duration} minutos</ServiceDuration>
                   </ServiceCard>
@@ -305,7 +306,7 @@ const BookingPage: React.FC = () => {
               {selectedServices.length > 0 && (
                 <InlineInfoBox>
                   <Text $color="primary" $weight="semibold">
-                    Total: R$ {totalPrice.toFixed(2)} • {totalDuration} min
+                    Total: {formatBRL(totalPrice)} • {totalDuration} min
                   </Text>
                 </InlineInfoBox>
               )}
@@ -457,8 +458,10 @@ const BookingPage: React.FC = () => {
                     id="whatsapp"
                     type="tel"
                     value={clientWhatsapp}
-                    onChange={(e) => setClientWhatsapp(e.target.value)}
+                    onChange={(e) => setClientWhatsapp(maskPhone(e.target.value))}
                     placeholder="(11) 99999-9999"
+                    inputMode="numeric"
+                    maxLength={15}
                     disabled={submitting}
                   />
                 </FormGroup>
@@ -510,7 +513,7 @@ const BookingPage: React.FC = () => {
                     return service ? (
                       <ReviewItem key={service.id}>
                         <ReviewLabel>{service.name}</ReviewLabel>
-                        <ReviewValue>R$ {service.price.toFixed(2)}</ReviewValue>
+                        <ReviewValue>{formatBRL(service.price)}</ReviewValue>
                       </ReviewItem>
                     ) : null;
                   })}
@@ -536,7 +539,7 @@ const BookingPage: React.FC = () => {
                   </ReviewSectionTitle>
                   <ReviewItem>
                     <ReviewLabel>Data</ReviewLabel>
-                    <ReviewValue>{format(selectedDate, "dd/MM/yyyy")}</ReviewValue>
+                    <ReviewValue>{formatDateBR(selectedDate)}</ReviewValue>
                   </ReviewItem>
                   <ReviewItem>
                     <ReviewLabel>Horário</ReviewLabel>
@@ -573,7 +576,7 @@ const BookingPage: React.FC = () => {
                   <ReviewTotal>
                     <ReviewTotalLabel>Total</ReviewTotalLabel>
                     <ReviewTotalValue>
-                      R$ {(paymentMethod === 'pix' ? discountedPrice : totalPrice).toFixed(2)}
+                      {formatBRL(paymentMethod === 'pix' ? discountedPrice : totalPrice)}
                       {paymentMethod === 'pix' ? ' (PIX com desconto)' : ''}
                     </ReviewTotalValue>
                   </ReviewTotal>
@@ -640,7 +643,7 @@ const BookingPage: React.FC = () => {
                   {paymentMethod === 'pix' && (
                     <SuccessStatusCard style={{ marginTop: '0.75rem', padding: '0.75rem' }}>
                       <Text $size="sm" $color="success" $weight="bold">
-                        💰 Você economiza R$ {(totalPrice - discountedPrice).toFixed(2)}!
+                        💰 Você economiza {formatBRL(totalPrice - discountedPrice)}!
                       </Text>
                     </SuccessStatusCard>
                   )}
@@ -724,13 +727,13 @@ const BookingPage: React.FC = () => {
                   Detalhes do Agendamento:
                 </Text>
                 <Text $color="secondary">
-                  📅 {format(selectedDate, "dd/MM/yyyy")} às {selectedTime}
+                  📅 {formatDateBR(selectedDate)} às {selectedTime}
                 </Text>
                 <Text $color="secondary">
                   👨‍💼 {professionalForConfirmation.name}
                 </Text>
                 <Text $color="secondary">
-                  💰 Total: R$ {discountedPrice.toFixed(2)}
+                  💰 Total: {formatBRL(discountedPrice)}
                   {paymentMethod === 'pix' && ' (com 5% de desconto)'}
                 </Text>
                 <Text $color="secondary">

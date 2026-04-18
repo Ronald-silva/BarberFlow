@@ -9,9 +9,11 @@ import {
 } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { Input, Label, FormGroup } from "../components/ui/Input";
+import { BackButton } from "../components/ui/BackButton";
 import { SettingsIcon } from "../components/icons";
 import { useAuth } from "../contexts/AuthContext";
 import { supabaseApi, formatPostgrestError } from "../services/supabaseApi";
+import { maskPhone } from "../utils/formatters";
 import {
   DEFAULT_BRAND_MAIN_HEX,
   defaultBrandMainHex,
@@ -569,6 +571,9 @@ const SettingsPage: React.FC = () => {
 
   return (
     <DashboardShell className="fade-in">
+      <div style={{ marginBottom: '1rem' }}>
+        <BackButton to="/dashboard/overview" label="Dashboard" />
+      </div>
       <div style={{ marginBottom: "2rem" }}>
         <Heading $level={1} $gradient>
           Configurações
@@ -616,10 +621,12 @@ const SettingsPage: React.FC = () => {
                   onChange={(e) =>
                     setBarbershopData({
                       ...barbershopData,
-                      phone: e.target.value,
+                      phone: maskPhone(e.target.value),
                     })
                   }
                   placeholder="(11) 99999-9999"
+                  inputMode="numeric"
+                  maxLength={15}
                 />
               </FormGroup>
 

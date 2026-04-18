@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { DashboardShell, Heading, Text, Flex } from '../components/ui/Container';
 import { Input } from '../components/ui/Input';
+import { BackButton } from '../components/ui/BackButton';
 import { CalendarIcon } from '../components/icons';
 
 interface AppointmentWithDetails {
@@ -240,6 +241,9 @@ const SchedulePage: React.FC = () => {
 
     return (
         <DashboardShell className="fade-in">
+            <div style={{ marginBottom: '1rem' }}>
+                <BackButton to="/dashboard/overview" label="Dashboard" />
+            </div>
             <ScheduleHeader>
                 <div>
                     <Heading $level={1} $gradient>

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseApi } from '../services/supabaseApi';
 import { DashboardShell, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { formatBRL } from '../utils/formatters';
 
 interface DashboardData {
     totalAppointments: number;
@@ -203,7 +204,7 @@ const DashboardPage: React.FC = () => {
                     <CardContent>
                         <StatsLabel>Faturamento Previsto</StatsLabel>
                         <StatsValue className="currency">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data?.faturamentoPrevisto || 0)}
+                            {formatBRL(data?.faturamentoPrevisto || 0)}
                         </StatsValue>
                         <Text $size="sm" $color="tertiary" style={{ marginTop: '0.5rem' }}>
                             receita estimada hoje

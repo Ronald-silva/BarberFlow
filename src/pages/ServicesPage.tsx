@@ -13,7 +13,10 @@ import {
 } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { Input, Label, FormGroup } from "../components/ui/Input";
+import { MaskedInput } from "../components/ui/MaskedInput";
+import { BackButton } from "../components/ui/BackButton";
 import { ScissorsIcon } from "../components/icons";
+import { formatBRL, maskCurrency, parseBRL } from "../utils/formatters";
 
 // Styled Components
 const ServicesHeader = styled.div`
@@ -57,8 +60,8 @@ const ServicePrice = styled.div`
   font-weight: ${(props) => props.theme.typography.fontWeights.bold};
   background: linear-gradient(
     135deg,
-    ${(props) => props.theme.colors.primary} 0%,
-    ${(props) => props.theme.colors.primaryLight} 100%
+    ${(props) => props.theme.colors.primary.main} 0%,
+    ${(props) => props.theme.colors.primary.light} 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -223,7 +226,7 @@ const ServicesPage: React.FC = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: "",
-    price: "",
+    price: "R$ 0,00",
     duration: "",
   });
 
@@ -249,12 +252,12 @@ const ServicesPage: React.FC = () => {
       setEditingService(service);
       setFormData({
         name: service.name,
-        price: service.price.toString(),
+        price: maskCurrency(String(Math.round(service.price * 100))),
         duration: service.duration.toString(),
       });
     } else {
       setEditingService(null);
-      setFormData({ name: "", price: "", duration: "" });
+      setFormData({ name: "", price: "R$ 0,00", duration: "" });
     }
     setIsModalOpen(true);
   };
@@ -262,7 +265,7 @@ const ServicesPage: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingService(null);
-    setFormData({ name: "", price: "", duration: "" });
+    setFormData({ name: "", price: "R$ 0,00", duration: "" });
     setError('');
   };
 
@@ -275,7 +278,7 @@ const ServicesPage: React.FC = () => {
     try {
       const serviceData = {
         name: formData.name,
-        price: parseFloat(formData.price),
+        price: parseBRL(formData.price),
         duration: parseInt(formData.duration)
       };
 
@@ -339,6 +342,9 @@ const ServicesPage: React.FC = () => {
 
   return (
     <DashboardShell className="fade-in">
+      <div style={{ marginBottom: '1rem' }}>
+        <BackButton to="/dashboard/overview" label="Dashboard" />
+      </div>
       <ServicesHeader>
         <div>
           <Heading $level={1} $gradient>
@@ -379,7 +385,7 @@ const ServicesPage: React.FC = () => {
               <CardContent>
                 <ServiceHeader>
                   <ServiceName>{service.name}</ServiceName>
-                  <ServicePrice>R$ {service.price.toFixed(2)}</ServicePrice>
+                  <ServicePrice>{formatBRL(service.price)}</ServicePrice>
                 </ServiceHeader>
 
                 <ServiceDuration>
@@ -444,20 +450,15 @@ const ServicesPage: React.FC = () => {
             </FormGroup>
 
             <FormGroup>
-              <Label htmlFor="servicePrice" $required>
-                Preço (R$)
-              </Label>
-              <Input
+              <MaskedInput
                 id="servicePrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-                placeholder="0,00"
+                mask="currency"
+                label="Preço"
                 required
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: maskCurrency(e.target.value) })}
+                inputMode="numeric"
+                helperText="Digite o valor em reais (ex: R$ 40,00)"
                 disabled={submitting}
               />
             </FormGroup>

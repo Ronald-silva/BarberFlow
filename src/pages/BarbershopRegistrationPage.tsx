@@ -5,6 +5,8 @@ import { Button } from "../components/ui/Button";
 import { supabase } from "../services/supabase";
 import type { Database } from "../services/supabase";
 import { logMultipleConsents } from "../services/consentLogger";
+import { maskPhone, maskCPFCNPJ } from "../utils/formatters";
+import { isValidPhone, isValidCPFCNPJ } from "../utils/validators";
 
 // ============================================================
 // SHAFAR — Registration Page v2.0
@@ -224,6 +226,59 @@ const Input = styled.input`
   &:hover:not(:focus) { border-color: #363636; }
 `;
 
+// PasswordField — encapsula Input + toggle olhinho (mesmos estilos do Input local)
+const PasswordInputWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const PasswordInputStyled = styled(Input)`
+  padding-right: 3rem;
+`;
+
+const RegEyeBtn = styled.button`
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  background: none;
+  border: none;
+  padding: 0.3rem;
+  cursor: pointer;
+  color: #6B6B6B;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  border-radius: 4px;
+  z-index: 2;
+
+  ${PasswordInputWrap}:hover & { opacity: 0.5; }
+  ${PasswordInputWrap}:hover &:hover { opacity: 0.9; }
+  &:focus-visible { outline: 2px solid rgba(200,146,42,0.6); outline-offset: 2px; opacity: 0.7; }
+`;
+
+const RegPasswordField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { id: string }> = ({ id, ...props }) => {
+  const [vis, setVis] = React.useState(false);
+  return (
+    <PasswordInputWrap>
+      <PasswordInputStyled id={id} type={vis ? 'text' : 'password'} {...props} />
+      <RegEyeBtn type="button" onClick={() => setVis(v => !v)}
+        aria-label={vis ? 'Ocultar senha' : 'Mostrar senha'} tabIndex={-1}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {vis ? (
+            <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
+          ) : (
+            <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></>
+          )}
+        </svg>
+      </RegEyeBtn>
+    </PasswordInputWrap>
+  );
+};
+
+
 const HelperText = styled.p`
   font-size: 0.75rem;
   color: #4A4A4A;
@@ -333,24 +388,8 @@ interface AdminData {
   name: string; email: string; password: string;
 }
 
-function formatCpfCnpjInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 14);
+// formatCpfCnpjInput substituído por maskCPFCNPJ de ../utils/formatters
 
-  if (digits.length <= 11) {
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
-  }
-
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
-  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
-  if (digits.length <= 12) {
-    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
-  }
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
-}
 
 const BarbershopRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -372,7 +411,9 @@ const BarbershopRegistrationPage: React.FC = () => {
 
   const handleShopChange = (field: keyof BarbershopData, value: string) => {
     setShop(prev => {
-      const formattedValue = field === "cpfCnpj" ? formatCpfCnpjInput(value) : value;
+      let formattedValue = value;
+      if (field === "cpfCnpj") formattedValue = maskCPFCNPJ(value);
+      if (field === "phone") formattedValue = maskPhone(value);
       const u = { ...prev, [field]: formattedValue };
       if (field === "name") u.slug = generateSlug(value);
       return u;
@@ -380,8 +421,9 @@ const BarbershopRegistrationPage: React.FC = () => {
   };
 
   const cpfCnpjClean = shop.cpfCnpj.replace(/\D/g, '');
-  const cpfCnpjValid = cpfCnpjClean.length === 11 || cpfCnpjClean.length === 14;
-  const step1Valid = shop.name && shop.slug && shop.address && shop.phone && shop.email && cpfCnpjValid;
+  const cpfCnpjValid = isValidCPFCNPJ(shop.cpfCnpj);
+  const phoneValid = isValidPhone(shop.phone);
+  const step1Valid = shop.name && shop.slug && shop.address && phoneValid && shop.email && cpfCnpjValid;
   const step2Valid = admin.name && admin.email && admin.password.length >= 6 && acceptedTerms && acceptedPrivacy;
 
   const handleSubmit = async () => {
@@ -544,7 +586,11 @@ const BarbershopRegistrationPage: React.FC = () => {
               <Field>
                 <Label htmlFor="shopPhone">Telefone</Label>
                 <Input id="shopPhone" type="tel" placeholder="(11) 99999-9999" value={shop.phone}
-                  autoComplete="tel" onChange={e => handleShopChange("phone", e.target.value)} />
+                  autoComplete="tel" inputMode="numeric" maxLength={15}
+                  onChange={e => handleShopChange("phone", e.target.value)} />
+                {shop.phone && !isValidPhone(shop.phone) && shop.phone.replace(/\D/g,'').length >= 10 && (
+                  <HelperText style={{ color: '#EF4444' }}>Telefone inválido — insira DDD + número</HelperText>
+                )}
               </Field>
 
               <Field>
@@ -585,8 +631,12 @@ const BarbershopRegistrationPage: React.FC = () => {
 
               <Field>
                 <Label htmlFor="adminPass">Senha</Label>
-                <Input id="adminPass" type="password" placeholder="Mínimo 6 caracteres" value={admin.password}
-                  autoComplete="new-password" onChange={e => setAdmin(p => ({ ...p, password: e.target.value }))} />
+                <RegPasswordField
+                  id="adminPass"
+                  placeholder="Mínimo 6 caracteres"
+                  value={admin.password}
+                  autoComplete="new-password"
+                  onChange={e => setAdmin(p => ({ ...p, password: e.target.value }))} />
               </Field>
             </FieldGroup>
 
