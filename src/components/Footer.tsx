@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { ByRonalDigital } from './ByRonalDigital';
 
 // ============================================================
 // SHAFAR Footer v2.0
@@ -29,9 +30,20 @@ const Inner = styled.div`
   }
 `;
 
+const BrandColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (min-width: 640px) {
+    align-items: flex-start;
+  }
+`;
+
 const Copy = styled.p`
   font-size: 0.8125rem;
   color: #3D3D3D;
+  margin: 0;
 `;
 
 const Links = styled.div`
@@ -61,7 +73,10 @@ export function Footer() {
   return (
     <FooterEl>
       <Inner>
-        <Copy>© {year} Shafar. Todos os direitos reservados.</Copy>
+        <BrandColumn>
+          <Copy>© {year} Shafar. Todos os direitos reservados.</Copy>
+          <ByRonalDigital />
+        </BrandColumn>
         <Links>
           <LinkBtn onClick={() => navigate('/privacy')}>Política de Privacidade</LinkBtn>
           <LinkBtn onClick={() => navigate('/terms')}>Termos de Uso</LinkBtn>

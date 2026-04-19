@@ -1,4 +1,5 @@
 import React from 'react';
+import { ByRonalDigital } from '../components/ByRonalDigital';
 import styled, { keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
@@ -771,8 +772,16 @@ const FooterBar = styled.footer`
 `;
 
 const Copyright = styled.div`
-  color: #BDBDBD;
+  color: #bdbdbd;
   font-size: 0.8125rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+
+  @media (min-width: 640px) {
+    align-items: flex-start;
+  }
 `;
 
 const FooterLinks = styled.div`
@@ -997,6 +1006,7 @@ const LandingPage: React.FC = () => {
       <FooterBar>
         <Copyright>
           © {new Date().getFullYear()} Shafar. Todos os direitos reservados.
+          <ByRonalDigital />
         </Copyright>
         <FooterLinks>
           <FooterLink onClick={() => navigate('/privacy')}>Privacidade</FooterLink>
