@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
+import { PageContainer, Card, CardContent, Heading, Text, Grid, PageTitleRow, PageTitleEmoji } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { useToastContext } from '../contexts/ToastContext';
 import { supabaseApi as api } from '../services/supabaseApi';
@@ -125,11 +125,52 @@ const StatsValue = styled.div`
   margin: ${props => props.theme.spacing[2]} 0;
 `;
 
+const SupportRefreshToolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  margin-top: ${props => props.theme.spacing[4]};
+  padding-top: ${props => props.theme.spacing[1]};
+
+  & > button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    & > button {
+      width: auto;
+    }
+  }
+`;
+
 const FilterBar = styled.div`
   display: flex;
-  gap: ${props => props.theme.spacing[2]};
+  flex-direction: column;
+  width: 100%;
+  gap: ${props => props.theme.spacing[3]};
   margin-bottom: ${props => props.theme.spacing[4]};
-  flex-wrap: wrap;
+
+  & > button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: ${props => props.theme.spacing[2]};
+
+    & > button {
+      width: auto;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
 `;
 
 type SupportTicket = {
@@ -199,17 +240,20 @@ const PlatformSupportPage: React.FC = () => {
   return (
     <PageContainer className="fade-in">
       <div style={{ marginBottom: '2rem' }}>
-        <Heading $level={1} $gradient>
-          Central de Suporte 💬
-        </Heading>
+        <PageTitleRow>
+          <Heading $level={1} $gradient>
+            Central de Suporte
+          </Heading>
+          <PageTitleEmoji aria-hidden>💬</PageTitleEmoji>
+        </PageTitleRow>
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
           Gerencie tickets e solicitações das barbearias
         </Text>
-        <div style={{ marginTop: '1rem' }}>
+        <SupportRefreshToolbar>
           <Button $variant="secondary" onClick={() => void fetchSupportData(true)} disabled={refreshing}>
             {refreshing ? 'Atualizando...' : 'Recarregar Suporte'}
           </Button>
-        </div>
+        </SupportRefreshToolbar>
       </div>
 
       <Grid $columns={4} $responsive style={{ marginBottom: '2rem' }}>

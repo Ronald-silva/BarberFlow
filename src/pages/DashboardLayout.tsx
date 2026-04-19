@@ -726,7 +726,7 @@ const DashboardLayout: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <Main $menuOpen={menuOpen}>
+      <Main $menuOpen={menuOpen} data-app-shell="dashboard">
         <Outlet />
       </Main>
 

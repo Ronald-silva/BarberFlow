@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { PageContainer, Card, CardContent, Heading, Text, Grid } from '../components/ui/Container';
+import { PageContainer, Card, CardContent, Heading, Text, Grid, PageTitleRow, PageTitleEmoji } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { useToastContext } from '../contexts/ToastContext';
 import { supabaseApi as api } from '../services/supabaseApi';
@@ -65,6 +65,17 @@ const DataList = styled.ul`
   color: ${props => props.theme.colors.text.secondary};
 `;
 
+const AnalyticsToolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+  width: 100%;
+  margin-top: ${props => props.theme.spacing[4]};
+  padding-top: ${props => props.theme.spacing[1]};
+`;
+
 interface PlatformAnalyticsData {
   monthlyRevenue: number;
   newBarbershopsThisMonth: number;
@@ -127,17 +138,20 @@ const PlatformAnalyticsPage: React.FC = () => {
   return (
     <PageContainer className="fade-in">
       <div style={{ marginBottom: '2rem' }}>
-        <Heading $level={1} $gradient>
-          Analytics da Plataforma 📈
-        </Heading>
+        <PageTitleRow>
+          <Heading $level={1} $gradient>
+            Analytics da Plataforma
+          </Heading>
+          <PageTitleEmoji aria-hidden>📈</PageTitleEmoji>
+        </PageTitleRow>
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
           Análise detalhada de performance e crescimento da plataforma
         </Text>
-        <div style={{ marginTop: '1rem' }}>
+        <AnalyticsToolbar>
           <Button $variant="secondary" onClick={() => void loadAnalytics(true)} disabled={refreshing}>
             {refreshing ? 'Atualizando...' : 'Recarregar Analytics'}
           </Button>
-        </div>
+        </AnalyticsToolbar>
       </div>
 
       <Grid $columns={4} $responsive style={{ marginBottom: '2rem' }}>

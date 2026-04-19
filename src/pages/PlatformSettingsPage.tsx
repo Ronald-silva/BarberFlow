@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { PageContainer, Card, CardContent, Heading, Text } from '../components/ui/Container';
+import { PageContainer, Card, CardContent, Heading, Text, PageTitleRow, PageTitleEmoji } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { Input, Label, FormGroup } from '../components/ui/Input';
 import { useAuth } from '../contexts/AuthContext';
@@ -105,6 +105,70 @@ const SettingDescription = styled.div`
 const DangerZone = styled(Card)`
   border: 2px solid ${props => props.theme.colors.error};
   background: ${props => props.theme.colors.errorLight}10;
+`;
+
+/** Mobile: primário em linha única; dois secundários lado a lado, centrados. Desktop: três botões em linha centrados. */
+const PlatformFormActions = styled.div`
+  margin-top: ${props => props.theme.spacing[6]};
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${props => props.theme.spacing[3]};
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  & > button {
+    min-height: 48px;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.25;
+    padding-left: ${props => props.theme.spacing[3]};
+    padding-right: ${props => props.theme.spacing[3]};
+  }
+
+  & > button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    gap: ${props => props.theme.spacing[3]};
+
+    & > button:first-child {
+      grid-column: unset;
+    }
+
+    & > button {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+  }
+`;
+
+const DangerActions = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${props => props.theme.spacing[3]};
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+
+  & > button {
+    min-height: 48px;
+    justify-content: center;
+    white-space: normal;
+    line-height: 1.25;
+    padding-left: ${props => props.theme.spacing[3]};
+    padding-right: ${props => props.theme.spacing[3]};
+  }
 `;
 
 const STORAGE_KEY = 'shafar_platform_settings';
@@ -217,9 +281,12 @@ const PlatformSettingsPage: React.FC = () => {
   return (
     <PageContainer className="fade-in">
       <div style={{ marginBottom: '2rem' }}>
-        <Heading $level={1} $gradient>
-          Configurações da Plataforma ⚙️
-        </Heading>
+        <PageTitleRow>
+          <Heading $level={1} $gradient>
+            Configurações da Plataforma
+          </Heading>
+          <PageTitleEmoji aria-hidden>⚙️</PageTitleEmoji>
+        </PageTitleRow>
         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
           Gerencie configurações globais da plataforma Shafar
         </Text>
@@ -294,7 +361,7 @@ const PlatformSettingsPage: React.FC = () => {
               </FormGroup>
             </SettingsGrid>
 
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <PlatformFormActions>
               <Button $variant="primary" onClick={saveProfile} disabled={savingProfile || !platformAdminName.trim()}>
                 {savingProfile ? 'Salvando perfil...' : 'Salvar Perfil do Admin'}
               </Button>
@@ -304,7 +371,7 @@ const PlatformSettingsPage: React.FC = () => {
               <Button $variant="secondary" onClick={reloadLocalSettings}>
                 Recarregar Configurações Locais
               </Button>
-            </div>
+            </PlatformFormActions>
             <Text $size="sm" $color="tertiary" style={{ marginTop: '0.75rem' }}>
               Campos marcados como local são salvos somente neste navegador/ambiente.
             </Text>
@@ -439,14 +506,14 @@ const PlatformSettingsPage: React.FC = () => {
             Ações irreversíveis que afetam toda a plataforma
           </Text>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <DangerActions>
             <Button $variant="secondary" style={{ borderColor: 'var(--error)', color: 'var(--error)' }}>
               Resetar Todas as Estatísticas
             </Button>
             <Button $variant="secondary" style={{ borderColor: 'var(--error)', color: 'var(--error)' }}>
               Exportar Todos os Dados
             </Button>
-          </div>
+          </DangerActions>
         </CardContent>
       </DangerZone>
 

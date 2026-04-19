@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useToastContext } from '../contexts/ToastContext';
 import { supabaseApi as api } from '../services/supabaseApi';
-import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex, PageTitleRow, PageTitleEmoji } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 
 interface PlatformStats {
@@ -253,9 +253,12 @@ const PlatformDashboardPage: React.FC = () => {
             <WelcomeSection>
                 <Flex $justify="between" $align="center" $responsive>
                     <div>
-                        <Heading $level={1} $gradient>
-                            Dashboard da Plataforma 🚀
-                        </Heading>
+                        <PageTitleRow>
+                          <Heading $level={1} $gradient>
+                            Dashboard da Plataforma
+                          </Heading>
+                          <PageTitleEmoji aria-hidden>🚀</PageTitleEmoji>
+                        </PageTitleRow>
                         <Text $color="secondary" style={{ marginTop: '0.5rem' }}>
                             Gerencie todas as barbearias assinantes da sua plataforma
                         </Text>

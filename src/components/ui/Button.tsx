@@ -177,7 +177,9 @@ const buttonSizes = {
   `,
 };
 
-export const Button = styled.button<ButtonProps>`
+export const Button = styled.button.attrs(() => ({
+  'data-shafar-button': '1',
+}))<ButtonProps>`
   position: relative;
   display: inline-flex;
   align-items: center;

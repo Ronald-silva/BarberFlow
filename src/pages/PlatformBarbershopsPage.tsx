@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { supabaseApi as api } from '../services/supabaseApi';
 import { useToastContext } from '../contexts/ToastContext';
 import { Barbershop } from '../types';
-import { PageContainer, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
+import { PageContainer, Grid, Card, CardContent, Heading, Text, PageTitleRow, PageTitleEmoji } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 
 // Styled Components
@@ -110,9 +110,27 @@ const StatusBadge = styled.span<{ $status: 'active' | 'inactive' | 'trial' }>`
   }}
 `;
 
+const ListToolbar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing[4]};
+  width: 100%;
+  margin-bottom: ${props => props.theme.spacing[8]};
+`;
+
+const ToolbarMetaRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+  width: 100%;
+  padding: ${props => props.theme.spacing[1]} 0;
+`;
+
 const SearchBar = styled.input`
   width: 100%;
-  max-width: 400px;
+  max-width: 100%;
   padding: ${props => props.theme.spacing[3]} ${props => props.theme.spacing[4]};
   border: 1px solid ${props => props.theme.colors.border.primary};
   border-radius: ${props => props.theme.radii.lg};
@@ -185,29 +203,32 @@ const PlatformBarbershopsPage: React.FC = () => {
     return (
         <PageContainer className="fade-in">
             <div style={{ marginBottom: '2rem' }}>
-                <Heading $level={1} $gradient>
-                    Barbearias da Plataforma 💈
-                </Heading>
+                <PageTitleRow>
+                  <Heading $level={1} $gradient>
+                    Barbearias da Plataforma
+                  </Heading>
+                  <PageTitleEmoji aria-hidden>💈</PageTitleEmoji>
+                </PageTitleRow>
                 <Text $color="secondary" style={{ marginTop: '0.5rem', marginBottom: '2rem' }}>
                     Gerencie todas as barbearias cadastradas na sua plataforma
                 </Text>
                 
-                <Flex $justify="between" $align="center" $responsive style={{ marginBottom: '2rem' }}>
+                <ListToolbar>
                     <SearchBar
                         type="text"
                         placeholder="Buscar barbearias..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <Flex $align="center" style={{ gap: '0.75rem' }}>
-                        <Text $size="sm" $color="tertiary">
+                    <ToolbarMetaRow>
+                        <Text $size="sm" $color="tertiary" style={{ textAlign: 'center' }}>
                             {filteredBarbershops.length} barbearia{filteredBarbershops.length !== 1 ? 's' : ''} encontrada{filteredBarbershops.length !== 1 ? 's' : ''}
                         </Text>
                         <Button $variant="secondary" onClick={() => void loadBarbershops(true)} disabled={refreshing}>
                             {refreshing ? 'Atualizando...' : 'Recarregar'}
                         </Button>
-                    </Flex>
-                </Flex>
+                    </ToolbarMetaRow>
+                </ListToolbar>
             </div>
 
             {filteredBarbershops.length === 0 ? (

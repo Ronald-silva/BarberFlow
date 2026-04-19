@@ -1,1 +1,18 @@
 /* Apenas o CSS do React Calendar - o resto será via Styled Components */
+
+/*
+ * Botões do design system nas áreas logadas (data-app-shell em PlatformLayout / DashboardLayout):
+ * no mobile, largura total do content e área de toque ≥48px.
+ * Escopo em main[data-app-shell] evita alterar a landing/nav públicos.
+ * Breakpoint md do tema: 768px.
+ */
+@media (max-width: 768px) {
+  main[data-app-shell] button[data-shafar-button='1'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+  }
+}

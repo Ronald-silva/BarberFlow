@@ -466,7 +466,7 @@ const PlatformLayout: React.FC = () => {
         </DrawerRow>
       </MobileDrawerDialog>
 
-      <MainContent>
+      <MainContent data-app-shell="platform">
         <Outlet />
       </MainContent>
     </LayoutContainer>

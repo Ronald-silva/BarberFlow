@@ -256,6 +256,29 @@ export const Flex = styled.div<{
   `}
 `;
 
+/**
+ * Título H1 com gradiente + emoji ao lado: o emoji **não** deve ficar dentro do mesmo nó que `Heading $gradient`,
+ * senão `background-clip: text` remove as cores nativas do emoji (fica “tudo dourado”).
+ */
+export const PageTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing[3]};
+  flex-wrap: wrap;
+  margin: 0;
+`;
+
+export const PageTitleEmoji = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: clamp(1.75rem, 4.2vw, 2.5rem);
+  line-height: 1;
+  user-select: none;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Noto Emoji", sans-serif;
+`;
+
 // Typography
 export const Heading = styled.h1<{ 
   $level?: 1 | 2 | 3 | 4 | 5 | 6;
