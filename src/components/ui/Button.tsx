@@ -1,3 +1,4 @@
+import type { ButtonHTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 
 // ============================================================
@@ -177,9 +178,12 @@ const buttonSizes = {
   `,
 };
 
-export const Button = styled.button.attrs(() => ({
-  'data-shafar-button': '1',
-}))<ButtonProps>`
+export const Button = styled.button.attrs(
+  () =>
+    ({
+      'data-shafar-button': '1',
+    }) as Partial<ButtonHTMLAttributes<HTMLButtonElement>>,
+)<ButtonProps>`
   position: relative;
   display: inline-flex;
   align-items: center;
