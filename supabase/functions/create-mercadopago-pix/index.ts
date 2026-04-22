@@ -18,6 +18,23 @@ function extractMercadoPagoToken(
   return null;
 }
 
+function formatMercadoPagoError(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') return 'Erro desconhecido no Mercado Pago';
+  const body = payload as {
+    message?: string;
+    error?: string;
+    cause?: Array<{ code?: string; description?: string }>;
+  };
+  const base = body.message || body.error || 'Erro no Mercado Pago';
+  const cause = Array.isArray(body.cause) && body.cause.length > 0
+    ? body.cause
+        .map((c) => [c.code, c.description].filter(Boolean).join(': '))
+        .filter(Boolean)
+        .join(' | ')
+    : '';
+  return cause ? `${base} — ${cause}` : base;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -121,6 +138,15 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
+    if (!accessToken.startsWith('TEST-') && !accessToken.startsWith('APP_USR-')) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'Token do Mercado Pago em formato inválido. Use TEST-... (sandbox) ou APP_USR-... (produção).',
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
@@ -166,9 +192,10 @@ serve(async (req) => {
     };
 
     if (!mpRes.ok || !mpData.id) {
-      console.error('MP error:', JSON.stringify(mpData));
+      const detailedError = formatMercadoPagoError(mpData);
+      console.error('MP error:', mpRes.status, JSON.stringify(mpData));
       return new Response(
-        JSON.stringify({ error: mpData.message || 'Erro ao gerar PIX no Mercado Pago' }),
+        JSON.stringify({ error: `Mercado Pago (${mpRes.status}): ${detailedError}` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }

@@ -317,7 +317,14 @@ const BookingPage: React.FC = () => {
       });
 
       const err = pixErr || (pixData as { error?: string })?.error;
-      if (err) throw new Error(typeof err === 'string' ? err : 'Erro ao gerar PIX');
+      if (err) {
+        if (typeof err === 'string') throw new Error(err);
+        const msg =
+          (err as { message?: string; context?: unknown }).message ||
+          (pixData as { error?: string })?.error ||
+          'Erro ao gerar PIX';
+        throw new Error(msg);
+      }
 
       const pd = pixData as {
         payment_id: string;
