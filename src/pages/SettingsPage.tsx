@@ -322,10 +322,15 @@ const MpTokenRow = styled.div`
   display: flex;
   gap: ${(props) => props.theme.spacing[3]};
   align-items: stretch;
+  flex-wrap: wrap;
 
   input {
-    flex: 1 1 0;
+    flex: 1 1 200px;
     min-width: 0;
+  }
+
+  button {
+    flex: 0 0 auto;
   }
 `;
 

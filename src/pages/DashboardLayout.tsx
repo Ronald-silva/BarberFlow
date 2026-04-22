@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react'
 import styled, { css } from 'styled-components';
 import { NavLink, Outlet, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole, type User, type Subscription } from '../types';
+import { UserRole, type User } from '../types';
 import { barbershopBrandCssVars } from '../lib/barbershopBranding';
 import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, LogoutIcon, CreditCardIcon } from '../components/icons';
 import MobileBottomNav from '../components/ui/MobileBottomNav';
@@ -570,7 +570,7 @@ const Main = styled.main<{ $menuOpen: boolean }>`
 
   @media (max-width: 1023px) {
     padding-top: 60px;
-    padding-bottom: 70px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     ${p =>
       p.$menuOpen &&
       `
