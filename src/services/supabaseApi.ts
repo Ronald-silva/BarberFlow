@@ -225,23 +225,45 @@ export const api = {
     return { brandSaved: true };
   },
 
-  uploadBarbershopLogo: async (barbershopId: string, file: File): Promise<string | null> => {
-    // Validações de segurança
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  uploadBarbershopLogo: async (barbershopId: string, rawFile: File): Promise<string | null> => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
-    const MAX_DIMENSION = 2000; // pixels
+    const MAX_DIMENSION = 2000;
 
-    // 1. Validar tipo de arquivo
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.includes(rawFile.type)) {
       throw new Error('Tipo de arquivo não permitido. Use JPG, PNG, WebP ou SVG.');
     }
-
-    // 2. Validar tamanho
-    if (file.size > MAX_FILE_SIZE) {
+    if (rawFile.size > MAX_FILE_SIZE) {
       throw new Error('Arquivo muito grande. Tamanho máximo: 5MB.');
     }
 
-    // 3. Validar dimensões (apenas para imagens bitmap)
+    // Converter SVG → PNG (Supabase Storage bloqueia SVG por segurança)
+    let file = rawFile;
+    if (rawFile.type === 'image/svg+xml') {
+      file = await new Promise<File>((resolve, reject) => {
+        const url = URL.createObjectURL(rawFile);
+        const img = new Image();
+        img.onload = () => {
+          const w = img.naturalWidth || 512;
+          const h = img.naturalHeight || 512;
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Canvas não disponível')); return; }
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(new File([blob], rawFile.name.replace(/\.svg$/i, '.png'), { type: 'image/png' }));
+            else reject(new Error('Falha ao converter SVG para PNG'));
+          }, 'image/png');
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Erro ao carregar SVG')); };
+        img.src = url;
+      });
+    }
+
+    // Validar dimensões (apenas bitmap)
     if (file.type !== 'image/svg+xml') {
       try {
         const img = new Image();

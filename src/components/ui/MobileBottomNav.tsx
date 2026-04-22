@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, SettingsIcon, MoreHorizIcon } from '../icons';
+import { DashboardIcon, CalendarIcon, UsersIcon, ScissorsIcon, TeamIcon, MoreHorizIcon } from '../icons';
 import { UserRole } from '../../types';
 
 // ============================================================
@@ -226,12 +226,12 @@ const MoreTab = styled.button<{ $active?: boolean }>`
 
 const MobileBottomNav: React.FC<Props> = ({ userRole, onOpenMoreMenu, moreMenuOpen }) => {
   const items = [
-    { to: 'overview', icon: <DashboardIcon size={20} />, label: 'Início', adminOnly: false },
-    { to: 'schedule', icon: <CalendarIcon size={20} />, label: 'Agenda', adminOnly: false },
-    { to: 'clients', icon: <UsersIcon size={20} />, label: 'Clientes', adminOnly: false },
-    { to: 'services', icon: <ScissorsIcon size={20} />, label: 'Serviços', adminOnly: true },
-    { to: 'professionals', icon: <TeamIcon size={20} />, label: 'Equipe', adminOnly: true },
-    { to: 'settings', icon: <SettingsIcon size={20} />, label: 'Config.', adminOnly: true },
+    { to: 'overview',       icon: <DashboardIcon size={20} />, label: 'Início',   adminOnly: false },
+    { to: 'schedule',       icon: <CalendarIcon  size={20} />, label: 'Agenda',   adminOnly: false },
+    { to: 'clients',        icon: <UsersIcon     size={20} />, label: 'Clientes', adminOnly: false },
+    { to: 'services',       icon: <ScissorsIcon  size={20} />, label: 'Serviços', adminOnly: true  },
+    { to: 'professionals',  icon: <TeamIcon      size={20} />, label: 'Equipe',   adminOnly: true  },
+    // Config. foi movido para o menu "Mais" (drawer lateral) — mantém 5 + Mais no rodapé
   ].filter(i => !i.adminOnly || userRole === UserRole.ADMIN);
 
   return (
