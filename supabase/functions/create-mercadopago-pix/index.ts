@@ -13,9 +13,17 @@ function extractMercadoPagoToken(
 ): string | null {
   if (providerMetadata && typeof providerMetadata === 'object') {
     const token = (providerMetadata as Record<string, unknown>).mercadopago_access_token;
-    if (typeof token === 'string' && token.trim().length > 0) return token.trim();
+    if (typeof token === 'string') {
+      const normalized = token.replace(/\s+/g, '');
+      if (normalized.length > 0) return normalized;
+    }
   }
   return null;
+}
+
+function isLikelyMercadoPagoAccessToken(token: string | null): boolean {
+  if (!token) return false;
+  return token.startsWith('TEST-') || token.startsWith('APP_USR-');
 }
 
 function formatMercadoPagoError(payload: unknown): string {
@@ -130,15 +138,26 @@ serve(async (req) => {
       .eq('barbershop_id', barbershop_id)
       .maybeSingle();
 
-    const accessToken = extractMercadoPagoToken(providerCfg?.metadata);
+    const accessTokenFromMetadata = extractMercadoPagoToken(providerCfg?.metadata);
+    const accessTokenFromEnv = (Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') || '').replace(/\s+/g, '');
+    const metadataTokenValid = isLikelyMercadoPagoAccessToken(accessTokenFromMetadata);
+    const envTokenValid = isLikelyMercadoPagoAccessToken(accessTokenFromEnv);
+    const accessToken = metadataTokenValid
+      ? accessTokenFromMetadata
+      : envTokenValid
+      ? accessTokenFromEnv
+      : (accessTokenFromMetadata || accessTokenFromEnv || null);
 
     if (!accessToken) {
       return new Response(
-        JSON.stringify({ error: 'Mercado Pago não configurado para esta barbearia' }),
+        JSON.stringify({
+          error:
+            'Mercado Pago não configurado. Defina mercadopago_access_token na barbearia ou MERCADOPAGO_ACCESS_TOKEN nos Supabase Secrets.',
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
-    if (!accessToken.startsWith('TEST-') && !accessToken.startsWith('APP_USR-')) {
+    if (!isLikelyMercadoPagoAccessToken(accessToken)) {
       return new Response(
         JSON.stringify({
           error:

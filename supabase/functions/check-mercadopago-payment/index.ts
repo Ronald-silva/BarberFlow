@@ -30,9 +30,17 @@ function extractMercadoPagoToken(
 ): string | null {
   if (providerMetadata && typeof providerMetadata === 'object') {
     const token = (providerMetadata as Record<string, unknown>).mercadopago_access_token;
-    if (typeof token === 'string' && token.trim().length > 0) return token.trim();
+    if (typeof token === 'string') {
+      const normalized = token.replace(/\s+/g, '');
+      if (normalized.length > 0) return normalized;
+    }
   }
   return null;
+}
+
+function isLikelyMercadoPagoAccessToken(token: string | null): boolean {
+  if (!token) return false;
+  return token.startsWith('TEST-') || token.startsWith('APP_USR-');
 }
 
 serve(async (req) => {
@@ -113,10 +121,27 @@ serve(async (req) => {
       .eq('barbershop_id', barbershop_id)
       .maybeSingle();
 
-    const accessToken = extractMercadoPagoToken(providerCfg?.metadata);
+    const accessTokenFromMetadata = extractMercadoPagoToken(providerCfg?.metadata);
+    const accessTokenFromEnv = (Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') || '').replace(/\s+/g, '');
+    const metadataTokenValid = isLikelyMercadoPagoAccessToken(accessTokenFromMetadata);
+    const envTokenValid = isLikelyMercadoPagoAccessToken(accessTokenFromEnv);
+    const accessToken = metadataTokenValid
+      ? accessTokenFromMetadata
+      : envTokenValid
+      ? accessTokenFromEnv
+      : (accessTokenFromMetadata || accessTokenFromEnv || null);
 
     if (!accessToken) {
-      throw new HttpError(400, 'Configuração MP não encontrada');
+      throw new HttpError(
+        400,
+        'Configuração MP não encontrada. Defina token por barbearia ou MERCADOPAGO_ACCESS_TOKEN nos Supabase Secrets.',
+      );
+    }
+    if (!isLikelyMercadoPagoAccessToken(accessToken)) {
+      throw new HttpError(
+        400,
+        'Token MP inválido. Use TEST-... (sandbox) ou APP_USR-... (produção).',
+      );
     }
 
     const mpRes = await fetch(`${MP_API}/v1/payments/${payment_id}`, {
