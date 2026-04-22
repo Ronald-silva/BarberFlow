@@ -147,6 +147,15 @@ serve(async (req) => {
       : envTokenValid
       ? accessTokenFromEnv
       : (accessTokenFromMetadata || accessTokenFromEnv || null);
+    const tokenSource = metadataTokenValid
+      ? 'barbershop_metadata'
+      : envTokenValid
+      ? 'supabase_secret'
+      : accessTokenFromMetadata
+      ? 'barbershop_metadata_invalid'
+      : accessTokenFromEnv
+      ? 'supabase_secret_invalid'
+      : 'none';
 
     if (!accessToken) {
       return new Response(
@@ -162,6 +171,11 @@ serve(async (req) => {
         JSON.stringify({
           error:
             'Token do Mercado Pago em formato inválido. Use TEST-... (sandbox) ou APP_USR-... (produção).',
+          debug: {
+            token_source: tokenSource,
+            token_length: accessToken?.length || 0,
+            token_prefix: accessToken ? accessToken.slice(0, 10) : null,
+          },
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
@@ -214,7 +228,14 @@ serve(async (req) => {
       const detailedError = formatMercadoPagoError(mpData);
       console.error('MP error:', mpRes.status, JSON.stringify(mpData));
       return new Response(
-        JSON.stringify({ error: `Mercado Pago (${mpRes.status}): ${detailedError}` }),
+        JSON.stringify({
+          error: `Mercado Pago (${mpRes.status}): ${detailedError}`,
+          debug: {
+            token_source: tokenSource,
+            token_length: accessToken.length,
+            token_prefix: accessToken.slice(0, 10),
+          },
+        }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
