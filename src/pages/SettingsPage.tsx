@@ -56,6 +56,9 @@ const SectionDescription = styled.p`
 
 const SectionContent = styled.div`
   padding: ${(props) => props.theme.spacing[5]};
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 
   @media (min-width: ${(props) => props.theme.breakpoints.md}) {
     padding: ${(props) => props.theme.spacing[7]};
@@ -118,10 +121,14 @@ const LinkTipList = styled.ul`
 
 const FileInputContainer = styled.div`
   position: relative;
+  max-width: 100%;
+  overflow: hidden;
 `;
 
 const FileInput = styled.input`
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: ${(props) => props.theme.spacing[3]}
     ${(props) => props.theme.spacing[4]};
   background-color: ${(props) => props.theme.colors.background.secondary};
@@ -243,6 +250,12 @@ const ToggleSliderSpan = styled.span`
 const SaveButton = styled(Button)`
   align-self: flex-start;
   min-width: 200px;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 480px) {
+    width: 100%;
+  }
 `;
 
 const SuccessMessage = styled.div<{ $show: boolean }>`
@@ -552,6 +565,17 @@ const SettingsPage: React.FC = () => {
         setError("Informe o nome da barbearia para gerar o link de agendamento.");
         return;
       }
+      // Upload da logo pendente (se existir) antes de salvar o resto
+      if (logoFile) {
+        const uploadedUrl = await supabaseApi.uploadBarbershopLogo(user.barbershopId!, logoFile);
+        if (uploadedUrl) {
+          barbershopData.logoUrl = uploadedUrl;
+          setLogoFile(null);
+        } else {
+          throw new Error('Falha ao enviar a logo. Tente novamente.');
+        }
+      }
+
       const { brandSaved } = await supabaseApi.updateBarbershop(user.barbershopId!, {
         ...barbershopData,
         slug,
@@ -661,29 +685,6 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleLogoUpload = async () => {
-    if (!logoFile || !user) return;
-
-    setUploadingLogo(true);
-    try {
-      const logoUrl = await supabaseApi.uploadBarbershopLogo(user.barbershopId!, logoFile);
-      if (logoUrl) {
-        setBarbershopData(prev => ({ ...prev, logoUrl }));
-        setLogoFile(null);
-        await reloadBarbershop();
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-      } else {
-        setError('Erro ao fazer upload da logo. Tente novamente.');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      const msg = error instanceof Error ? error.message : 'Erro ao fazer upload da logo.';
-      setError(msg);
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
 
   const handleLogoRemove = async () => {
     if (!barbershopData.logoUrl || !user) return;
@@ -963,35 +964,9 @@ const SettingsPage: React.FC = () => {
                 </FileInputContainer>
 
                 {logoFile && (
-                  <div style={{
-                    marginTop: "1rem",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "0.75rem"
-                  }}>
-                    <Button
-                      type="button"
-                      $variant="primary"
-                      $size="sm"
-                      onClick={handleLogoUpload}
-                      disabled={uploadingLogo}
-                    >
-                      {uploadingLogo ? "Enviando..." : "📤 Enviar Logo"}
-                    </Button>
-                    <Button
-                      type="button"
-                      $variant="outline"
-                      $size="sm"
-                      onClick={() => {
-                        setLogoFile(null);
-                        setLogoPreview(barbershopData.logoUrl);
-                        const input = document.getElementById('barbershopLogo') as HTMLInputElement;
-                        if (input) input.value = '';
-                      }}
-                    >
-                      ❌ Cancelar
-                    </Button>
-                  </div>
+                  <Text $size="sm" $color="secondary" style={{ marginTop: '0.5rem' }}>
+                    Nova logo pronta — clique em <strong>Salvar Informações</strong> para confirmar.
+                  </Text>
                 )}
 
                 <Text $size="xs" $color="tertiary" style={{ marginTop: "0.5rem" }}>
