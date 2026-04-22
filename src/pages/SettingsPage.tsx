@@ -673,7 +673,8 @@ const SettingsPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      setError('Erro ao fazer upload da logo. Tente novamente.');
+      const msg = error instanceof Error ? error.message : 'Erro ao fazer upload da logo.';
+      setError(msg);
     } finally {
       setUploadingLogo(false);
     }
@@ -988,7 +989,7 @@ const SettingsPage: React.FC = () => {
                 )}
 
                 <Text $size="xs" $color="tertiary" style={{ marginTop: "0.5rem" }}>
-                  Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB.
+                  Formatos aceitos: JPG, PNG, WebP, SVG. Tamanho máximo: 5MB.
                 </Text>
               </FormGroup>
               </FormRowFull>
