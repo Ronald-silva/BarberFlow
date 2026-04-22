@@ -179,6 +179,10 @@ const BookingPage: React.FC = () => {
   const [mpAppointmentId, setMpAppointmentId] = useState<string | null>(null);
   const [mpPollingStatus, setMpPollingStatus] = useState<'waiting' | 'approved' | 'cancelled'>('waiting');
   const [mpSecondsLeft, setMpSecondsLeft] = useState(30 * 60);
+  const anonAuthHeaders = useMemo(() => {
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    return anonKey ? { Authorization: `Bearer ${anonKey}` } : undefined;
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -213,6 +217,7 @@ const BookingPage: React.FC = () => {
     const interval = setInterval(async () => {
       try {
         const { data } = await supabase.functions.invoke('check-mercadopago-payment', {
+          headers: anonAuthHeaders,
           body: {
             payment_id: mpPaymentId,
             barbershop_id: barbershop!.id,
@@ -234,7 +239,7 @@ const BookingPage: React.FC = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [step, mpPaymentId, mpAppointmentId, mpPollingStatus, barbershop]);
+  }, [step, mpPaymentId, mpAppointmentId, mpPollingStatus, barbershop, anonAuthHeaders]);
 
   // Countdown timer for MP PIX expiration
   useEffect(() => {
@@ -299,6 +304,7 @@ const BookingPage: React.FC = () => {
         .join(', ');
 
       const { data: pixData, error: pixErr } = await supabase.functions.invoke('create-mercadopago-pix', {
+        headers: anonAuthHeaders,
         body: {
           barbershop_id: barbershop.id,
           appointment_id: appointment.id,
@@ -334,7 +340,7 @@ const BookingPage: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, ptBR]);
+  }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, ptBR, anonAuthHeaders]);
 
   const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
 
