@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { Database } from './supabase';
 import { User, Barbershop, Service, Client, Appointment, AppointmentStatus, UserRole } from '../types';
+import type { WorkingHoursConfig } from '../types';
 import { addMinutes, format } from 'date-fns';
 import { sendNotification, scheduleReminder } from './notificationService';
 
@@ -30,6 +31,7 @@ export function mapDbBarbershop(row: DbBarbershop): Barbershop {
     brandPrimaryColor: row.brand_primary_color?.trim() || null,
     requirePaymentBeforeBooking: row.require_payment_before_booking ?? false,
     mercadopagoConfigured: !!row.mercadopago_access_token,
+    workingHours: (row.working_hours as WorkingHoursConfig | null) ?? undefined,
   };
 }
 
@@ -187,6 +189,7 @@ export const api = {
       brandPrimaryColor?: string | null;
       mercadopagoAccessToken?: string | null;
       requirePaymentBeforeBooking?: boolean;
+      workingHours?: WorkingHoursConfig | null;
     }
   ): Promise<{ brandSaved: boolean }> => {
     const row: Database['public']['Tables']['barbershops']['Update'] = {};
@@ -198,6 +201,7 @@ export const api = {
     if (payload.logoUrl !== undefined) row.logo_url = payload.logoUrl;
     if (payload.mercadopagoAccessToken !== undefined) row.mercadopago_access_token = payload.mercadopagoAccessToken;
     if (payload.requirePaymentBeforeBooking !== undefined) row.require_payment_before_booking = payload.requirePaymentBeforeBooking;
+    if (payload.workingHours !== undefined) row.working_hours = payload.workingHours as unknown;
 
     const wantsBrand = Object.prototype.hasOwnProperty.call(payload, 'brandPrimaryColor');
     const withBrand = wantsBrand

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import {
   DashboardShell,
@@ -17,6 +17,8 @@ import {
   defaultBrandMainHex,
   normalizeBrandHex,
 } from "../lib/barbershopBranding";
+import type { DaySchedule, WorkInterval } from "../types";
+import { DEFAULT_WORKING_HOURS } from "../utils/timeSlots";
 
 // Styled Components
 const SettingsContainer = styled.div`
@@ -380,6 +382,51 @@ const MpInfoBox = styled.div`
   line-height: 1.55;
 `;
 
+const IntervalRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing[2]};
+  flex-wrap: wrap;
+`;
+
+const IntervalSep = styled.span`
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
+  white-space: nowrap;
+`;
+
+const AddIntervalBtn = styled.button`
+  background: none;
+  border: 1px dashed ${(props) => props.theme.colors.border.secondary};
+  color: var(--bs-brand-main, #c8922a);
+  border-radius: ${(props) => props.theme.radii.md};
+  padding: ${(props) => props.theme.spacing[1]} ${(props) => props.theme.spacing[3]};
+  font-size: ${(props) => props.theme.typography.fontSizes.xs};
+  cursor: pointer;
+  transition: ${(props) => props.theme.transitions.base};
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--bs-brand-main, #c8922a);
+    background: color-mix(in srgb, var(--bs-brand-main, #c8922a) 8%, transparent);
+  }
+`;
+
+const RemoveIntervalBtn = styled.button`
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.colors.text.tertiary};
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+
+  &:hover { color: ${(props) => props.theme.colors.error}; }
+`;
+
+const DAY_LABELS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
 function normalizeBarbershopSlug(slug: string, businessName: string): string {
   const fromField = slug
     .trim()
@@ -413,15 +460,7 @@ const SettingsPage: React.FC = () => {
   const [useCustomBrandColor, setUseCustomBrandColor] = useState(false);
   const [brandColorHex, setBrandColorHex] = useState(DEFAULT_BRAND_MAIN_HEX);
 
-  const [workingHours, setWorkingHours] = useState([
-    { day: "Segunda-feira", start: "09:00", end: "18:00", enabled: true },
-    { day: "Terça-feira", start: "09:00", end: "18:00", enabled: true },
-    { day: "Quarta-feira", start: "09:00", end: "18:00", enabled: true },
-    { day: "Quinta-feira", start: "09:00", end: "18:00", enabled: true },
-    { day: "Sexta-feira", start: "09:00", end: "20:00", enabled: true },
-    { day: "Sábado", start: "08:00", end: "16:00", enabled: true },
-    { day: "Domingo", start: "09:00", end: "15:00", enabled: false },
-  ]);
+  const [workingHours, setWorkingHours] = useState<DaySchedule[]>(DEFAULT_WORKING_HOURS);
 
   const [mpAccessToken, setMpAccessToken] = useState('');
   const [mpShowToken, setMpShowToken] = useState(false);
@@ -460,6 +499,9 @@ const SettingsPage: React.FC = () => {
             setLogoPreview(barbershop.logoUrl || "");
             setMpConfigured(barbershop.mercadopagoConfigured ?? false);
             setRequirePaymentBeforeBooking(barbershop.requirePaymentBeforeBooking ?? false);
+            if (barbershop.workingHours && barbershop.workingHours.length > 0) {
+              setWorkingHours(barbershop.workingHours);
+            }
             const saved = normalizeBrandHex(barbershop.brandPrimaryColor ?? undefined);
             if (saved) {
               setUseCustomBrandColor(true);
@@ -531,30 +573,61 @@ const SettingsPage: React.FC = () => {
 
   const handleWorkingHoursSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setSubmitting(true);
     setError("");
     try {
-      // Por enquanto apenas simula o salvamento
-      console.log("Salvando horários de funcionamento:", workingHours);
+      await supabaseApi.updateBarbershop(user.barbershopId!, { workingHours });
+      await reloadBarbershop();
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error("Erro ao salvar horários:", error);
-      setError("Erro ao salvar horários. Tente novamente.");
+      setError(formatPostgrestError(error));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const updateWorkingHour = (
-    index: number,
-    field: string,
-    value: string | boolean
-  ) => {
-    const updated = [...workingHours];
-    updated[index] = { ...updated[index], [field]: value };
-    setWorkingHours(updated);
-  };
+  const toggleDayEnabled = useCallback((dayIndex: number) => {
+    setWorkingHours((prev) =>
+      prev.map((d) => d.day === dayIndex ? { ...d, enabled: !d.enabled } : d)
+    );
+  }, []);
+
+  const updateInterval = useCallback(
+    (dayIndex: number, intervalIdx: number, field: keyof WorkInterval, value: string) => {
+      setWorkingHours((prev) =>
+        prev.map((d) => {
+          if (d.day !== dayIndex) return d;
+          const intervals = d.intervals.map((iv, i) =>
+            i === intervalIdx ? { ...iv, [field]: value } : iv
+          );
+          return { ...d, intervals };
+        })
+      );
+    },
+    []
+  );
+
+  const addInterval = useCallback((dayIndex: number) => {
+    setWorkingHours((prev) =>
+      prev.map((d) => {
+        if (d.day !== dayIndex) return d;
+        const last = d.intervals[d.intervals.length - 1];
+        return { ...d, intervals: [...d.intervals, { start: last?.end ?? '14:00', end: '18:00' }] };
+      })
+    );
+  }, []);
+
+  const removeInterval = useCallback((dayIndex: number, intervalIdx: number) => {
+    setWorkingHours((prev) =>
+      prev.map((d) => {
+        if (d.day !== dayIndex || d.intervals.length <= 1) return d;
+        return { ...d, intervals: d.intervals.filter((_, i) => i !== intervalIdx) };
+      })
+    );
+  }, []);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1120,34 +1193,58 @@ const SettingsPage: React.FC = () => {
           <SectionContent>
             <WorkingHoursForm onSubmit={handleWorkingHoursSubmit}>
               <WorkingHoursGrid>
-                {workingHours.map((schedule, index) => (
-                  <DayRow key={schedule.day}>
-                    <DayLabel>{schedule.day}</DayLabel>
-                    <TimeInput
-                      type="time"
-                      value={schedule.start}
-                      onChange={(e) =>
-                        updateWorkingHour(index, "start", e.target.value)
-                      }
-                      disabled={!schedule.enabled}
-                      $size="sm"
-                    />
-                    <TimeInput
-                      type="time"
-                      value={schedule.end}
-                      onChange={(e) =>
-                        updateWorkingHour(index, "end", e.target.value)
-                      }
-                      disabled={!schedule.enabled}
-                      $size="sm"
-                    />
-                    <ToggleSwitch>
+                {workingHours.map((schedule) => (
+                  <DayRow key={schedule.day} style={{ gridTemplateColumns: '120px 1fr auto', alignItems: 'start' }}>
+                    <DayLabel style={{ paddingTop: '0.5rem' }}>{DAY_LABELS[schedule.day]}</DayLabel>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {schedule.intervals.map((iv, ivIdx) => (
+                        <IntervalRow key={ivIdx}>
+                          <TimeInput
+                            type="time"
+                            value={iv.start}
+                            onChange={(e) => updateInterval(schedule.day, ivIdx, 'start', e.target.value)}
+                            disabled={!schedule.enabled}
+                            $size="sm"
+                            style={{ width: 100 }}
+                          />
+                          <IntervalSep>até</IntervalSep>
+                          <TimeInput
+                            type="time"
+                            value={iv.end}
+                            onChange={(e) => updateInterval(schedule.day, ivIdx, 'end', e.target.value)}
+                            disabled={!schedule.enabled}
+                            $size="sm"
+                            style={{ width: 100 }}
+                          />
+                          {schedule.intervals.length > 1 && (
+                            <RemoveIntervalBtn
+                              type="button"
+                              title="Remover intervalo"
+                              onClick={() => removeInterval(schedule.day, ivIdx)}
+                              disabled={!schedule.enabled}
+                            >
+                              ×
+                            </RemoveIntervalBtn>
+                          )}
+                        </IntervalRow>
+                      ))}
+
+                      {schedule.enabled && (
+                        <AddIntervalBtn
+                          type="button"
+                          onClick={() => addInterval(schedule.day)}
+                        >
+                          + intervalo
+                        </AddIntervalBtn>
+                      )}
+                    </div>
+
+                    <ToggleSwitch style={{ marginTop: '0.35rem' }}>
                       <ToggleSlider
                         type="checkbox"
                         checked={schedule.enabled}
-                        onChange={(e) =>
-                          updateWorkingHour(index, "enabled", e.target.checked)
-                        }
+                        onChange={() => toggleDayEnabled(schedule.day)}
                       />
                       <ToggleSliderSpan />
                     </ToggleSwitch>

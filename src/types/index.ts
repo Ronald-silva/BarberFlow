@@ -5,6 +5,19 @@ export type {
   CheckoutProviderId,
 } from './barbershopPayments';
 
+export interface WorkInterval {
+  start: string; // "HH:MM"
+  end: string;   // "HH:MM"
+}
+
+export interface DaySchedule {
+  day: number;           // 0=Dom … 6=Sáb
+  enabled: boolean;
+  intervals: WorkInterval[];
+}
+
+export type WorkingHoursConfig = DaySchedule[];
+
 export enum UserRole {
   PLATFORM_ADMIN = 'platform_admin',
   ADMIN = 'admin',
@@ -31,6 +44,8 @@ export interface Barbershop {
   requirePaymentBeforeBooking?: boolean;
   /** True se o access token do Mercado Pago já está configurado (token não é exposto). */
   mercadopagoConfigured?: boolean;
+  /** Horários de funcionamento da barbearia com suporte a múltiplos intervalos por dia. */
+  workingHours?: WorkingHoursConfig;
 }
 
 export interface User {

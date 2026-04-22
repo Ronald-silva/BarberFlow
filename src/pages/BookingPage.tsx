@@ -7,6 +7,7 @@ import { supabase } from '../services/supabase';
 import { paymentService, type PaymentResponse } from '../services/paymentService';
 import { useToastContext } from '../contexts/ToastContext';
 import { maskPhone, formatBRL, formatDateBR, formatDateTimeBR } from '../utils/formatters';
+import { getAvailableSlots } from '../utils/timeSlots';
 import Calendar from 'react-calendar';
 import { addDays, format, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
@@ -414,7 +415,13 @@ const BookingPage: React.FC = () => {
     }
   }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, ptBR]);
 
-  const timeSlots = ['09:00', '09:45', '10:30', '11:15', '14:00', '14:45', '15:30', '16:15', '17:00', '18:00', '19:00'];
+  const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
+
+  const timeSlots = useMemo(() => {
+    const slotMin = totalDuration > 0 ? totalDuration : 30;
+    const dynamic = getAvailableSlots(barbershop?.workingHours, selectedDate, slotMin);
+    return dynamic !== null ? dynamic : FALLBACK_SLOTS;
+  }, [barbershop?.workingHours, selectedDate, totalDuration]);
 
   if (loading) {
     return (
