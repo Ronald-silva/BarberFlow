@@ -430,11 +430,10 @@ const BarbershopRegistrationPage: React.FC = () => {
       // Cadastro público: insert em barbershops só passa RLS como anônimo (ou política estendida).
       await supabase.auth.signOut();
 
-      const { data: slugRows, error: slugCheckErr } = await supabase
-        .from("barbershops")
-        .select("id")
-        .eq("slug", shop.slug)
-        .limit(1);
+      const { data: slugAvailable, error: slugCheckErr } = await supabase.rpc(
+        'is_barbershop_slug_available',
+        { p_slug: shop.slug }
+      );
 
       if (slugCheckErr) {
         console.error(slugCheckErr);
@@ -442,7 +441,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         setLoading(false);
         return;
       }
-      if (slugRows && slugRows.length > 0) {
+      if (!slugAvailable) {
         setError(
           "Esta URL (slug) já está em uso — muitas vezes por um cadastro anterior que parou no meio. Altere o nome da barbearia/slug ou apague a linha órfã em public.barbershops no Supabase e tente de novo."
         );

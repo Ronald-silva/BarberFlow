@@ -1,0 +1,18 @@
+---
+description: Contexto central e fluxo multi-tenant do projeto Shafar
+alwaysApply: true
+---
+
+# Shafar Core Context
+
+- Sempre trate o projeto como SaaS multi-tenant para barbearias.
+- Considere tres dominios: `\/platform/*`, `\/dashboard/*`, `\/book/:slug`.
+- Antes de implementar mudancas relevantes, consulte `AGENTS.md` e `docs/SESSION_BOOTSTRAP.md`.
+- Preserve isolamento entre tenants em consultas e regras de acesso.
+- Evite alterar arquitetura sem necessidade explicita do usuario.
+
+# Seguranca minima
+
+- Nunca exibir segredos de `.env` em respostas.
+- Nao mover chaves sensiveis para variaveis `VITE_*`.
+- Para integracoes de pagamento/webhook, preferir secrets no backend/Edge Functions.

@@ -135,9 +135,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- PARTE 4: POLÍTICAS RLS - BARBERSHOPS
 -- =====================================================
 
-CREATE POLICY "barbershops_select_public"
+CREATE POLICY "barbershops_select_member_or_platform"
   ON barbershops FOR SELECT
-  USING (true);
+  USING (is_barbershop_member(id) OR is_platform_admin());
 
 CREATE POLICY "barbershops_insert_public"
   ON barbershops FOR INSERT

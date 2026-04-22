@@ -45,6 +45,24 @@ interface ResendResponse {
   created_at: string;
 }
 
+type Requester = { id: string; barbershop_id: string | null; role: string };
+
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function parseBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!authHeader) return null;
+  const [scheme, token] = authHeader.split(' ');
+  if (!scheme || !token || scheme.toLowerCase() !== 'bearer') return null;
+  return token.trim();
+}
+
 // =====================================================
 // MAIN HANDLER
 // =====================================================
@@ -68,11 +86,49 @@ serve(async (req) => {
     // 2. Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // 2.1 Require authenticated caller (even with verify_jwt=false in config)
+    const token = parseBearerToken(req);
+    if (!token) {
+      throw new HttpError(401, 'Não autorizado');
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authData?.user) {
+      throw new HttpError(401, 'Token inválido');
+    }
+
+    const { data: requester, error: requesterError } = await supabase
+      .from('users')
+      .select('id, barbershop_id, role')
+      .eq('id', authData.user.id)
+      .single();
+
+    const requesterData = requester as Requester | null;
+    if (requesterError || !requesterData) {
+      throw new HttpError(403, 'Usuário sem perfil autorizado');
+    }
+
     // 3. Parse request body
     const body: SendEmailRequest = await req.json();
 
     if (!body.to) {
       throw new Error('Campo "to" é obrigatório');
+    }
+
+    if (
+      body.barbershop_id &&
+      requesterData.role !== 'platform_admin' &&
+      requesterData.barbershop_id !== body.barbershop_id
+    ) {
+      throw new HttpError(403, 'Sem permissão para enviar email desta barbearia');
+    }
+
+    if (
+      body.user_id &&
+      requesterData.role !== 'platform_admin' &&
+      body.user_id !== requesterData.id
+    ) {
+      throw new HttpError(403, 'Sem permissão para usar user_id de outro usuário');
     }
 
     // Normalize "to" to array
@@ -151,7 +207,7 @@ serve(async (req) => {
         provider: 'resend',
         provider_message_id: resendData.id,
         barbershop_id: body.barbershop_id || null,
-        user_id: body.user_id || null,
+        user_id: body.user_id || requesterData.id,
         appointment_id: body.appointment_id || null,
         sent_at: new Date().toISOString(),
       });
@@ -186,7 +242,7 @@ serve(async (req) => {
           subject: body.subject || 'Unknown',
           template_key: body.template_key || null,
           status: 'failed',
-          error_message: error.message,
+          error_message: error instanceof Error ? error.message : 'Erro desconhecido',
           barbershop_id: body.barbershop_id || null,
           user_id: body.user_id || null,
           failed_at: new Date().toISOString(),
@@ -197,11 +253,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        error: error.message || 'Erro ao enviar email',
+        error: error instanceof Error ? error.message : 'Erro ao enviar email',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: error instanceof HttpError ? error.status : 400,
       }
     );
   }

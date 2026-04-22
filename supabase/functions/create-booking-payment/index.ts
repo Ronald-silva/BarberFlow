@@ -9,6 +9,15 @@ const corsHeaders = {
 
 type Provider = 'stripe' | 'asaas';
 type Method = 'pix' | 'credit_card' | 'debit_card' | 'boleto' | 'bitcoin';
+type Requester = { id: string; barbershop_id: string | null; role: string };
+
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
 function asaasBaseUrl() {
   return (Deno.env.get('ASAAS_ENV') || 'sandbox').toLowerCase() === 'production'
@@ -86,6 +95,14 @@ async function findAsaasCustomerByExternalRef(
   return row?.id ?? null;
 }
 
+function parseBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!authHeader) return null;
+  const [scheme, token] = authHeader.split(' ');
+  if (!scheme || !token || scheme.toLowerCase() !== 'bearer') return null;
+  return token.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -106,12 +123,62 @@ serve(async (req) => {
     const cancelUrl = body.cancel_url || body.cancelUrl;
 
     if (!appointmentId || !barbershopId || amount <= 0) {
-      throw new Error('Parâmetros inválidos para pagamento');
+      throw new HttpError(400, 'Parâmetros inválidos para pagamento');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Segurança: valida sempre se o agendamento informado pertence à barbearia enviada.
+    const { data: appointment, error: appointmentError } = await supabaseAdmin
+      .from('appointments')
+      .select('id, barbershop_id, total_amount, payment_status')
+      .eq('id', appointmentId)
+      .single();
+
+    if (appointmentError || !appointment) {
+      throw new HttpError(404, 'Agendamento não encontrado');
+    }
+
+    if (appointment.barbershop_id !== barbershopId) {
+      throw new HttpError(403, 'Agendamento não pertence à barbearia informada');
+    }
+
+    if (
+      appointment.total_amount !== null &&
+      appointment.total_amount !== undefined &&
+      Number.isFinite(appointment.total_amount) &&
+      Math.abs(Number(appointment.total_amount) - amount) > 0.01
+    ) {
+      throw new HttpError(400, 'Valor do pagamento difere do valor do agendamento');
+    }
+
+    const token = parseBearerToken(req);
+    if (token) {
+      // Quando há sessão no request, exigimos autorização por tenant.
+      const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !authData?.user) {
+        throw new HttpError(401, 'Token inválido');
+      }
+
+      const { data: requester, error: requesterError } = await supabaseAdmin
+        .from('users')
+        .select('id, barbershop_id, role')
+        .eq('id', authData.user.id)
+        .single();
+
+      const requesterData = requester as Requester | null;
+      if (requesterError || !requesterData) {
+        throw new HttpError(403, 'Usuário sem perfil autorizado');
+      }
+
+      const canAccess =
+        requesterData.role === 'platform_admin' || requesterData.barbershop_id === barbershopId;
+      if (!canAccess) {
+        throw new HttpError(403, 'Sem permissão para cobrar esta barbearia');
+      }
+    }
 
     let provider: Provider = requestedProvider || 'stripe';
     if (!requestedProvider) {
@@ -127,7 +194,7 @@ serve(async (req) => {
 
     if (provider === 'stripe') {
       const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
-      if (!stripeSecret) throw new Error('STRIPE_SECRET_KEY não configurada');
+      if (!stripeSecret) throw new HttpError(500, 'STRIPE_SECRET_KEY não configurada');
 
       const stripe = new Stripe(stripeSecret, {
         apiVersion: '2023-10-16',
@@ -191,7 +258,7 @@ serve(async (req) => {
 
     // Provider Asaas
     const asaasApiKey = Deno.env.get('ASAAS_API_KEY');
-    if (!asaasApiKey) throw new Error('ASAAS_API_KEY não configurada');
+    if (!asaasApiKey) throw new HttpError(500, 'ASAAS_API_KEY não configurada');
     assertAsaasKeyMatchesEnv(asaasApiKey);
 
     // Idempotência: mesma cobrança pendente Asaas já registrada para este agendamento
@@ -293,7 +360,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : 'Erro ao criar pagamento',
       }),
       {
-        status: 400,
+        status: error instanceof HttpError ? error.status : 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

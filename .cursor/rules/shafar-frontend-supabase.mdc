@@ -1,0 +1,18 @@
+---
+description: Convencoes para alteracoes em React/TypeScript e Supabase
+globs: **/*.{ts,tsx,js}
+alwaysApply: false
+---
+
+# Frontend + Supabase Conventions
+
+- Manter padrao existente: React funcional, TypeScript, styled-components.
+- Reutilizar servicos em `src/services/` antes de criar novas camadas.
+- Mudancas de auth/perfil devem considerar `AuthContext` e papeis de plataforma vs barbearia.
+- Para fluxos async, manter coerencia com TanStack Query quando aplicavel.
+
+# Qualidade minima
+
+- Depois de alteracoes substanciais, rodar `npm run type-check`.
+- Se mudou fluxo principal, validar tambem com `npm run build`.
+- Preferir mudancas pequenas, com baixo risco de regressao.

@@ -1,0 +1,30 @@
+---
+description: Regras de seguranca e implementacao para pagamentos e webhooks
+globs: {supabase/functions/**/*.ts,src/services/**/*payment*.ts,src/pages/SettingsPage.tsx,src/pages/BookingPage.tsx}
+alwaysApply: false
+---
+
+# Payments and Webhooks Guardrails
+
+- Toda mudanca de pagamento deve preservar isolamento multi-tenant por barbearia.
+- Segredos (tokens, webhook secrets, secret keys) ficam apenas no backend/Edge Functions.
+- Nunca usar `VITE_*` para segredos.
+
+# Mercado Pago - convencoes
+
+- **Backend secret:** preferir `MERCADOPAGO_ACCESS_TOKEN` (ou token por tenant em metadata segura).
+- **Frontend public key (opcional):** usar `VITE_MERCADOPAGO_PUBLIC_KEY`.
+- Se existir alias legado no `.env` (`MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`), mapear explicitamente para os nomes oficiais acima e evitar duplicidade sem necessidade.
+
+# Webhooks
+
+- Sempre validar assinatura antes de processar evento.
+- Tratar idempotencia de eventos (nao processar o mesmo evento duas vezes).
+- Nunca logar token/chave inteira; mascarar quando necessario.
+
+# Checklist minimo antes de concluir
+
+1. Confirmar variaveis corretas por ambiente (local, preview, prod).
+2. Garantir que nenhum segredo foi para codigo cliente.
+3. Rodar `npm run type-check`.
+4. Em mudanca de fluxo critico, rodar `npm run build`.

@@ -7,6 +7,33 @@ const corsHeaders = {
 };
 
 const MP_API = 'https://api.mercadopago.com';
+type Requester = { id: string; barbershop_id: string | null; role: string };
+
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function parseBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!authHeader) return null;
+  const [scheme, token] = authHeader.split(' ');
+  if (!scheme || !token || scheme.toLowerCase() !== 'bearer') return null;
+  return token.trim();
+}
+
+function extractMercadoPagoToken(
+  providerMetadata: unknown,
+): string | null {
+  if (providerMetadata && typeof providerMetadata === 'object') {
+    const token = (providerMetadata as Record<string, unknown>).mercadopago_access_token;
+    if (typeof token === 'string' && token.trim().length > 0) return token.trim();
+  }
+  return null;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,10 +49,7 @@ serve(async (req) => {
     };
 
     if (!payment_id || !barbershop_id || !appointment_id) {
-      return new Response(
-        JSON.stringify({ error: 'payment_id, barbershop_id e appointment_id são obrigatórios' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      throw new HttpError(400, 'payment_id, barbershop_id e appointment_id são obrigatórios');
     }
 
     const supabaseAdmin = createClient(
@@ -33,32 +57,78 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const { data: barbershop } = await supabaseAdmin
-      .from('barbershops')
-      .select('mercadopago_access_token')
-      .eq('id', barbershop_id)
+    const { data: appointment, error: appointmentError } = await supabaseAdmin
+      .from('appointments')
+      .select('id, barbershop_id, payment_status, mp_payment_id')
+      .eq('id', appointment_id)
       .single();
 
-    if (!barbershop?.mercadopago_access_token) {
+    if (appointmentError || !appointment) {
+      throw new HttpError(404, 'Agendamento não encontrado');
+    }
+
+    if (appointment.barbershop_id !== barbershop_id) {
+      throw new HttpError(403, 'Agendamento não pertence à barbearia informada');
+    }
+
+    if (!appointment.mp_payment_id || appointment.mp_payment_id !== payment_id) {
+      throw new HttpError(403, 'payment_id não corresponde ao agendamento informado');
+    }
+
+    if (appointment.payment_status !== 'pending_payment') {
       return new Response(
-        JSON.stringify({ error: 'Configuração MP não encontrada' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ status: appointment.payment_status }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
+    }
+
+    const token = parseBearerToken(req);
+    if (token) {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !authData?.user) {
+        throw new HttpError(401, 'Token inválido');
+      }
+
+      const { data: requester, error: requesterError } = await supabaseAdmin
+        .from('users')
+        .select('id, barbershop_id, role')
+        .eq('id', authData.user.id)
+        .single();
+
+      const requesterData = requester as Requester | null;
+      if (requesterError || !requesterData) {
+        throw new HttpError(403, 'Usuário sem perfil autorizado');
+      }
+
+      const canAccess =
+        requesterData.role === 'platform_admin' || requesterData.barbershop_id === barbershop_id;
+      if (!canAccess) {
+        throw new HttpError(403, 'Sem permissão para consultar este pagamento');
+      }
+    }
+
+    const { data: providerCfg } = await supabaseAdmin
+      .from('payment_provider_configs')
+      .select('metadata')
+      .eq('barbershop_id', barbershop_id)
+      .maybeSingle();
+
+    const accessToken = extractMercadoPagoToken(providerCfg?.metadata);
+
+    if (!accessToken) {
+      throw new HttpError(400, 'Configuração MP não encontrada');
     }
 
     const mpRes = await fetch(`${MP_API}/v1/payments/${payment_id}`, {
       headers: {
-        'Authorization': `Bearer ${barbershop.mercadopago_access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
     const mpData = await mpRes.json() as { status?: string; status_detail?: string };
 
     if (!mpRes.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Erro ao consultar pagamento no Mercado Pago' }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      throw new HttpError(502, 'Erro ao consultar pagamento no Mercado Pago');
     }
 
     const mpStatus = mpData.status ?? 'pending';
@@ -69,6 +139,8 @@ serve(async (req) => {
         .from('appointments')
         .update({ status: 'confirmed', payment_status: 'paid' })
         .eq('id', appointment_id)
+        .eq('barbershop_id', barbershop_id)
+        .eq('mp_payment_id', payment_id)
         .eq('payment_status', 'pending_payment');
     }
 
@@ -78,6 +150,8 @@ serve(async (req) => {
         .from('appointments')
         .update({ status: 'cancelled', payment_status: 'cancelled' })
         .eq('id', appointment_id)
+        .eq('barbershop_id', barbershop_id)
+        .eq('mp_payment_id', payment_id)
         .eq('payment_status', 'pending_payment');
     }
 
@@ -89,7 +163,7 @@ serve(async (req) => {
     console.error('Erro check-mercadopago-payment:', err);
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : 'Erro interno' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: err instanceof HttpError ? err.status : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

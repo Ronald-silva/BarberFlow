@@ -8,6 +8,16 @@ const corsHeaders = {
 
 const MP_API = 'https://api.mercadopago.com';
 
+function extractMercadoPagoToken(
+  providerMetadata: unknown,
+): string | null {
+  if (providerMetadata && typeof providerMetadata === 'object') {
+    const token = (providerMetadata as Record<string, unknown>).mercadopago_access_token;
+    if (typeof token === 'string' && token.trim().length > 0) return token.trim();
+  }
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -45,21 +55,73 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Buscar token MP da barbearia no banco
+    const { data: appointment, error: appErr } = await supabaseAdmin
+      .from('appointments')
+      .select('id, barbershop_id, payment_status, total_amount')
+      .eq('id', appointment_id)
+      .single();
+
+    if (appErr || !appointment) {
+      return new Response(
+        JSON.stringify({ error: 'Agendamento não encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (appointment.barbershop_id !== barbershop_id) {
+      return new Response(
+        JSON.stringify({ error: 'Agendamento não pertence à barbearia informada' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (appointment.payment_status && appointment.payment_status !== 'pending_payment') {
+      return new Response(
+        JSON.stringify({ error: 'Agendamento não está aguardando pagamento' }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (
+      appointment.total_amount !== null &&
+      appointment.total_amount !== undefined &&
+      Math.abs(Number(appointment.total_amount) - Number(amount)) > 0.01
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'Valor diferente do total do agendamento' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Buscar metadados da barbearia para descrição (dados públicos).
     const { data: barbershop, error: bsErr } = await supabaseAdmin
       .from('barbershops')
-      .select('mercadopago_access_token, name')
+      .select('name')
       .eq('id', barbershop_id)
       .single();
 
-    if (bsErr || !barbershop?.mercadopago_access_token) {
+    if (bsErr || !barbershop) {
+      return new Response(
+        JSON.stringify({ error: 'Barbearia não encontrada' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const { data: providerCfg } = await supabaseAdmin
+      .from('payment_provider_configs')
+      .select('metadata')
+      .eq('barbershop_id', barbershop_id)
+      .maybeSingle();
+
+    const accessToken = extractMercadoPagoToken(providerCfg?.metadata);
+
+    if (!accessToken) {
       return new Response(
         JSON.stringify({ error: 'Mercado Pago não configurado para esta barbearia' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    const accessToken = barbershop.mercadopago_access_token as string;
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
     const firstName = (client_name || 'Cliente').split(' ')[0];
@@ -128,7 +190,9 @@ serve(async (req) => {
         payment_status: 'pending_payment',
         payment_method: 'pix',
       })
-      .eq('id', appointment_id);
+      .eq('id', appointment_id)
+      .eq('barbershop_id', barbershop_id)
+      .eq('payment_status', 'pending_payment');
 
     if (updateErr) {
       console.error('Erro ao atualizar appointment:', updateErr);

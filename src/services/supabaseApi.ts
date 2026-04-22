@@ -7,6 +7,19 @@ import { sendNotification, scheduleReminder } from './notificationService';
 
 type DbUser = Database['public']['Tables']['users']['Row'];
 type DbBarbershop = Database['public']['Tables']['barbershops']['Row'];
+type DbBarbershopPublicRow = Pick<
+  DbBarbershop,
+  | 'id'
+  | 'name'
+  | 'slug'
+  | 'address'
+  | 'logo_url'
+  | 'phone'
+  | 'email'
+  | 'brand_primary_color'
+  | 'require_payment_before_booking'
+  | 'working_hours'
+>;
 
 function mapDbUser(row: DbUser): User {
   return {
@@ -19,7 +32,7 @@ function mapDbUser(row: DbUser): User {
   };
 }
 
-export function mapDbBarbershop(row: DbBarbershop): Barbershop {
+export function mapDbBarbershop(row: DbBarbershopPublicRow): Barbershop {
   return {
     id: row.id,
     name: row.name,
@@ -30,7 +43,7 @@ export function mapDbBarbershop(row: DbBarbershop): Barbershop {
     email: row.email ?? null,
     brandPrimaryColor: row.brand_primary_color?.trim() || null,
     requirePaymentBeforeBooking: row.require_payment_before_booking ?? false,
-    mercadopagoConfigured: !!row.mercadopago_access_token,
+    mercadopagoConfigured: false,
     workingHours: (row.working_hours as WorkingHoursConfig | null) ?? undefined,
   };
 }
@@ -152,24 +165,39 @@ export const api = {
   },
 
   getBarbershopBySlug: async (slug: string): Promise<Barbershop | null> => {
-    const { data, error } = await supabase
-      .from('barbershops')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-    
-    if (error || !data) return null;
-    return mapDbBarbershop(data);
+    const { data, error } = await supabase.rpc('get_public_barbershop_by_slug', {
+      p_slug: slug,
+    });
+
+    if (error || !Array.isArray(data) || data.length === 0) return null;
+    return mapDbBarbershop(data[0] as DbBarbershopPublicRow);
   },
 
   getBarbershopById: async (id: string | null): Promise<Barbershop | null> => {
     if (!id) return null;
-    const { data, error } = await supabase.from('barbershops').select('*').eq('id', id).maybeSingle();
+    const { data, error } = await supabase
+      .from('barbershops')
+      .select('id, name, slug, address, logo_url, phone, email, brand_primary_color, require_payment_before_booking, working_hours')
+      .eq('id', id)
+      .maybeSingle();
     if (error) {
       console.error('getBarbershopById', error);
       return null;
     }
-    return data ? mapDbBarbershop(data) : null;
+    if (!data) return null;
+    const mapped = mapDbBarbershop(data as DbBarbershop);
+    const { data: providerCfg } = await supabase
+      .from('payment_provider_configs')
+      .select('metadata')
+      .eq('barbershop_id', id)
+      .maybeSingle();
+    const metadata = (providerCfg?.metadata && typeof providerCfg.metadata === 'object')
+      ? (providerCfg.metadata as Record<string, unknown>)
+      : null;
+    return {
+      ...mapped,
+      mercadopagoConfigured: !!metadata?.mercadopago_access_token,
+    };
   },
 
   /**
@@ -199,7 +227,6 @@ export const api = {
     if (payload.phone !== undefined) row.phone = payload.phone;
     if (payload.email !== undefined) row.email = payload.email;
     if (payload.logoUrl !== undefined) row.logo_url = payload.logoUrl;
-    if (payload.mercadopagoAccessToken !== undefined) row.mercadopago_access_token = payload.mercadopagoAccessToken;
     if (payload.requirePaymentBeforeBooking !== undefined) row.require_payment_before_booking = payload.requirePaymentBeforeBooking;
     if (payload.workingHours !== undefined) row.working_hours = payload.workingHours as unknown;
 
@@ -222,6 +249,36 @@ export const api = {
     }
 
     if (error) throw error;
+
+    if (payload.mercadopagoAccessToken !== undefined) {
+      const { data: providerCfg } = await supabase
+        .from('payment_provider_configs')
+        .select('metadata')
+        .eq('barbershop_id', id)
+        .maybeSingle();
+
+      const currentMetadata =
+        providerCfg?.metadata && typeof providerCfg.metadata === 'object'
+          ? { ...(providerCfg.metadata as Record<string, unknown>) }
+          : {};
+
+      const cleanedToken = payload.mercadopagoAccessToken?.trim();
+      if (cleanedToken) currentMetadata.mercadopago_access_token = cleanedToken;
+      else delete currentMetadata.mercadopago_access_token;
+
+      const { error: cfgError } = await supabase
+        .from('payment_provider_configs')
+        .upsert(
+          {
+            barbershop_id: id,
+            metadata: currentMetadata as Database['public']['Tables']['payment_provider_configs']['Insert']['metadata'],
+          },
+          { onConflict: 'barbershop_id' }
+        );
+
+      if (cfgError) throw cfgError;
+    }
+
     return { brandSaved: true };
   },
 

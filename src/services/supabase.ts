@@ -43,7 +43,6 @@ export interface Database {
           email: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
-          mercadopago_access_token?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
           created_at: string;
@@ -59,7 +58,6 @@ export interface Database {
           email?: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
-          mercadopago_access_token?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
           created_at?: string;
@@ -75,7 +73,6 @@ export interface Database {
           email?: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
-          mercadopago_access_token?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
           created_at?: string;
@@ -814,6 +811,25 @@ export interface Database {
           max_services: number | null;
           max_monthly_appointments: number | null;
         }[];
+      };
+      get_public_barbershop_by_slug: {
+        Args: { p_slug: string };
+        Returns: {
+          id: string;
+          name: string;
+          slug: string;
+          address: string | null;
+          logo_url: string | null;
+          phone: string | null;
+          email: string | null;
+          brand_primary_color: string | null;
+          require_payment_before_booking: boolean | null;
+          working_hours: unknown | null;
+        }[];
+      };
+      is_barbershop_slug_available: {
+        Args: { p_slug: string };
+        Returns: boolean;
       };
     };
   };
