@@ -38,8 +38,11 @@ import {
   ProfessionalName,
   DateTimeContainer,
   CalendarContainer,
+  CalendarShell,
   TimeSlotContainer,
+  TimeSlotPanel,
   TimeSlotHeader,
+  TimeSlotSub,
   TimeSlotGrid,
   TimeSlotButton,
   ClientForm,
@@ -420,7 +423,8 @@ const BookingPage: React.FC = () => {
   const timeSlots = useMemo(() => {
     const slotMin = totalDuration > 0 ? totalDuration : 30;
     const dynamic = getAvailableSlots(barbershop?.workingHours, selectedDate, slotMin);
-    return dynamic !== null ? dynamic : FALLBACK_SLOTS;
+    if (dynamic === null) return FALLBACK_SLOTS;
+    return dynamic;
   }, [barbershop?.workingHours, selectedDate, totalDuration]);
 
   if (loading) {
@@ -462,7 +466,7 @@ const BookingPage: React.FC = () => {
 
   return (
     <BookingContainer>
-      <BookingCard className="fade-in">
+      <BookingCard $variant="glass" className="fade-in">
         <BarbershopHeader>
           <BarbershopLogo src={barbershop.logoUrl} alt={`Logo ${barbershop.name}`} />
           <BarbershopInfo>
@@ -573,47 +577,61 @@ const BookingPage: React.FC = () => {
 
               <DateTimeContainer>
                 <CalendarContainer>
-                  <Calendar
-                    onChange={(date) => {
-                      if (date instanceof Date) {
-                        setSelectedDate(date);
-                        setSelectedTime(null);
-                      }
-                    }}
-                    value={selectedDate}
-                    minDate={new Date()}
-                    maxDate={addDays(new Date(), 60)}
-                    locale="pt-BR"
-                  />
+                  <CalendarShell>
+                    <Calendar
+                      onChange={(date) => {
+                        if (date instanceof Date) {
+                          setSelectedDate(date);
+                          setSelectedTime(null);
+                        }
+                      }}
+                      value={selectedDate}
+                      minDate={new Date()}
+                      maxDate={addDays(new Date(), 60)}
+                      locale="pt-BR"
+                    />
+                  </CalendarShell>
                 </CalendarContainer>
 
                 <TimeSlotContainer>
-                  <TimeSlotHeader>
-                    {format(selectedDate, "eeee, dd 'de' MMMM", { locale: ptBR })}
-                  </TimeSlotHeader>
-                  <TimeSlotGrid>
-                    {timeSlots.map(time => {
-                      const [hours, minutes] = time.split(':').map(Number);
-                      const timeSlot = new Date(selectedDate);
-                      timeSlot.setHours(hours, minutes, 0, 0);
-                      const isPast = isBefore(timeSlot, new Date());
-                      const isBooked = Math.random() > 0.7;
-                      const isDisabled = isPast || isBooked;
+                  <TimeSlotPanel>
+                    <TimeSlotHeader>
+                      {format(selectedDate, "eeee, dd 'de' MMMM", { locale: ptBR })}
+                    </TimeSlotHeader>
+                    {timeSlots.length > 0 && (
+                      <TimeSlotSub>Toque em um horário livre para este dia.</TimeSlotSub>
+                    )}
+                    {timeSlots.length === 0 ? (
+                      <Text
+                        $size="sm"
+                        $color="secondary"
+                        style={{ marginTop: '0.5rem', lineHeight: 1.5, textAlign: 'center' }}
+                      >
+                        A barbearia não atende neste dia. Escolha outra data no calendário.
+                      </Text>
+                    ) : (
+                      <TimeSlotGrid>
+                        {timeSlots.map((time) => {
+                          const [hours, minutes] = time.split(':').map(Number);
+                          const timeSlot = new Date(selectedDate);
+                          timeSlot.setHours(hours, minutes, 0, 0);
+                          const isPast = isBefore(timeSlot, new Date());
 
-                      return (
-                        <TimeSlotButton
-                          key={time}
-                          $variant={selectedTime === time ? "primary" : "ghost"}
-                          $size="sm"
-                          onClick={() => setSelectedTime(time)}
-                          disabled={isDisabled}
-                          selected={selectedTime === time}
-                        >
-                          {time}
-                        </TimeSlotButton>
-                      );
-                    })}
-                  </TimeSlotGrid>
+                          return (
+                            <TimeSlotButton
+                              key={time}
+                              type="button"
+                              $active={selectedTime === time}
+                              onClick={() => setSelectedTime(time)}
+                              disabled={isPast}
+                            >
+                              {time}
+                            </TimeSlotButton>
+                          );
+                        })}
+                      </TimeSlotGrid>
+                    )}
+                  </TimeSlotPanel>
                 </TimeSlotContainer>
               </DateTimeContainer>
 

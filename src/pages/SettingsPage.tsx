@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
 import {
   DashboardShell,
@@ -72,7 +72,7 @@ const FormRowFull = styled.div`
 
 const BarbershopForm = styled.form`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: ${(props) => props.theme.spacing[4]}
     ${(props) => props.theme.spacing[5]};
   align-items: start;
@@ -123,6 +123,15 @@ const FileInputContainer = styled.div`
   position: relative;
   max-width: 100%;
   overflow: hidden;
+`;
+
+/** Ações da seleção pendente: envio imediato ou cancelar sem submeter o formulário inteiro */
+const LogoPendingRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing[3]};
+  margin-top: ${(props) => props.theme.spacing[3]};
 `;
 
 const FileInput = styled.input`
@@ -474,6 +483,7 @@ const SettingsPage: React.FC = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   const [useCustomBrandColor, setUseCustomBrandColor] = useState(false);
   const [brandColorHex, setBrandColorHex] = useState(DEFAULT_BRAND_MAIN_HEX);
@@ -542,6 +552,20 @@ const SettingsPage: React.FC = () => {
     fetchBarbershopData();
   }, [user]);
 
+  const uploadLogoAsset = useCallback(
+    async (file: File): Promise<string> => {
+      if (!user?.barbershopId) {
+        throw new Error("Sessão inválida.");
+      }
+      const url = await supabaseApi.uploadBarbershopLogo(user.barbershopId, file);
+      if (!url) {
+        throw new Error("Falha ao enviar a logo. Tente novamente.");
+      }
+      return url;
+    },
+    [user]
+  );
+
   const handleBarbershopSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -565,24 +589,23 @@ const SettingsPage: React.FC = () => {
         setError("Informe o nome da barbearia para gerar o link de agendamento.");
         return;
       }
-      // Upload da logo pendente (se existir) antes de salvar o resto
+      let nextLogoUrl = barbershopData.logoUrl;
       if (logoFile) {
-        const uploadedUrl = await supabaseApi.uploadBarbershopLogo(user.barbershopId!, logoFile);
-        if (uploadedUrl) {
-          barbershopData.logoUrl = uploadedUrl;
-          setLogoFile(null);
-        } else {
-          throw new Error('Falha ao enviar a logo. Tente novamente.');
-        }
+        const uploadedUrl = await uploadLogoAsset(logoFile);
+        nextLogoUrl = uploadedUrl;
+        setLogoFile(null);
+        setLogoPreview(uploadedUrl);
+        if (logoFileInputRef.current) logoFileInputRef.current.value = "";
       }
 
       const { brandSaved } = await supabaseApi.updateBarbershop(user.barbershopId!, {
         ...barbershopData,
         slug,
+        logoUrl: nextLogoUrl,
         brandPrimaryColor: useCustomBrandColor ? normalizedCustom : null,
       });
       await reloadBarbershop();
-      setBarbershopData((prev) => ({ ...prev, slug }));
+      setBarbershopData((prev) => ({ ...prev, slug, logoUrl: nextLogoUrl }));
       setShowSuccess(true);
       setShowBrandMigrationNote(!brandSaved);
       setTimeout(() => {
@@ -685,6 +708,36 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleLogoCancelSelection = useCallback(() => {
+    setLogoFile(null);
+    setLogoPreview(barbershopData.logoUrl || "");
+    setError("");
+    if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+  }, [barbershopData.logoUrl]);
+
+  const handleLogoUpload = async () => {
+    if (!logoFile || !user) return;
+    setUploadingLogo(true);
+    setError("");
+    try {
+      const uploadedUrl = await uploadLogoAsset(logoFile);
+      await supabaseApi.updateBarbershop(user.barbershopId!, { logoUrl: uploadedUrl });
+      await reloadBarbershop();
+      setBarbershopData((prev) => ({ ...prev, logoUrl: uploadedUrl }));
+      setLogoPreview(uploadedUrl);
+      setLogoFile(null);
+      if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setError(
+        error instanceof Error ? error.message : formatPostgrestError(error)
+      );
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleLogoRemove = async () => {
     if (!barbershopData.logoUrl || !user) return;
@@ -696,6 +749,7 @@ const SettingsPage: React.FC = () => {
         setBarbershopData(prev => ({ ...prev, logoUrl: '' }));
         setLogoPreview('');
         setLogoFile(null);
+        if (logoFileInputRef.current) logoFileInputRef.current.value = "";
         await reloadBarbershop();
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
@@ -955,18 +1009,47 @@ const SettingsPage: React.FC = () => {
                 )}
 
                 <FileInputContainer>
-                  <FileInput 
-                    id="barbershopLogo" 
-                    type="file" 
+                  <FileInput
+                    ref={logoFileInputRef}
+                    id="barbershopLogo"
+                    type="file"
                     accept="image/*"
                     onChange={handleLogoChange}
                   />
                 </FileInputContainer>
 
                 {logoFile && (
-                  <Text $size="sm" $color="secondary" style={{ marginTop: '0.5rem' }}>
-                    Nova logo pronta — clique em <strong>Salvar Informações</strong> para confirmar.
-                  </Text>
+                  <>
+                    <Text
+                      $size="sm"
+                      $color="secondary"
+                      style={{ marginTop: "0.75rem", display: "block" }}
+                    >
+                      Envie só a logo agora ou use <strong>Salvar Informações</strong> para
+                      gravar logo e demais dados de uma vez.
+                    </Text>
+                    <LogoPendingRow>
+                      <Button
+                        type="button"
+                        $variant="primary"
+                        $size="sm"
+                        onClick={handleLogoUpload}
+                        disabled={uploadingLogo || submitting}
+                        $loading={uploadingLogo}
+                      >
+                        {uploadingLogo ? "Enviando..." : "Enviar logo"}
+                      </Button>
+                      <Button
+                        type="button"
+                        $variant="outline"
+                        $size="sm"
+                        onClick={handleLogoCancelSelection}
+                        disabled={uploadingLogo || submitting}
+                      >
+                        Cancelar seleção
+                      </Button>
+                    </LogoPendingRow>
+                  </>
                 )}
 
                 <Text $size="xs" $color="tertiary" style={{ marginTop: "0.5rem" }}>
@@ -980,7 +1063,7 @@ const SettingsPage: React.FC = () => {
                 type="submit"
                 $variant="primary"
                 $loading={submitting}
-                disabled={submitting}
+                disabled={submitting || uploadingLogo}
               >
                 {submitting ? "Salvando..." : "Salvar Informações"}
               </SaveButton>

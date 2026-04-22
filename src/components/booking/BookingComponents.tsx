@@ -1,173 +1,169 @@
 import styled, { css } from 'styled-components';
-import { Button } from '../ui/Button';
 import { Card } from '../ui/Container';
 
-// Container principal
+const bookingFont = `'Plus Jakarta Sans', 'Inter', system-ui, sans-serif`;
+
+/** Fluxo público de agendamento — fundo com profundidade (referência: Calendly / Cal.com) */
 export const BookingContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, ${props => props.theme.colors.background.primary} 0%, ${props => props.theme.colors.background.secondary} 100%);
-  padding: ${props => props.theme.spacing[3]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    padding: ${props => props.theme.spacing[4]};
+  min-height: 100dvh;
+  font-family: ${bookingFont};
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -30%, rgba(200, 146, 42, 0.14), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 100%, rgba(200, 146, 42, 0.06), transparent 45%),
+    linear-gradient(165deg, #080808 0%, #121212 40%, #0c0c0c 100%);
+  padding: ${(props) => props.theme.spacing[3]};
+  padding-bottom: max(${(props) => props.theme.spacing[6]}, env(safe-area-inset-bottom, 0px));
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    padding: ${(props) => props.theme.spacing[5]};
+    padding-bottom: max(${(props) => props.theme.spacing[8]}, env(safe-area-inset-bottom, 0px));
   }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[6]};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    padding: ${props => props.theme.spacing[8]};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.lg}) {
+    padding: ${(props) => props.theme.spacing[8]};
   }
 `;
 
 export const BookingCard = styled(Card)`
+  font-family: ${bookingFont};
   max-width: 100%;
   margin: 0 auto;
-  box-shadow: ${props => props.theme.shadows.lg};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    max-width: 600px;
-    box-shadow: ${props => props.theme.shadows.xl};
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(26, 26, 26, 0.98) 0%, rgba(18, 18, 18, 0.99) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 24px 48px -12px rgba(0, 0, 0, 0.65),
+    0 0 80px -20px rgba(200, 146, 42, 0.12);
+
+  @media (min-width: ${(props) => props.theme.breakpoints.sm}) {
+    max-width: 560px;
+    border-radius: 1.35rem;
   }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    max-width: 700px;
+
+  @media (min-width: ${(props) => props.theme.breakpoints.md}) {
+    max-width: 640px;
   }
-  
-  @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    max-width: 800px;
-    box-shadow: ${props => props.theme.shadows['2xl']};
+
+  @media (min-width: ${(props) => props.theme.breakpoints.lg}) {
+    max-width: 720px;
   }
 `;
 
-// Header da barbearia
 export const BarbershopHeader = styled.div`
-  padding: ${props => props.theme.spacing[4]};
-  background: linear-gradient(135deg, ${props => props.theme.colors.background.elevated} 0%, ${props => props.theme.colors.background.tertiary} 100%);
-  border-bottom: 1px solid ${props => props.theme.colors.border.primary};
+  padding: 1.25rem 1.25rem 1.35rem;
+  background: linear-gradient(
+    135deg,
+    rgba(200, 146, 42, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing[3]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    padding: ${props => props.theme.spacing[5]};
-    gap: ${props => props.theme.spacing[4]};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[6]};
+  gap: 1rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    padding: 1.5rem 1.75rem;
+    gap: 1.125rem;
   }
 `;
 
 export const BarbershopLogo = styled.img`
-  width: 48px;
-  height: 48px;
-  border-radius: ${props => props.theme.radii.lg};
-  border: 2px solid ${props => props.theme.colors.primary};
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid color-mix(in srgb, var(--bs-brand-main, #c8922a) 70%, transparent);
   object-fit: cover;
   flex-shrink: 0;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    width: 56px;
-    height: 56px;
-    border-radius: ${props => props.theme.radii.xl};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    width: 64px;
-    height: 64px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
   }
 `;
 
 export const BarbershopInfo = styled.div`
   flex: 1;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0;
 `;
 
 export const BarbershopName = styled.h1`
-  font-size: ${props => props.theme.typography.fontSizes.lg};
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  color: ${props => props.theme.colors.text.primary};
-  margin: 0 0 ${props => props.theme.spacing[1]} 0;
-  line-height: 1.2;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    font-size: ${props => props.theme.typography.fontSizes.xl};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    font-size: ${props => props.theme.typography.fontSizes['2xl']};
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.15;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    font-size: 1.45rem;
   }
 `;
 
 export const BarbershopAddress = styled.p`
-  font-size: ${props => props.theme.typography.fontSizes.xs};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: 0.8125rem;
+  color: rgba(245, 245, 245, 0.5);
   margin: 0;
-  line-height: 1.3;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    font-size: ${props => props.theme.typography.fontSizes.sm};
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    font-size: 0.875rem;
   }
 `;
 
-// Conteúdo principal
 export const BookingContent = styled.div`
-  padding: ${props => props.theme.spacing[4]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    padding: ${props => props.theme.spacing[5]};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    padding: ${props => props.theme.spacing[6]};
+  padding: 1.25rem 1.25rem 1.5rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    padding: 1.5rem 1.75rem 1.75rem;
   }
 `;
 
 export const StepHeader = styled.div`
-  margin-bottom: ${props => props.theme.spacing[4]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    margin-bottom: ${props => props.theme.spacing[5]};
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    margin-bottom: ${props => props.theme.spacing[6]};
+  margin-bottom: 1.25rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    margin-bottom: 1.5rem;
   }
 `;
 
 export const StepTitle = styled.h2`
-  font-size: ${props => props.theme.typography.fontSizes.lg};
-  font-weight: ${props => props.theme.typography.fontWeights.semibold};
-  color: ${props => props.theme.colors.primary};
-  margin: 0 0 ${props => props.theme.spacing[2]} 0;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    font-size: ${props => props.theme.typography.fontSizes.xl};
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    font-size: 1.35rem;
   }
 `;
 
 export const StepDescription = styled.p`
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  color: ${props => props.theme.colors.text.secondary};
+  font-size: 0.9rem;
+  color: rgba(245, 245, 245, 0.55);
   margin: 0;
-  line-height: 1.4;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    font-size: ${props => props.theme.typography.fontSizes.base};
-  }
+  line-height: 1.5;
+  max-width: 38rem;
 `;
 
-// Seleção de serviços
 export const ServiceGrid = styled.div`
   display: grid;
-  gap: ${props => props.theme.spacing[3]};
-  margin-bottom: ${props => props.theme.spacing[5]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    margin-bottom: ${props => props.theme.spacing[6]};
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
   }
 `;
 
@@ -204,87 +200,180 @@ export const ServiceInfo = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${props => props.theme.spacing[2]};
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
 `;
 
 export const ServiceName = styled.h3`
-  font-size: ${props => props.theme.typography.fontSizes.base};
-  font-weight: ${props => props.theme.typography.fontWeights.semibold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #f5f5f5;
   margin: 0;
+  line-height: 1.3;
 `;
 
 export const ServicePrice = styled.span`
-  font-size: ${props => props.theme.typography.fontSizes.base};
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  color: ${props => props.theme.colors.primary};
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--bs-brand-light, #e8b84b);
+  white-space: nowrap;
 `;
 
 export const ServiceDuration = styled.p`
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(245, 245, 245, 0.45);
   margin: 0;
+  letter-spacing: 0.02em;
 `;
 
-// Seleção de profissional
 export const ProfessionalGrid = styled.div`
   display: grid;
-  gap: ${props => props.theme.spacing[3]};
-  margin-bottom: ${props => props.theme.spacing[6]};
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 `;
 
 export const ProfessionalCard = styled(ServiceCard)`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing[3]};
+  gap: 0.75rem;
+  min-height: 3.5rem;
 `;
 
 export const ProfessionalName = styled.h3`
-  font-size: ${props => props.theme.typography.fontSizes.base};
-  font-weight: ${props => props.theme.typography.fontWeights.medium};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #f0f0f0;
   margin: 0;
+  line-height: 1.35;
 `;
 
-// Calendário e horários
+// Calendário e horários — duas colunas só em telas largas; em md a coluna da direita ficava estreita e sumia a grade.
 export const DateTimeContainer = styled.div`
   display: grid;
   gap: ${props => props.theme.spacing[6]};
   margin-bottom: ${props => props.theme.spacing[6]};
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: 1fr 1fr;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
   }
 `;
 
 export const CalendarContainer = styled.div`
   display: flex;
   justify-content: center;
+  min-width: 0;
+  width: 100%;
 `;
 
-export const TimeSlotContainer = styled.div``;
+/** Cartão ao redor do calendário (contraste e área de toque) */
+export const CalendarShell = styled.div`
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  .react-calendar {
+    width: 100% !important;
+    background: transparent !important;
+  }
+`;
+
+export const TimeSlotPanel = styled.div`
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+`;
+
+export const TimeSlotContainer = styled.div`
+  min-width: 0;
+  width: 100%;
+`;
 
 export const TimeSlotHeader = styled.h3`
-  font-size: ${props => props.theme.typography.fontSizes.lg};
-  font-weight: ${props => props.theme.typography.fontWeights.semibold};
-  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fafafa;
   text-align: center;
-  margin: 0 0 ${props => props.theme.spacing[4]} 0;
+  margin: 0 0 0.35rem 0;
+`;
+
+export const TimeSlotSub = styled.p`
+  margin: 0 0 1rem 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgba(245, 245, 245, 0.48);
+  line-height: 1.45;
 `;
 
 export const TimeSlotGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${props => props.theme.spacing[2]};
-  max-height: 300px;
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+  max-height: 280px;
   overflow-y: auto;
+  padding: 0.15rem;
+  scrollbar-gutter: stable;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+  }
 `;
 
-export const TimeSlotButton = styled(Button)<{ selected?: boolean }>`
-  ${props => props.selected && css`
-    background: ${props => props.theme.colors.primary};
-    color: ${props => props.theme.colors.text.inverse};
-  `}
+export const TimeSlotButton = styled.button<{ $active?: boolean }>`
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0.65rem 0.45rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: color-mix(in srgb, var(--bs-brand-main, #c8922a) 40%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-brand-main, #c8922a);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.28;
+    cursor: not-allowed;
+  }
+
+  ${(p) =>
+    p.$active &&
+    css`
+      background: linear-gradient(135deg, var(--bs-brand-main, #c8922a), var(--bs-brand-light, #e8b84b));
+      border-color: transparent;
+      color: #0d0d0d;
+      box-shadow: 0 6px 20px color-mix(in srgb, var(--bs-brand-main, #c8922a) 35%, transparent);
+    `}
 `;
 
 // Formulário de cliente
@@ -294,13 +383,20 @@ export const ClientForm = styled.div`
   margin-bottom: ${props => props.theme.spacing[6]};
 `;
 
-// Navegação entre steps
 export const StepNavigation = styled.div`
   display: flex;
   justify-content: space-between;
-  gap: ${props => props.theme.spacing[4]};
-  padding-top: ${props => props.theme.spacing[6]};
-  border-top: 1px solid ${props => props.theme.colors.border.primary};
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  & > button {
+    min-height: 48px;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 `;
 
 // Página de sucesso
@@ -372,11 +468,11 @@ export const ReviewContainer = styled.div`
 `;
 
 export const ReviewSection = styled.div`
-  background-color: ${props => props.theme.colors.background.secondary};
-  border-radius: ${props => props.theme.radii.lg};
-  padding: ${props => props.theme.spacing[4]};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  margin-bottom: ${props => props.theme.spacing[4]};
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.75rem;
 `;
 
 export const ReviewSectionTitle = styled.h4`
@@ -574,11 +670,15 @@ export const PaymentPlanBadge = styled.div<{ required?: boolean }>`
 `;
 
 export const InlineInfoBox = styled.div`
-  margin-bottom: ${props => props.theme.spacing[6]};
-  padding: ${props => props.theme.spacing[4]};
-  background-color: rgba(212, 175, 55, 0.1);
-  border-radius: ${props => props.theme.radii.lg};
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(200, 146, 42, 0.12) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--bs-brand-main, #c8922a) 35%, transparent);
 `;
 
 export const SuccessStatusCard = styled.div`

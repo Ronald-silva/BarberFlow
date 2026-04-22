@@ -7,157 +7,113 @@ interface ProgressIndicatorProps {
   steps: string[];
 }
 
-const ProgressContainer = styled.div`
-  margin-bottom: 2.5rem;
-  padding: 0 1rem;
+const Shell = styled.div`
+  margin-bottom: 1.75rem;
 `;
 
-const ProgressBar = styled.div`
+const TopRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  position: relative;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 `;
 
-const ProgressLine = styled.div<{ progress: number }>`
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: ${props => props.theme.colors.border.secondary};
-  transform: translateY(-50%);
-  z-index: 0;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: ${props => props.progress}%;
-    background: linear-gradient(90deg, ${props => props.theme.colors.primary}, ${props => props.theme.colors.primaryLight});
-    transition: width 0.4s ease;
-  }
+const Meta = styled.span`
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.45);
 `;
 
-const StepCircle = styled.div<{ active: boolean; completed: boolean }>`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+const Pct = styled.span`
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--bs-brand-light, #e8b84b);
+`;
+
+const BarTrack = styled.div`
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+`;
+
+const BarFill = styled.div<{ $pct: number }>`
+  height: 100%;
+  width: ${(p) => p.$pct}%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--bs-brand-main, #c8922a),
+    var(--bs-brand-light, #e8b84b)
+  );
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
+const CurrentTitle = styled.h2`
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.25;
+`;
+
+const Dots = styled.div`
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  font-weight: ${props => props.theme.typography.fontWeights.bold};
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  z-index: 1;
-  transition: all 0.3s ease;
-  position: relative;
-
-  ${props => props.completed && `
-    background: linear-gradient(135deg, ${props.theme.colors.primary}, ${props.theme.colors.primaryLight});
-    color: white;
-    box-shadow: ${props.theme.shadows.md};
-  `}
-
-  ${props => props.active && !props.completed && `
-    background: ${props.theme.colors.background.elevated};
-    border: 3px solid ${props.theme.colors.primary};
-    color: ${props.theme.colors.primary};
-    box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
-  `}
-
-  ${props => !props.active && !props.completed && `
-    background: ${props.theme.colors.background.secondary};
-    border: 2px solid ${props.theme.colors.border.primary};
-    color: ${props.theme.colors.text.tertiary};
-  `}
-
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    width: 32px;
-    height: 32px;
-    font-size: ${props => props.theme.typography.fontSizes.xs};
-  }
+  gap: 0.35rem;
 `;
 
-const StepLabels = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-`;
-
-const StepLabel = styled.div<{ active: boolean }>`
-  flex: 1;
-  text-align: center;
-  font-size: ${props => props.theme.typography.fontSizes.xs};
-  color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.text.tertiary};
-  font-weight: ${props => props.active ? props.theme.typography.fontWeights.semibold : props.theme.typography.fontWeights.normal};
-  transition: all 0.3s ease;
-  padding: 0 0.25rem;
-
-  @media (max-width: ${props => props.theme.breakpoints.md}) {
-    font-size: 0.65rem;
-    display: ${props => props.active ? 'block' : 'none'};
-  }
-`;
-
-const CurrentStepInfo = styled.div`
-  text-align: center;
-  margin-top: 1rem;
-
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    display: none;
-  }
-`;
-
-const CurrentStepText = styled.p`
-  font-size: ${props => props.theme.typography.fontSizes.sm};
-  color: ${props => props.theme.colors.text.secondary};
-  font-weight: ${props => props.theme.typography.fontWeights.medium};
+const Dot = styled.span<{ $done: boolean; $current: boolean }>`
+  width: ${(p) => (p.$current ? '22px' : '8px')};
+  height: 8px;
+  border-radius: 999px;
+  transition:
+    width 0.25s ease,
+    background 0.2s ease,
+    opacity 0.2s ease;
+  background: ${(p) =>
+    p.$done
+      ? 'linear-gradient(90deg, var(--bs-brand-main, #c8922a), var(--bs-brand-light, #e8b84b))'
+      : p.$current
+        ? 'rgba(255, 255, 255, 0.35)'
+        : 'rgba(255, 255, 255, 0.1)'};
+  opacity: ${(p) => (p.$current ? 1 : p.$done ? 1 : 0.55)};
 `;
 
 export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   currentStep,
   totalSteps,
-  steps
+  steps,
 }) => {
-  const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+  const denom = Math.max(totalSteps - 1, 1);
+  const pct = ((currentStep - 1) / denom) * 100;
+  const label = steps[currentStep - 1] ?? '';
 
   return (
-    <ProgressContainer>
-      <ProgressBar>
-        <ProgressLine progress={progress} />
-        {Array.from({ length: totalSteps }, (_, index) => {
-          const stepNumber = index + 1;
-          const isCompleted = stepNumber < currentStep;
-          const isActive = stepNumber === currentStep;
-
-          return (
-            <StepCircle
-              key={stepNumber}
-              active={isActive}
-              completed={isCompleted}
-            >
-              {isCompleted ? '✓' : stepNumber}
-            </StepCircle>
-          );
+    <Shell role="navigation" aria-label="Progresso do agendamento">
+      <TopRow>
+        <Meta>
+          Etapa {currentStep} de {totalSteps}
+        </Meta>
+        <Pct aria-hidden>{Math.round(pct)}%</Pct>
+      </TopRow>
+      <BarTrack aria-hidden>
+        <BarFill $pct={pct} />
+      </BarTrack>
+      <CurrentTitle>{label}</CurrentTitle>
+      <Dots aria-hidden>
+        {steps.map((_, i) => {
+          const n = i + 1;
+          return <Dot key={i} $done={n < currentStep} $current={n === currentStep} />;
         })}
-      </ProgressBar>
-
-      <StepLabels>
-        {steps.map((step, index) => (
-          <StepLabel key={index} active={index + 1 === currentStep}>
-            {step}
-          </StepLabel>
-        ))}
-      </StepLabels>
-
-      <CurrentStepInfo>
-        <CurrentStepText>
-          Passo {currentStep} de {totalSteps}: {steps[currentStep - 1]}
-        </CurrentStepText>
-      </CurrentStepInfo>
-    </ProgressContainer>
+      </Dots>
+    </Shell>
   );
 };

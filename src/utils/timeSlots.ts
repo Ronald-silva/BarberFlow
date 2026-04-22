@@ -41,16 +41,24 @@ export function getDaySchedule(
 
 /**
  * Returns the available time slots for a given date and barbershop working hours.
- * Returns null if the barbershop has no hours config (caller should use fallback).
+ * - `null` — sem configuração de horário no banco (ex.: `working_hours` vazio); o caller pode usar fallback.
+ * - `[]` — barbearia fechada nesse dia da semana ou sem intervalos válidos.
+ * - demais — horários clicáveis.
  */
 export function getAvailableSlots(
   config: WorkingHoursConfig | undefined | null,
   date: Date,
   slotMinutes: number,
 ): string[] | null {
+  if (!config || config.length === 0) return null;
   const schedule = getDaySchedule(config, date);
   if (!schedule || !schedule.enabled || schedule.intervals.length === 0) return [];
-  return generateSlotsForIntervals(schedule.intervals, slotMinutes);
+  let slots = generateSlotsForIntervals(schedule.intervals, slotMinutes);
+  /* Se a duração total do serviço for grande vs. o intervalo do dia, a primeira grade pode vir vazia — tenta grade de 15 em 15 min. */
+  if (slots.length === 0) {
+    slots = generateSlotsForIntervals(schedule.intervals, 15);
+  }
+  return slots;
 }
 
 /** Default working hours config (Mon–Sat, single interval). */
