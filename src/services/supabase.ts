@@ -827,6 +827,26 @@ export interface Database {
           working_hours: unknown | null;
         }[];
       };
+      get_public_services_by_barbershop: {
+        Args: { p_barbershop_id: string };
+        Returns: {
+          id: string;
+          name: string;
+          price: number;
+          duration: number;
+          barbershop_id: string;
+        }[];
+      };
+      get_public_professionals_by_barbershop: {
+        Args: { p_barbershop_id: string };
+        Returns: {
+          id: string;
+          name: string;
+          barbershop_id: string;
+          role: 'admin' | 'member';
+          work_hours: unknown | null;
+        }[];
+      };
       is_barbershop_slug_available: {
         Args: { p_slug: string };
         Returns: boolean;

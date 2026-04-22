@@ -20,6 +20,9 @@ type DbBarbershopPublicRow = Pick<
   | 'require_payment_before_booking'
   | 'working_hours'
 >;
+type DbPublicServiceRow = Database['public']['Functions']['get_public_services_by_barbershop']['Returns'][number];
+type DbPublicProfessionalRow =
+  Database['public']['Functions']['get_public_professionals_by_barbershop']['Returns'][number];
 
 function mapDbUser(row: DbUser): User {
   return {
@@ -395,6 +398,23 @@ export const api = {
     })) as Service[];
   },
 
+  getPublicServicesByBarbershop: async (barbershopId: string): Promise<Service[]> => {
+    const { data, error } = await supabase.rpc('get_public_services_by_barbershop', {
+      p_barbershop_id: barbershopId,
+    });
+    if (!error && Array.isArray(data)) {
+      return (data as DbPublicServiceRow[]).map((row) => ({
+        id: row.id,
+        name: row.name,
+        price: row.price,
+        duration: row.duration,
+        barbershopId: row.barbershop_id,
+      }));
+    }
+    // Fallback: mantém compatibilidade com ambientes que ainda não aplicaram a migration.
+    return api.getServicesByBarbershop(barbershopId);
+  },
+
   createService: async (input: { name: string; price: number; duration: number; barbershopId: string }): Promise<Service> => {
     const { data, error } = await supabase
       .from('services')
@@ -434,6 +454,24 @@ export const api = {
     
     if (error || !data) return [];
     return data.map(u => mapDbUser(u));
+  },
+
+  getPublicProfessionalsByBarbershop: async (barbershopId: string): Promise<User[]> => {
+    const { data, error } = await supabase.rpc('get_public_professionals_by_barbershop', {
+      p_barbershop_id: barbershopId,
+    });
+    if (!error && Array.isArray(data)) {
+      return (data as DbPublicProfessionalRow[]).map((row) => ({
+        id: row.id,
+        name: row.name,
+        email: '',
+        barbershopId: row.barbershop_id,
+        role: row.role as UserRole,
+        workHours: Array.isArray(row.work_hours) ? (row.work_hours as User['workHours']) : [],
+      }));
+    }
+    // Fallback: mantém compatibilidade com ambientes que ainda não aplicaram a migration.
+    return api.getProfessionalsByBarbershop(barbershopId);
   },
 
   getAppointmentsByProfessional: async (professionalId: string, date: Date): Promise<Appointment[]> => {

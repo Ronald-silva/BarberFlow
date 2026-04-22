@@ -211,8 +211,8 @@ const BookingPage: React.FC = () => {
           if (bs) {
             setBarbershop(bs);
             const [srv, prof] = await Promise.all([
-              supabaseApi.getServicesByBarbershop(bs.id),
-              supabaseApi.getProfessionalsByBarbershop(bs.id)
+              supabaseApi.getPublicServicesByBarbershop(bs.id),
+              supabaseApi.getPublicProfessionalsByBarbershop(bs.id)
             ]);
             setServices(srv);
             setProfessionals(prof);
