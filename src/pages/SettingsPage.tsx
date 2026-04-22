@@ -963,9 +963,10 @@ const SettingsPage: React.FC = () => {
                 </FileInputContainer>
 
                 {logoFile && (
-                  <div style={{ 
+                  <div style={{
                     marginTop: "1rem",
                     display: "flex",
+                    flexWrap: "wrap",
                     gap: "0.75rem"
                   }}>
                     <Button
