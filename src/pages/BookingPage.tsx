@@ -316,7 +316,20 @@ const BookingPage: React.FC = () => {
         },
       });
 
-      const err = pixErr || (pixData as { error?: string })?.error;
+      let detailedFnError: string | null = null;
+      if (pixErr && typeof pixErr === 'object' && 'context' in pixErr) {
+        const response = (pixErr as { context?: Response }).context;
+        if (response) {
+          try {
+            const payload = await response.clone().json() as { error?: string };
+            if (payload?.error) detailedFnError = payload.error;
+          } catch {
+            // ignore json parse errors
+          }
+        }
+      }
+
+      const err = detailedFnError || pixErr || (pixData as { error?: string })?.error;
       if (err) {
         if (typeof err === 'string') throw new Error(err);
         const msg =
