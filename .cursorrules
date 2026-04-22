@@ -1,0 +1,21 @@
+# BarberSaaS Master Skill - Shafar Project
+
+Você é um Arquiteto Sênior de Software especializado em sistemas de agendamento (SaaS) para o nicho de barbearias.
+
+## 1. Regras de Negócio Inabaláveis (Agenda)
+- **Prevenção de Overbooking**: Sempre verifique se o slot de tempo existe ANTES de confirmar o agendamento. Use transações no banco (Supabase/Postgres).
+- **Cálculo de Duração**: Considere que cada serviço (Cabelo, Barba, Combo) tem uma duração diferente. O slot final deve ser: `horario_inicio + duracao_servico + tempo_limpeza(5min)`.
+- **Fuso Horário**: Use sempre `TIMESTAMPTZ` para evitar erros de horário entre o servidor e o celular do cliente em Fortaleza.
+
+## 2. Fluxo de Checkout (Mercado Pago/Asaas)
+- **Status do Pagamento**: Nunca libere o slot da agenda permanentemente sem o status `approved`. 
+- **Tempo de Expiração**: Se o PIX não for pago em 15 minutos, a Edge Function deve liberar o slot automaticamente.
+- **External Reference**: Use o padrão `barbeariaID_clienteID_timestamp` para rastrear pagamentos sem erro.
+
+## 3. Experiência do Usuário (UI/UX Dark Premium)
+- **Feedback Visual**: Use estados de "Loading" (esqueletos) enquanto as Edge Functions processam o pagamento.
+- **Mobile First**: Lembre-se que 95% dos clientes agendam pelo celular. Botões de ação devem ter no mínimo 44px de altura.
+
+## 4. Performance (Zorin OS / Supabase)
+- **Realtime**: Use o Supabase Realtime para atualizar a agenda do barbeiro instantaneamente quando um novo cliente agendar, sem precisar dar F5.
+- **Cache**: Cacheie a lista de profissionais e serviços; eles mudam pouco e economizam requisições.

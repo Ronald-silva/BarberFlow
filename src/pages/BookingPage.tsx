@@ -4,7 +4,6 @@ import styled, { keyframes } from 'styled-components';
 import { Barbershop, Service, User } from '../types';
 import { supabaseApi } from '../services/supabaseApi';
 import { supabase } from '../services/supabase';
-import { paymentService, type PaymentResponse } from '../services/paymentService';
 import { useToastContext } from '../contexts/ToastContext';
 import { maskPhone, formatBRL, formatDateBR, formatDateTimeBR } from '../utils/formatters';
 import { getAvailableSlots } from '../utils/timeSlots';
@@ -58,15 +57,6 @@ import {
   ReviewTotalLabel,
   ReviewTotalValue,
   EditButton,
-  PaymentOptionsGrid,
-  PaymentOptionCard,
-  PaymentOptionHeader,
-  PaymentOptionName,
-  PaymentOptionBadge,
-  PaymentOptionDescription,
-  PaymentOptionFeatures,
-  PaymentOptionFeature,
-  PaymentPlanBadge,
   InlineInfoBox,
   SuccessStatusCard,
   SuccessContainer,
@@ -161,15 +151,6 @@ const STEPS = [
   'Confirmado'
 ];
 
-// Feature Flags - Controle de funcionalidades
-const FEATURES = {
-  enableCryptoPayments: false, // Bitcoin e USDT desabilitados por padrão (baixa adoção + fricção)
-  enablePixDiscount: true,
-  pixDiscountPercentage: 5,
-};
-
-type PaymentMethod = 'in_person' | 'pix' | 'bitcoin' | 'usdt';
-
 const BookingPage: React.FC = () => {
   const toast = useToastContext();
   const { barbershopSlug } = useParams<{ barbershopSlug: string }>();
@@ -185,9 +166,6 @@ const BookingPage: React.FC = () => {
   const [clientName, setClientName] = useState('');
   const [clientWhatsapp, setClientWhatsapp] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('in_person');
-  /** PIX Asaas gerado após criar o agendamento (exibido na etapa de sucesso). */
-  const [pixBookingPayment, setPixBookingPayment] = useState<PaymentResponse | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -276,13 +254,6 @@ const BookingPage: React.FC = () => {
     }, 0);
   }, [selectedServices, services]);
 
-  const discountedPrice = useMemo(() => {
-    if (FEATURES.enablePixDiscount && paymentMethod === 'pix') {
-      return totalPrice * (1 - FEATURES.pixDiscountPercentage / 100);
-    }
-    return totalPrice;
-  }, [totalPrice, paymentMethod]);
-
   const totalDuration = useMemo(() => {
     return selectedServices.reduce((total, sId) => {
       const service = services.find(s => s.id === sId);
@@ -296,59 +267,6 @@ const BookingPage: React.FC = () => {
         ? prev.filter(id => id !== serviceId)
         : [...prev, serviceId]
     );
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!barbershop || !selectedTime || professionals.length === 0) return;
-
-    setSubmitting(true);
-    setPixBookingPayment(null);
-    try {
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      const bookingDateTime = new Date(selectedDate);
-      bookingDateTime.setHours(hours, minutes, 0, 0);
-
-      const professionalToBook = selectedProfessional === 'any' ? professionals[0].id : selectedProfessional;
-
-      const appointment = await supabaseApi.createAppointment({
-        client: { name: clientName, whatsapp: clientWhatsapp },
-        barbershopId: barbershop.id,
-        professionalId: professionalToBook,
-        serviceIds: selectedServices,
-        startDateTime: bookingDateTime.toISOString(),
-        totalPrice: discountedPrice,
-        paymentRequired: paymentMethod !== 'in_person',
-        paymentStatus: paymentMethod === 'in_person' ? 'pending' : 'pending',
-        paymentMethod,
-      });
-
-      if (paymentMethod === 'pix') {
-        const serviceNames = selectedServices
-          .map((id) => services.find((s) => s.id === id)?.name)
-          .filter(Boolean)
-          .join(', ');
-        const pix = await paymentService.createPixPayment({
-          appointmentId: appointment.id,
-          barbershopId: barbershop.id,
-          amount: discountedPrice,
-          clientName,
-          clientEmail: clientEmail.trim() || undefined,
-          clientPhone: clientWhatsapp,
-          description: `${barbershop.name} — ${serviceNames || 'Serviços'} — ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })} ${selectedTime}`,
-        });
-        setPixBookingPayment(pix);
-      } else {
-        setPixBookingPayment(null);
-      }
-
-      setStep(7); // Success step
-    } catch (error) {
-      console.error('Erro ao criar agendamento:', error);
-      const msg = error instanceof Error ? error.message : 'Erro ao criar agendamento. Tente novamente.';
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   // Generate MP PIX before confirming appointment (payment-first flow)
@@ -794,10 +712,7 @@ const BookingPage: React.FC = () => {
                 <ReviewTotalSection>
                   <ReviewTotal>
                     <ReviewTotalLabel>Total</ReviewTotalLabel>
-                    <ReviewTotalValue>
-                      {formatBRL(paymentMethod === 'pix' ? discountedPrice : totalPrice)}
-                      {paymentMethod === 'pix' ? ' (PIX com desconto)' : ''}
-                    </ReviewTotalValue>
+                    <ReviewTotalValue>{formatBRL(totalPrice)}</ReviewTotalValue>
                   </ReviewTotal>
                 </ReviewTotalSection>
               </ReviewContainer>
@@ -806,26 +721,20 @@ const BookingPage: React.FC = () => {
                 <Button $variant="secondary" onClick={() => setStep(4)}>
                   Voltar
                 </Button>
-                {barbershop?.requirePaymentBeforeBooking ? (
-                  <Button
-                    $variant="primary"
-                    onClick={() => void handleGenerateMpPix()}
-                    disabled={submitting}
-                    $loading={submitting}
-                  >
-                    {submitting ? 'Gerando PIX...' : 'Pagar com PIX 💚'}
-                  </Button>
-                ) : (
-                  <Button $variant="primary" onClick={() => setStep(6)}>
-                    Escolher Pagamento
-                  </Button>
-                )}
+                <Button
+                  $variant="primary"
+                  onClick={() => void handleGenerateMpPix()}
+                  disabled={submitting}
+                  $loading={submitting}
+                >
+                  {submitting ? 'Gerando PIX...' : 'Pagar com PIX 💚'}
+                </Button>
               </StepNavigation>
             </div>
           )}
 
-          {/* Step 6: MP PIX payment-first OR normal payment selection */}
-          {step === 6 && barbershop?.requirePaymentBeforeBooking && (
+          {/* Step 6: MP PIX payment-first (único fluxo) */}
+          {step === 6 && (
             <div className="slide-in">
               <StepHeader>
                 <StepTitle>Pague com PIX 💚</StepTitle>
@@ -901,121 +810,6 @@ const BookingPage: React.FC = () => {
             </div>
           )}
 
-          {step === 6 && !barbershop?.requirePaymentBeforeBooking && (
-            <div className="slide-in">
-              <StepHeader>
-                <StepTitle>Forma de pagamento</StepTitle>
-                <StepDescription>Escolha como deseja pagar pelo serviço</StepDescription>
-              </StepHeader>
-
-              <PaymentOptionsGrid>
-                {/* Pay in Person */}
-                <PaymentOptionCard
-                  selected={paymentMethod === 'in_person'}
-                  onClick={() => setPaymentMethod('in_person')}
-                >
-                  <PaymentOptionHeader>
-                    <PaymentOptionName>💵 Pagar na Barbearia</PaymentOptionName>
-                    <PaymentOptionBadge type="popular">Mais Usado</PaymentOptionBadge>
-                  </PaymentOptionHeader>
-                  <PaymentOptionDescription>
-                    Pague diretamente na barbearia após o serviço
-                  </PaymentOptionDescription>
-                  <PaymentOptionFeatures>
-                    <PaymentOptionFeature>Dinheiro ou cartão</PaymentOptionFeature>
-                    <PaymentOptionFeature>Sem antecipação necessária</PaymentOptionFeature>
-                    <PaymentOptionFeature>Flexibilidade total</PaymentOptionFeature>
-                  </PaymentOptionFeatures>
-                </PaymentOptionCard>
-
-                {/* PIX */}
-                <PaymentOptionCard
-                  selected={paymentMethod === 'pix'}
-                  onClick={() => setPaymentMethod('pix')}
-                >
-                  <PaymentOptionHeader>
-                    <PaymentOptionName>💚 PIX</PaymentOptionName>
-                    <PaymentOptionBadge type="discount">{FEATURES.pixDiscountPercentage}% OFF</PaymentOptionBadge>
-                  </PaymentOptionHeader>
-                  <PaymentOptionDescription>
-                    Pagamento instantâneo com desconto exclusivo!
-                  </PaymentOptionDescription>
-                  <PaymentOptionFeatures>
-                    <PaymentOptionFeature>Desconto de {FEATURES.pixDiscountPercentage}%</PaymentOptionFeature>
-                    <PaymentOptionFeature>Confirmação instantânea</PaymentOptionFeature>
-                    <PaymentOptionFeature>QR Code fácil de pagar</PaymentOptionFeature>
-                    <PaymentOptionFeature>Todos os bancos aceitam</PaymentOptionFeature>
-                  </PaymentOptionFeatures>
-                  {paymentMethod === 'pix' && (
-                    <SuccessStatusCard style={{ marginTop: '0.75rem', padding: '0.75rem' }}>
-                      <Text $size="sm" $color="success" $weight="bold">
-                        💰 Você economiza {formatBRL(totalPrice - discountedPrice)}!
-                      </Text>
-                    </SuccessStatusCard>
-                  )}
-                </PaymentOptionCard>
-
-                {/* Bitcoin - DESABILITADO (Feature Flag) */}
-                {FEATURES.enableCryptoPayments && (
-                  <PaymentOptionCard
-                    selected={paymentMethod === 'bitcoin'}
-                    onClick={() => setPaymentMethod('bitcoin')}
-                  >
-                    <PaymentOptionHeader>
-                      <PaymentOptionName>₿ Bitcoin</PaymentOptionName>
-                      <PaymentOptionBadge type="new">Novo</PaymentOptionBadge>
-                    </PaymentOptionHeader>
-                    <PaymentOptionDescription>
-                      Pagamento em criptomoeda
-                    </PaymentOptionDescription>
-                    <PaymentOptionFeatures>
-                      <PaymentOptionFeature>Taxas ultra baixas</PaymentOptionFeature>
-                      <PaymentOptionFeature>Transação global</PaymentOptionFeature>
-                      <PaymentOptionFeature>Confirmação em minutos</PaymentOptionFeature>
-                    </PaymentOptionFeatures>
-                    <PaymentPlanBadge>Planos Pro e Enterprise</PaymentPlanBadge>
-                  </PaymentOptionCard>
-                )}
-
-                {/* USDT - DESABILITADO (Feature Flag) */}
-                {FEATURES.enableCryptoPayments && (
-                  <PaymentOptionCard
-                    selected={paymentMethod === 'usdt'}
-                    onClick={() => setPaymentMethod('usdt')}
-                  >
-                    <PaymentOptionHeader>
-                      <PaymentOptionName>₮ USDT (Tether)</PaymentOptionName>
-                      <PaymentOptionBadge type="new">Novo</PaymentOptionBadge>
-                    </PaymentOptionHeader>
-                    <PaymentOptionDescription>
-                      Stablecoin estável em dólar
-                    </PaymentOptionDescription>
-                    <PaymentOptionFeatures>
-                      <PaymentOptionFeature>Sem volatilidade</PaymentOptionFeature>
-                      <PaymentOptionFeature>Taxas mínimas</PaymentOptionFeature>
-                      <PaymentOptionFeature>Estável em USD</PaymentOptionFeature>
-                    </PaymentOptionFeatures>
-                    <PaymentPlanBadge>Planos Pro e Enterprise</PaymentPlanBadge>
-                  </PaymentOptionCard>
-                )}
-              </PaymentOptionsGrid>
-
-              <StepNavigation>
-                <Button $variant="secondary" onClick={() => setStep(5)}>
-                  Voltar
-                </Button>
-                <Button
-                  $variant="primary"
-                  onClick={handleConfirmBooking}
-                  disabled={submitting}
-                  $loading={submitting}
-                >
-                  {submitting ? 'Confirmando...' : 'Confirmar Agendamento'}
-                </Button>
-              </StepNavigation>
-            </div>
-          )}
-
           {/* Step 7: Success */}
           {step === 7 && (
             <SuccessContainer className="fade-in">
@@ -1039,80 +833,14 @@ const BookingPage: React.FC = () => {
                   👨‍💼 {professionalForConfirmation.name}
                 </Text>
                 <Text $color="secondary">
-                  💰 Total: {formatBRL(barbershop?.requirePaymentBeforeBooking ? totalPrice : discountedPrice)}
-                  {!barbershop?.requirePaymentBeforeBooking && paymentMethod === 'pix' && ' (com 5% de desconto)'}
+                  💰 Total: {formatBRL(totalPrice)}
                 </Text>
                 <Text $color="secondary">
-                  💳 Pagamento: {
-                    barbershop?.requirePaymentBeforeBooking ? 'PIX (pago ✓)' :
-                    paymentMethod === 'in_person' ? 'Na barbearia' :
-                    paymentMethod === 'pix' ? 'PIX' :
-                    paymentMethod === 'bitcoin' ? 'Bitcoin' :
-                    'USDT'
-                  }
+                  💳 Pagamento: PIX (pago ✓)
                 </Text>
                 <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
                   📱 Você receberá um lembrete no seu WhatsApp 24h antes
                 </Text>
-
-                {paymentMethod === 'pix' && pixBookingPayment && (
-                  <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                    <Text $color="primary" $weight="semibold" style={{ marginBottom: '0.75rem' }}>
-                      Pague com PIX agora
-                    </Text>
-                    {pixBookingPayment.qrCode ? (
-                      <img
-                        src={
-                          pixBookingPayment.qrCode.startsWith('data:') ||
-                          pixBookingPayment.qrCode.startsWith('http')
-                            ? pixBookingPayment.qrCode
-                            : `data:image/png;base64,${pixBookingPayment.qrCode}`
-                        }
-                        alt="QR Code PIX"
-                        style={{ maxWidth: 260, width: '100%', borderRadius: 8, margin: '0 auto 1rem' }}
-                      />
-                    ) : null}
-                    {pixBookingPayment.paymentUrl ? (
-                      <Text $size="sm" $color="secondary" style={{ marginBottom: '0.75rem' }}>
-                        <a href={pixBookingPayment.paymentUrl} target="_blank" rel="noopener noreferrer">
-                          Abrir link de pagamento
-                        </a>
-                      </Text>
-                    ) : null}
-                    {pixBookingPayment.pixCode ? (
-                      <>
-                        <Text $size="sm" $color="tertiary" style={{ marginBottom: '0.35rem' }}>
-                          Copia e cola (PIX)
-                        </Text>
-                        <textarea
-                          readOnly
-                          value={pixBookingPayment.pixCode}
-                          rows={4}
-                          style={{
-                            width: '100%',
-                            maxWidth: 420,
-                            margin: '0 auto 0.75rem',
-                            fontSize: '0.75rem',
-                            padding: '0.5rem',
-                            borderRadius: 6,
-                            border: '1px solid #e5e7eb',
-                            fontFamily: 'monospace',
-                          }}
-                        />
-                        <Button
-                          $variant="secondary"
-                          type="button"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(pixBookingPayment.pixCode!);
-                            toast.success('Código PIX copiado.');
-                          }}
-                        >
-                          Copiar código PIX
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
-                )}
               </SuccessDetails>
             </SuccessContainer>
           )}

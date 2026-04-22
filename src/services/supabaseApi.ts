@@ -119,6 +119,13 @@ const defaultProfessionalWorkHours = [
   { day: 6, start: '08:00', end: '16:00' },
 ];
 
+function isVisibleConfirmedBooking(
+  row: Pick<Database['public']['Tables']['appointments']['Row'], 'payment_status'>
+): boolean {
+  // Regra de negócio: enquanto estiver aguardando PIX, o agendamento não deve aparecer na agenda.
+  return row.payment_status !== 'pending_payment';
+}
+
 export type CreateAppointmentPayload = Omit<Appointment, 'id' | 'endDateTime' | 'status' | 'clientId'> & {
   client: Omit<Client, 'id' | 'lastVisit' | 'barbershopId'>;
   barbershopId: string;
@@ -488,7 +495,9 @@ export const api = {
       .lte('start_datetime', endOfDay.toISOString());
 
     if (error || !data) return [];
-    return data.map(a => mapRowToAppointment(a));
+    return data
+      .filter(isVisibleConfirmedBooking)
+      .map(a => mapRowToAppointment(a));
   },
 
   createAppointment: async (
@@ -796,17 +805,18 @@ export const api = {
       .gte('start_datetime', startOfDay.toISOString())
       .lte('start_datetime', endOfDay.toISOString());
 
-    const totalAppointments = appointments?.length || 0;
+    const visibleAppointments = (appointments || []).filter(isVisibleConfirmedBooking);
+    const totalAppointments = visibleAppointments.length;
 
     // Calculate revenue
     let faturamentoPrevisto = 0;
-    if (appointments) {
+    if (visibleAppointments.length > 0) {
       // Note: This assumes we can join services. If not, we fetch services separately.
       // Supabase join requires foreign keys. 'service_ids' is an array, so standard join won't work easily.
       // We'll fetch all services for the barbershop to calculate price.
       const { data: allServices } = await supabase.from('services').select('*').eq('barbershop_id', barbershopId);
       
-      appointments.forEach(app => {
+      visibleAppointments.forEach(app => {
         app.service_ids.forEach((sId: string) => {
           const service = allServices?.find(s => s.id === sId);
           if (service) faturamentoPrevisto += service.price;
@@ -820,6 +830,7 @@ export const api = {
       .from('appointments')
       .select('*')
       .eq('barbershop_id', barbershopId)
+      .neq('payment_status', 'pending_payment')
       .gte('start_datetime', now.toISOString())
       .order('start_datetime', { ascending: true })
       .limit(1)
@@ -856,13 +867,15 @@ export const api = {
       .lte('start_datetime', endOfDay.toISOString());
 
     if (!appointments) return [];
+    const visibleAppointments = appointments.filter(isVisibleConfirmedBooking);
+    if (visibleAppointments.length === 0) return [];
 
     // Fetch details manually since we have array of IDs
-    const { data: clients } = await supabase.from('clients').select('*').in('id', appointments.map(a => a.client_id));
-    const { data: users } = await supabase.from('users').select('*').in('id', appointments.map(a => a.professional_id));
+    const { data: clients } = await supabase.from('clients').select('*').in('id', visibleAppointments.map(a => a.client_id));
+    const { data: users } = await supabase.from('users').select('*').in('id', visibleAppointments.map(a => a.professional_id));
     const { data: services } = await supabase.from('services').select('*').eq('barbershop_id', barbershopId);
 
-    return appointments.map(app => {
+    return visibleAppointments.map(app => {
       const client = clients?.find(c => c.id === app.client_id);
       const professional = users?.find(u => u.id === app.professional_id);
       const appServices = services?.filter(s => app.service_ids.includes(s.id));
