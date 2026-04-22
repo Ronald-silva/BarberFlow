@@ -154,11 +154,6 @@ const StepBar = styled.div<{ $filled: boolean }>`
   margin: 0 8px;
 `;
 
-const StepLabel = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0;
-`;
 
 const HeadTitle = styled.h1`
   font-size: 1.375rem;
@@ -421,7 +416,7 @@ const BarbershopRegistrationPage: React.FC = () => {
   };
 
   const cpfCnpjClean = shop.cpfCnpj.replace(/\D/g, '');
-  const cpfCnpjValid = isValidCPFCNPJ(shop.cpfCnpj);
+  const cpfCnpjValid = !shop.cpfCnpj || isValidCPFCNPJ(shop.cpfCnpj);
   const phoneValid = isValidPhone(shop.phone);
   const step1Valid = shop.name && shop.slug && shop.address && phoneValid && shop.email && cpfCnpjValid;
   const step2Valid = admin.name && admin.email && admin.password.length >= 6 && acceptedTerms && acceptedPrivacy;
@@ -461,7 +456,7 @@ const BarbershopRegistrationPage: React.FC = () => {
         address: shop.address,
         phone: shop.phone,
         email: shop.email,
-        cpf_cnpj: cpfCnpjClean,
+        ...(cpfCnpjClean ? { cpf_cnpj: cpfCnpjClean } : {}),
       };
       const { data: barbershop, error: bErr } = await supabase
         .from('barbershops')
@@ -600,7 +595,7 @@ const BarbershopRegistrationPage: React.FC = () => {
               </Field>
 
               <Field>
-                <Label htmlFor="shopCpfCnpj">CPF / CNPJ do responsável</Label>
+                <Label htmlFor="shopCpfCnpj">CPF / CNPJ do responsável <span style={{ color: '#6b7280', fontWeight: 400 }}>(opcional)</span></Label>
                 <Input id="shopCpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0001-00" value={shop.cpfCnpj}
                   inputMode="numeric" maxLength={18}
                   onChange={e => handleShopChange("cpfCnpj", e.target.value)} />

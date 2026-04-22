@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import { Barbershop, Service, User } from '../types';
 import { supabaseApi } from '../services/supabaseApi';
+import { supabase } from '../services/supabase';
 import { paymentService, type PaymentResponse } from '../services/paymentService';
 import { useToastContext } from '../contexts/ToastContext';
 import { maskPhone, formatBRL, formatDateBR, formatDateTimeBR } from '../utils/formatters';
@@ -72,6 +74,79 @@ import {
   LoadingSpinner,
 } from '../components/booking/BookingComponents';
 
+// ── MP PIX styled components ────────────────────────────────────────────────
+
+const pixSpin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const PixContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 0;
+`;
+
+const PixQrImage = styled.img`
+  width: 220px;
+  height: 220px;
+  border-radius: 12px;
+  border: 3px solid #22c55e;
+  background: #fff;
+  display: block;
+`;
+
+const PixCopyBox = styled.div`
+  width: 100%;
+  max-width: 420px;
+  background: ${p => p.theme.colors.background.secondary};
+  border: 1px solid ${p => p.theme.colors.border.primary};
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-family: monospace;
+  font-size: 0.7rem;
+  word-break: break-all;
+  color: ${p => p.theme.colors.text.secondary};
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.5;
+`;
+
+const PixStatusBadge = styled.div<{ $status: 'waiting' | 'approved' | 'cancelled' }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  ${p =>
+    p.$status === 'approved'
+      ? `background: #dcfce7; color: #16a34a;`
+      : p.$status === 'cancelled'
+      ? `background: #fee2e2; color: #dc2626;`
+      : `background: ${p.theme.colors.background.tertiary}; color: ${p.theme.colors.text.secondary};`}
+`;
+
+const PixSpinnerEl = styled.div`
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ${pixSpin} 0.8s linear infinite;
+  flex-shrink: 0;
+`;
+
+const PixTimer = styled.div`
+  font-size: 0.8rem;
+  color: ${p => p.theme.colors.text.tertiary};
+`;
+
+// ── end MP PIX styled components ────────────────────────────────────────────
+
 const STEPS = [
   'Serviços',
   'Profissional',
@@ -113,6 +188,16 @@ const BookingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // MP PIX payment-first state
+  const [mpPaymentId, setMpPaymentId] = useState<string | null>(null);
+  const [mpQrCode, setMpQrCode] = useState<string | null>(null);
+  const [mpQrCodeBase64, setMpQrCodeBase64] = useState<string | null>(null);
+  const [mpTicketUrl, setMpTicketUrl] = useState<string | null>(null);
+  const [mpExpiresAt, setMpExpiresAt] = useState<Date | null>(null);
+  const [mpAppointmentId, setMpAppointmentId] = useState<string | null>(null);
+  const [mpPollingStatus, setMpPollingStatus] = useState<'waiting' | 'approved' | 'cancelled'>('waiting');
+  const [mpSecondsLeft, setMpSecondsLeft] = useState(30 * 60);
+
   useEffect(() => {
     const loadData = async () => {
       if (barbershopSlug) {
@@ -137,6 +222,48 @@ const BookingPage: React.FC = () => {
     };
     loadData();
   }, [barbershopSlug]);
+
+  // Polling: check MP payment every 3s while on step 6 (payment-first flow)
+  useEffect(() => {
+    const isPaymentFirst = barbershop?.requirePaymentBeforeBooking;
+    if (!isPaymentFirst || step !== 6 || !mpPaymentId || !mpAppointmentId || mpPollingStatus !== 'waiting') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await supabase.functions.invoke('check-mercadopago-payment', {
+          body: {
+            payment_id: mpPaymentId,
+            barbershop_id: barbershop!.id,
+            appointment_id: mpAppointmentId,
+          },
+        });
+        const status = (data as { status?: string })?.status;
+        if (status === 'approved') {
+          setMpPollingStatus('approved');
+          clearInterval(interval);
+          setTimeout(() => setStep(7), 800); // small delay so "Pago!" badge shows briefly
+        } else if (status === 'cancelled' || status === 'rejected') {
+          setMpPollingStatus('cancelled');
+          clearInterval(interval);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [step, mpPaymentId, mpAppointmentId, mpPollingStatus, barbershop]);
+
+  // Countdown timer for MP PIX expiration
+  useEffect(() => {
+    if (!mpExpiresAt || step !== 6) return;
+    const tick = setInterval(() => {
+      const left = Math.max(0, Math.floor((mpExpiresAt.getTime() - Date.now()) / 1000));
+      setMpSecondsLeft(left);
+      if (left === 0) clearInterval(tick);
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [mpExpiresAt, step]);
 
   const totalPrice = useMemo(() => {
     return selectedServices.reduce((total, sId) => {
@@ -219,6 +346,73 @@ const BookingPage: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  // Generate MP PIX before confirming appointment (payment-first flow)
+  const handleGenerateMpPix = useCallback(async () => {
+    if (!barbershop || !selectedTime || professionals.length === 0) return;
+    setSubmitting(true);
+    try {
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      const bookingDateTime = new Date(selectedDate);
+      bookingDateTime.setHours(hours, minutes, 0, 0);
+      const professionalToBook = selectedProfessional === 'any' ? professionals[0].id : selectedProfessional;
+
+      const appointment = await supabaseApi.createAppointment({
+        client: { name: clientName, whatsapp: clientWhatsapp },
+        barbershopId: barbershop.id,
+        professionalId: professionalToBook,
+        serviceIds: selectedServices,
+        startDateTime: bookingDateTime.toISOString(),
+        totalPrice,
+        paymentRequired: true,
+        paymentStatus: 'pending_payment',
+        paymentMethod: 'pix',
+      });
+
+      setMpAppointmentId(appointment.id);
+
+      const serviceNames = selectedServices
+        .map(id => services.find(s => s.id === id)?.name)
+        .filter(Boolean)
+        .join(', ');
+
+      const { data: pixData, error: pixErr } = await supabase.functions.invoke('create-mercadopago-pix', {
+        body: {
+          barbershop_id: barbershop.id,
+          appointment_id: appointment.id,
+          amount: totalPrice,
+          description: `${barbershop.name} — ${serviceNames || 'Serviços'} — ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })} ${selectedTime}`,
+          client_name: clientName,
+          client_email: clientEmail.trim() || undefined,
+          client_phone: clientWhatsapp,
+        },
+      });
+
+      const err = pixErr || (pixData as { error?: string })?.error;
+      if (err) throw new Error(typeof err === 'string' ? err : 'Erro ao gerar PIX');
+
+      const pd = pixData as {
+        payment_id: string;
+        qr_code?: string;
+        qr_code_base64?: string;
+        ticket_url?: string;
+        expires_at?: string;
+      };
+
+      setMpPaymentId(pd.payment_id);
+      setMpQrCode(pd.qr_code ?? null);
+      setMpQrCodeBase64(pd.qr_code_base64 ?? null);
+      setMpTicketUrl(pd.ticket_url ?? null);
+      setMpExpiresAt(pd.expires_at ? new Date(pd.expires_at) : new Date(Date.now() + 30 * 60 * 1000));
+      setMpSecondsLeft(30 * 60);
+      setMpPollingStatus('waiting');
+      setStep(6);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao gerar PIX. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, ptBR]);
 
   const timeSlots = ['09:00', '09:45', '10:30', '11:15', '14:00', '14:45', '15:30', '16:15', '17:00', '18:00', '19:00'];
 
@@ -587,15 +781,102 @@ const BookingPage: React.FC = () => {
                 <Button $variant="secondary" onClick={() => setStep(4)}>
                   Voltar
                 </Button>
-                <Button $variant="primary" onClick={() => setStep(6)}>
-                  Escolher Pagamento
-                </Button>
+                {barbershop?.requirePaymentBeforeBooking ? (
+                  <Button
+                    $variant="primary"
+                    onClick={() => void handleGenerateMpPix()}
+                    disabled={submitting}
+                    $loading={submitting}
+                  >
+                    {submitting ? 'Gerando PIX...' : 'Pagar com PIX 💚'}
+                  </Button>
+                ) : (
+                  <Button $variant="primary" onClick={() => setStep(6)}>
+                    Escolher Pagamento
+                  </Button>
+                )}
               </StepNavigation>
             </div>
           )}
 
-          {/* Step 6: Payment Selection */}
-          {step === 6 && (
+          {/* Step 6: MP PIX payment-first OR normal payment selection */}
+          {step === 6 && barbershop?.requirePaymentBeforeBooking && (
+            <div className="slide-in">
+              <StepHeader>
+                <StepTitle>Pague com PIX 💚</StepTitle>
+                <StepDescription>Escaneie o QR Code ou copie o código para confirmar seu horário</StepDescription>
+              </StepHeader>
+
+              <PixContainer>
+                {/* QR Code image */}
+                {mpQrCodeBase64 ? (
+                  <PixQrImage
+                    src={`data:image/png;base64,${mpQrCodeBase64}`}
+                    alt="QR Code PIX"
+                  />
+                ) : mpTicketUrl ? (
+                  <Text $size="sm" $color="secondary">
+                    <a href={mpTicketUrl} target="_blank" rel="noopener noreferrer">
+                      Abrir página de pagamento
+                    </a>
+                  </Text>
+                ) : null}
+
+                {/* Status badge */}
+                <PixStatusBadge $status={mpPollingStatus}>
+                  {mpPollingStatus === 'approved' ? (
+                    <>✓ PIX Pago! Confirmando agendamento...</>
+                  ) : mpPollingStatus === 'cancelled' ? (
+                    <>✗ Pagamento cancelado</>
+                  ) : (
+                    <><PixSpinnerEl /> Aguardando pagamento...</>
+                  )}
+                </PixStatusBadge>
+
+                {/* Countdown */}
+                {mpPollingStatus === 'waiting' && (
+                  <PixTimer>
+                    Válido por {Math.floor(mpSecondsLeft / 60)}:{String(mpSecondsLeft % 60).padStart(2, '0')} min
+                  </PixTimer>
+                )}
+
+                {/* Copia-e-cola */}
+                {mpQrCode && mpPollingStatus === 'waiting' && (
+                  <>
+                    <Text $size="xs" $color="tertiary">Toque para copiar o código PIX:</Text>
+                    <PixCopyBox
+                      onClick={() => {
+                        void navigator.clipboard.writeText(mpQrCode);
+                        toast.success('Código PIX copiado!');
+                      }}
+                      title="Clique para copiar"
+                    >
+                      {mpQrCode}
+                    </PixCopyBox>
+                    <Button
+                      $variant="secondary"
+                      $size="sm"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(mpQrCode);
+                        toast.success('Código PIX copiado!');
+                      }}
+                    >
+                      Copiar código PIX
+                    </Button>
+                  </>
+                )}
+
+                {/* Payment cancelled — allow going back */}
+                {mpPollingStatus === 'cancelled' && (
+                  <Button $variant="secondary" onClick={() => setStep(5)}>
+                    Voltar e tentar novamente
+                  </Button>
+                )}
+              </PixContainer>
+            </div>
+          )}
+
+          {step === 6 && !barbershop?.requirePaymentBeforeBooking && (
             <div className="slide-in">
               <StepHeader>
                 <StepTitle>Forma de pagamento</StepTitle>
@@ -733,11 +1014,12 @@ const BookingPage: React.FC = () => {
                   👨‍💼 {professionalForConfirmation.name}
                 </Text>
                 <Text $color="secondary">
-                  💰 Total: {formatBRL(discountedPrice)}
-                  {paymentMethod === 'pix' && ' (com 5% de desconto)'}
+                  💰 Total: {formatBRL(barbershop?.requirePaymentBeforeBooking ? totalPrice : discountedPrice)}
+                  {!barbershop?.requirePaymentBeforeBooking && paymentMethod === 'pix' && ' (com 5% de desconto)'}
                 </Text>
                 <Text $color="secondary">
                   💳 Pagamento: {
+                    barbershop?.requirePaymentBeforeBooking ? 'PIX (pago ✓)' :
                     paymentMethod === 'in_person' ? 'Na barbearia' :
                     paymentMethod === 'pix' ? 'PIX' :
                     paymentMethod === 'bitcoin' ? 'Bitcoin' :

@@ -28,6 +28,8 @@ export function mapDbBarbershop(row: DbBarbershop): Barbershop {
     phone: row.phone ?? null,
     email: row.email ?? null,
     brandPrimaryColor: row.brand_primary_color?.trim() || null,
+    requirePaymentBeforeBooking: row.require_payment_before_booking ?? false,
+    mercadopagoConfigured: !!row.mercadopago_access_token,
   };
 }
 
@@ -183,6 +185,8 @@ export const api = {
       logoUrl?: string;
       /** null remove a cor e volta ao modo automático */
       brandPrimaryColor?: string | null;
+      mercadopagoAccessToken?: string | null;
+      requirePaymentBeforeBooking?: boolean;
     }
   ): Promise<{ brandSaved: boolean }> => {
     const row: Database['public']['Tables']['barbershops']['Update'] = {};
@@ -192,6 +196,8 @@ export const api = {
     if (payload.phone !== undefined) row.phone = payload.phone;
     if (payload.email !== undefined) row.email = payload.email;
     if (payload.logoUrl !== undefined) row.logo_url = payload.logoUrl;
+    if (payload.mercadopagoAccessToken !== undefined) row.mercadopago_access_token = payload.mercadopagoAccessToken;
+    if (payload.requirePaymentBeforeBooking !== undefined) row.require_payment_before_booking = payload.requirePaymentBeforeBooking;
 
     const wantsBrand = Object.prototype.hasOwnProperty.call(payload, 'brandPrimaryColor');
     const withBrand = wantsBrand
@@ -418,7 +424,10 @@ export const api = {
     const endDateTime = addMinutes(new Date(data.startDateTime), totalDuration).toISOString();
     const totalPrice = data.totalPrice ?? services?.reduce((acc, s) => acc + s.price, 0) ?? 0;
 
-    const paymentStatusRow = data.paymentMethod === 'pix' ? 'pending' : null;
+    // payment_first (MP): appointment starts as 'pending' until PIX is confirmed
+    const isPendingPayment = data.paymentStatus === 'pending_payment';
+    const appointmentStatus = isPendingPayment ? 'pending' : 'confirmed';
+    const paymentStatusRow = data.paymentStatus ?? (data.paymentMethod === 'pix' ? 'pending' : null);
 
     // 3. Create appointment
     const { data: newAppointment, error: createAppError } = await supabase
@@ -430,9 +439,10 @@ export const api = {
         service_ids: data.serviceIds,
         start_datetime: data.startDateTime,
         end_datetime: endDateTime,
-        status: 'confirmed',
+        status: appointmentStatus,
         total_amount: totalPrice,
         ...(paymentStatusRow ? { payment_status: paymentStatusRow } : {}),
+        ...(data.paymentMethod ? { payment_method: data.paymentMethod } : {}),
       })
       .select()
       .single();

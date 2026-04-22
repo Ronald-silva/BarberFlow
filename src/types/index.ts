@@ -27,6 +27,10 @@ export interface Barbershop {
   email?: string | null;
   /** Cor do painel (#RRGGBB). Ausente/null = paleta automática por barbearia. */
   brandPrimaryColor?: string | null;
+  /** Se true, cliente deve pagar PIX antes de confirmar o agendamento. */
+  requirePaymentBeforeBooking?: boolean;
+  /** True se o access token do Mercado Pago já está configurado (token não é exposto). */
+  mercadopagoConfigured?: boolean;
 }
 
 export interface User {

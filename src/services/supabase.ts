@@ -43,6 +43,8 @@ export interface Database {
           email: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
+          mercadopago_access_token?: string | null;
+          require_payment_before_booking?: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +58,8 @@ export interface Database {
           email?: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
+          mercadopago_access_token?: string | null;
+          require_payment_before_booking?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -69,6 +73,8 @@ export interface Database {
           email?: string | null;
           brand_primary_color?: string | null;
           cpf_cnpj?: string | null;
+          mercadopago_access_token?: string | null;
+          require_payment_before_booking?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -178,7 +184,13 @@ export interface Database {
           end_datetime: string;
           status: 'confirmed' | 'pending' | 'canceled' | 'completed' | 'cancelled';
           payment_status?: string | null;
+          payment_method?: string | null;
+          payment_required?: boolean | null;
           total_amount?: number | null;
+          mp_payment_id?: string | null;
+          mp_qr_code?: string | null;
+          mp_qr_code_base64?: string | null;
+          mp_ticket_url?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -192,7 +204,13 @@ export interface Database {
           end_datetime: string;
           status?: 'confirmed' | 'pending' | 'canceled' | 'completed' | 'cancelled';
           payment_status?: string | null;
+          payment_method?: string | null;
+          payment_required?: boolean | null;
           total_amount?: number | null;
+          mp_payment_id?: string | null;
+          mp_qr_code?: string | null;
+          mp_qr_code_base64?: string | null;
+          mp_ticket_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -206,7 +224,13 @@ export interface Database {
           end_datetime?: string;
           status?: 'confirmed' | 'pending' | 'canceled' | 'completed' | 'cancelled';
           payment_status?: string | null;
+          payment_method?: string | null;
+          payment_required?: boolean | null;
           total_amount?: number | null;
+          mp_payment_id?: string | null;
+          mp_qr_code?: string | null;
+          mp_qr_code_base64?: string | null;
+          mp_ticket_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };

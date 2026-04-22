@@ -316,6 +316,70 @@ const LoadingSpinner = styled.div`
   }
 `;
 
+const MpTokenRow = styled.div`
+  display: flex;
+  gap: ${(props) => props.theme.spacing[3]};
+  align-items: stretch;
+
+  input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+`;
+
+const MpBadge = styled.span<{ $ok?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: ${(props) => props.theme.radii.full};
+  font-size: ${(props) => props.theme.typography.fontSizes.xs};
+  font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
+  background: ${(props) =>
+    props.$ok
+      ? props.theme.colors.success.light
+      : props.theme.colors.background.tertiary};
+  color: ${(props) =>
+    props.$ok
+      ? props.theme.colors.success.main
+      : props.theme.colors.text.tertiary};
+  border: 1px solid ${(props) =>
+    props.$ok
+      ? props.theme.colors.success.border
+      : props.theme.colors.border.secondary};
+`;
+
+const MpToggleRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing[4]};
+  cursor: pointer;
+  padding: ${(props) => props.theme.spacing[4]};
+  background: ${(props) => props.theme.colors.background.secondary};
+  border-radius: ${(props) => props.theme.radii.lg};
+  border: 1px solid ${(props) => props.theme.colors.border.primary};
+  transition: ${(props) => props.theme.transitions.base};
+
+  &:hover {
+    border-color: var(--bs-brand-main, #c8922a);
+  }
+`;
+
+const MpToggleText = styled.div`
+  flex: 1;
+`;
+
+const MpInfoBox = styled.div`
+  margin-top: ${(props) => props.theme.spacing[4]};
+  padding: ${(props) => props.theme.spacing[4]};
+  border-radius: ${(props) => props.theme.radii.lg};
+  border: 1px solid ${(props) => props.theme.colors.border.secondary};
+  background: ${(props) => props.theme.colors.background.secondary};
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color: ${(props) => props.theme.colors.text.tertiary};
+  line-height: 1.55;
+`;
+
 function normalizeBarbershopSlug(slug: string, businessName: string): string {
   const fromField = slug
     .trim()
@@ -359,6 +423,14 @@ const SettingsPage: React.FC = () => {
     { day: "Domingo", start: "09:00", end: "15:00", enabled: false },
   ]);
 
+  const [mpAccessToken, setMpAccessToken] = useState('');
+  const [mpShowToken, setMpShowToken] = useState(false);
+  const [mpConfigured, setMpConfigured] = useState(false);
+  const [requirePaymentBeforeBooking, setRequirePaymentBeforeBooking] = useState(false);
+  const [mpSubmitting, setMpSubmitting] = useState(false);
+  const [mpSuccess, setMpSuccess] = useState(false);
+  const [mpError, setMpError] = useState('');
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [showBrandMigrationNote, setShowBrandMigrationNote] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -386,6 +458,8 @@ const SettingsPage: React.FC = () => {
               logoUrl: barbershop.logoUrl || "",
             });
             setLogoPreview(barbershop.logoUrl || "");
+            setMpConfigured(barbershop.mercadopagoConfigured ?? false);
+            setRequirePaymentBeforeBooking(barbershop.requirePaymentBeforeBooking ?? false);
             const saved = normalizeBrandHex(barbershop.brandPrimaryColor ?? undefined);
             if (saved) {
               setUseCustomBrandColor(true);
@@ -553,6 +627,28 @@ const SettingsPage: React.FC = () => {
       setError('Erro ao remover logo. Tente novamente.');
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleMpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setMpSubmitting(true);
+    setMpError('');
+    try {
+      await supabaseApi.updateBarbershop(user.barbershopId!, {
+        ...(mpAccessToken.trim() ? { mercadopagoAccessToken: mpAccessToken.trim() } : {}),
+        requirePaymentBeforeBooking,
+      });
+      await reloadBarbershop();
+      if (mpAccessToken.trim()) setMpConfigured(true);
+      setMpAccessToken('');
+      setMpSuccess(true);
+      setTimeout(() => setMpSuccess(false), 3000);
+    } catch (err) {
+      setMpError(formatPostgrestError(err));
+    } finally {
+      setMpSubmitting(false);
     }
   };
 
@@ -904,6 +1000,108 @@ const SettingsPage: React.FC = () => {
                 <li>Cartão digital</li>
               </LinkTipList>
             </LinkTipBox>
+          </SectionContent>
+        </SettingsSection>
+
+        {/* Mercado Pago */}
+        <SettingsSection
+          $variant="elevated"
+          className="slide-in"
+          style={{ animationDelay: "0.08s" }}
+        >
+          <SectionHeader>
+            <SectionTitle>Pagamento via PIX (Mercado Pago)</SectionTitle>
+            <SectionDescription>
+              Configure seu Access Token para receber pagamentos PIX diretamente na sua conta
+            </SectionDescription>
+          </SectionHeader>
+          <SectionContent>
+            <form onSubmit={handleMpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <FormGroup>
+                <Label htmlFor="mpToken">
+                  Access Token do Mercado Pago
+                  {mpConfigured && (
+                    <MpBadge $ok style={{ marginLeft: '0.5rem' }}>
+                      ✓ configurado
+                    </MpBadge>
+                  )}
+                </Label>
+                <Text $size="sm" $color="tertiary" style={{ marginBottom: '0.5rem' }}>
+                  {mpConfigured
+                    ? 'Um token já está salvo. Cole um novo para substituí-lo.'
+                    : 'Cole aqui o token obtido no painel do Mercado Pago (Credenciais → Access Token de produção ou TEST-...).'}
+                </Text>
+                <MpTokenRow>
+                  <Input
+                    id="mpToken"
+                    type={mpShowToken ? 'text' : 'password'}
+                    value={mpAccessToken}
+                    onChange={(e) => setMpAccessToken(e.target.value)}
+                    placeholder={mpConfigured ? '••••••••••••••••••••' : 'APP_USR-... ou TEST-...'}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <Button
+                    type="button"
+                    $variant="outline"
+                    $size="sm"
+                    onClick={() => setMpShowToken((v) => !v)}
+                    style={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
+                  >
+                    {mpShowToken ? 'Ocultar' : 'Mostrar'}
+                  </Button>
+                </MpTokenRow>
+              </FormGroup>
+
+              <FormGroup>
+                <Label>Exigir pagamento PIX antes do agendamento</Label>
+                <MpToggleRow as="label" htmlFor="requirePayment">
+                  <MpToggleText>
+                    <Text $size="sm" $weight="medium" $color="primary" style={{ margin: 0 }}>
+                      Pagamento obrigatório
+                    </Text>
+                    <Text $size="xs" $color="tertiary" style={{ margin: '0.15rem 0 0' }}>
+                      O agendamento só é confirmado após o cliente pagar o PIX
+                    </Text>
+                  </MpToggleText>
+                  <ToggleSwitch>
+                    <ToggleSlider
+                      id="requirePayment"
+                      type="checkbox"
+                      checked={requirePaymentBeforeBooking}
+                      onChange={(e) => setRequirePaymentBeforeBooking(e.target.checked)}
+                    />
+                    <ToggleSliderSpan />
+                  </ToggleSwitch>
+                </MpToggleRow>
+              </FormGroup>
+
+              <MpInfoBox>
+                <strong>Como obter o Access Token:</strong>
+                {' '}Acesse mercadopago.com.br → Seu negócio → Credenciais → Access Token.
+                Para testes, use o token <code>TEST-...</code>; em produção, use <code>APP_USR-...</code>.
+                <br />
+                <strong>Webhook:</strong> configure no Mercado Pago a URL
+                {' '}<code style={{ wordBreak: 'break-all' }}>
+                  {`${window.location.origin.replace('localhost:5173', 'SEU_REF.supabase.co')}/functions/v1/mercadopago-webhook`}
+                </code>.
+              </MpInfoBox>
+
+              <div>
+                <SaveButton
+                  type="submit"
+                  $variant="primary"
+                  $loading={mpSubmitting}
+                  disabled={mpSubmitting}
+                >
+                  {mpSubmitting ? 'Salvando...' : 'Salvar configurações PIX'}
+                </SaveButton>
+                <SuccessMessage $show={mpSuccess}>
+                  ✓ Configurações do Mercado Pago salvas!
+                </SuccessMessage>
+                <ErrorMessage $show={!!mpError}>✗ {mpError}</ErrorMessage>
+              </div>
+            </form>
           </SectionContent>
         </SettingsSection>
 
