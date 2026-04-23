@@ -187,17 +187,21 @@ const WorkingHoursGrid = styled.div`
 
 const DayRow = styled.div`
   display: grid;
-  grid-template-columns: 120px 1fr 1fr auto;
+  grid-template-columns: 110px 1fr auto;
+  grid-template-areas: "label intervals toggle";
   gap: ${(props) => props.theme.spacing[3]};
-  align-items: center;
+  align-items: start;
   padding: ${(props) => props.theme.spacing[3]};
   background-color: ${(props) => props.theme.colors.background.secondary};
   border-radius: ${(props) => props.theme.radii.md};
   border: 1px solid ${(props) => props.theme.colors.border.primary};
 
   @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
-    gap: ${(props) => props.theme.spacing[2]};
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 
+      "label toggle"
+      "intervals intervals";
+    gap: ${(props) => props.theme.spacing[4]};
   }
 `;
 
@@ -348,17 +352,28 @@ const MpConnectArea = styled.div`
   border-radius: ${(props) => props.theme.radii.lg};
   border: 1px solid ${(props) => props.theme.colors.border.secondary};
   background: ${(props) => props.theme.colors.background.secondary};
-  flex-wrap: wrap;
+
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
 `;
 
 const MpConnectText = styled.div`
   flex: 1;
   min-width: 0;
+
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    width: 100%;
+    margin-bottom: ${(props) => props.theme.spacing[2]};
+  }
 `;
 
 const MpConnectBtn = styled.button`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.6rem 1.2rem;
   border-radius: ${(props) => props.theme.radii.md};
@@ -373,6 +388,10 @@ const MpConnectBtn = styled.button`
 
   &:hover { opacity: 0.88; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    width: 100%;
+  }
 `;
 
 const MpBadge = styled.span<{ $ok?: boolean }>`
@@ -1331,10 +1350,12 @@ const SettingsPage: React.FC = () => {
             <WorkingHoursForm onSubmit={handleWorkingHoursSubmit}>
               <WorkingHoursGrid>
                 {workingHours.map((schedule) => (
-                  <DayRow key={schedule.day} style={{ gridTemplateColumns: '120px 1fr auto', alignItems: 'start' }}>
-                    <DayLabel style={{ paddingTop: '0.5rem' }}>{DAY_LABELS[schedule.day]}</DayLabel>
+                  <DayRow key={schedule.day}>
+                    <DayLabel style={{ paddingTop: '0.35rem', gridArea: 'label' }}>
+                      {DAY_LABELS[schedule.day]}
+                    </DayLabel>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', gridArea: 'intervals' }}>
                       {schedule.intervals.map((iv, ivIdx) => (
                         <IntervalRow key={ivIdx}>
                           <TimeInput
@@ -1377,7 +1398,7 @@ const SettingsPage: React.FC = () => {
                       )}
                     </div>
 
-                    <ToggleSwitch style={{ marginTop: '0.35rem' }}>
+                    <ToggleSwitch style={{ marginTop: '0.2rem', gridArea: 'toggle' }}>
                       <ToggleSlider
                         type="checkbox"
                         checked={schedule.enabled}
