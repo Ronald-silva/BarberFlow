@@ -565,7 +565,17 @@ const SettingsPage: React.FC = () => {
             setMpConfigured(barbershop.mercadopagoConfigured ?? false);
             setRequirePaymentBeforeBooking(barbershop.requirePaymentBeforeBooking ?? false);
             if (barbershop.workingHours && barbershop.workingHours.length > 0) {
-              setWorkingHours(barbershop.workingHours);
+              let loadedHours = barbershop.workingHours;
+              
+              // Auto-correção: Se os horários forem do antigo padrão (Segunda das 09:00 às 18:00), 
+              // forçamos o novo padrão (Brito Barbershop) e já salvamos no banco para limpar a cache do cliente.
+              const isOldDefault = loadedHours[1]?.intervals?.[0]?.start === '09:00' && loadedHours[1]?.intervals?.[0]?.end === '18:00';
+              if (isOldDefault) {
+                loadedHours = DEFAULT_WORKING_HOURS;
+                supabaseApi.updateBarbershop(user.barbershopId, { workingHours: DEFAULT_WORKING_HOURS }).catch(console.error);
+              }
+              
+              setWorkingHours(loadedHours);
             }
             const saved = normalizeBrandHex(barbershop.brandPrimaryColor ?? undefined);
             if (saved) {
