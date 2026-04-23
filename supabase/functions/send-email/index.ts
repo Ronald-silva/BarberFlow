@@ -180,7 +180,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'BarberFlow <noreply@barberflow.com.br>',
+        from: 'Shafar <noreply@shafar.com.br>',
         to: recipients,
         subject: emailSubject,
         html: emailHtml,

@@ -1270,7 +1270,7 @@ const SettingsPage: React.FC = () => {
                           Nenhuma conta conectada
                         </Text>
                         <Text $size="xs" $color="tertiary" style={{ margin: '0.25rem 0 0' }}>
-                          Clique no botão para autorizar o BarberFlow na conta MP da barbearia.
+                          Clique no botão para autorizar o Shafar na conta MP da barbearia.
                         </Text>
                       </>
                     )}
@@ -1323,7 +1323,7 @@ const SettingsPage: React.FC = () => {
                 <strong>Como funciona:</strong> Ao clicar em "Conectar com Mercado Pago", você fará login seguro na sua própria conta. 
                 A partir desse momento, todos os pagamentos via PIX dos seus agendamentos cairão <strong>direto e instantaneamente na sua conta bancária</strong>.
                 <br /><br />
-                <strong>100% Seguro:</strong> O BarberFlow apenas gera a cobrança, não retemos o dinheiro em nenhum momento.
+                <strong>100% Seguro:</strong> O Shafar apenas gera a cobrança, não retemos o dinheiro em nenhum momento.
               </MpInfoBox>
 
               <div>

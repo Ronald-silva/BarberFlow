@@ -201,7 +201,7 @@ serve(async (req) => {
     const lastName = cliente_nome.trim().split(' ').slice(1).join(' ') || 'Cliente';
     const payerEmail =
       cliente_email?.trim() ||
-      `${cliente_whatsapp.replace(/\D/g, '')}@barberflow.app`;
+      `${cliente_whatsapp.replace(/\D/g, '')}@shafar.app`;
 
     const mpPayload = {
       transaction_amount: Number(valor.toFixed(2)),

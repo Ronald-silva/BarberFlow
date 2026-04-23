@@ -186,7 +186,7 @@ serve(async (req) => {
     const firstName = (client_name || 'Cliente').split(' ')[0];
     const lastName = (client_name || '').split(' ').slice(1).join(' ') || 'Barbearia';
     const email = client_email?.trim() ||
-      `${(client_phone || '').replace(/\D/g, '') || 'cliente'}@barberflow.app`;
+      `${(client_phone || '').replace(/\D/g, '') || 'cliente'}@shafar.app`;
 
     const mpPayload = {
       transaction_amount: Number(Number(amount).toFixed(2)),

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🔧 Iniciando build do BarberFlow..."
+echo "🔧 Iniciando build do Shafar..."
 
 # Verificar versões
 echo "📋 Node.js: $(node --version)"
