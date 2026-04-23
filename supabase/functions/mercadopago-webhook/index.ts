@@ -68,9 +68,7 @@ function buildManifest(dataId: string | null, requestId: string | null, ts: stri
   return parts.length > 0 ? `${parts.join(';')};` : '';
 }
 
-function extractMercadoPagoToken(
-  providerMetadata: unknown,
-): string | null {
+function extractMercadoPagoToken(providerMetadata: unknown): string | null {
   if (providerMetadata && typeof providerMetadata === 'object') {
     const token = (providerMetadata as Record<string, unknown>).mercadopago_access_token;
     if (typeof token === 'string' && token.trim().length > 0) return token.trim();
@@ -135,7 +133,6 @@ serve(async (req) => {
       return new Response('ok', { headers: corsHeaders });
     }
 
-    // Ignorar eventos que não são de pagamento
     if (body.type !== 'payment' && body.action !== 'payment.updated') {
       return new Response('ok', { headers: corsHeaders });
     }
@@ -150,20 +147,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Buscar agendamento pelo mp_payment_id
-    const { data: appointment } = await supabaseAdmin
-      .from('appointments')
-      .select('id, barbershop_id, payment_status')
+    // Buscar reserva pelo mp_payment_id
+    const { data: reserva } = await supabaseAdmin
+      .from('reservas')
+      .select('id, barbearia_id, status, profissional_id, servico_ids, horario, horario_fim, cliente_nome, cliente_whatsapp, valor')
       .eq('mp_payment_id', paymentId)
       .maybeSingle();
 
-    if (!appointment) {
-      console.log(`Nenhum agendamento para mp_payment_id=${paymentId}`);
+    if (!reserva) {
+      console.log(`Nenhuma reserva para mp_payment_id=${paymentId}`);
       return new Response('ok', { headers: corsHeaders });
     }
 
     // Idempotência: não reprocessar se já finalizado
-    if (appointment.payment_status === 'paid' || appointment.payment_status === 'cancelled') {
+    if (reserva.status === 'pago' || reserva.status === 'cancelado') {
       return new Response('ok', { headers: corsHeaders });
     }
 
@@ -171,42 +168,63 @@ serve(async (req) => {
     const { data: providerCfg } = await supabaseAdmin
       .from('payment_provider_configs')
       .select('metadata')
-      .eq('barbershop_id', appointment.barbershop_id)
+      .eq('barbershop_id', reserva.barbearia_id)
       .maybeSingle();
 
     const accessToken = extractMercadoPagoToken(providerCfg?.metadata);
 
     if (!accessToken) {
-      console.error(`Access token MP não encontrado para barbershop_id=${appointment.barbershop_id}`);
+      console.error(`Access token MP não encontrado para barbearia_id=${reserva.barbearia_id}`);
       return new Response('ok', { headers: corsHeaders });
     }
 
     // Verificar status real no MP (não confiar cegamente no webhook)
     const mpRes = await fetch(`${MP_API}/v1/payments/${paymentId}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    const mpData = await mpRes.json() as { status?: string };
+    const mpData = (await mpRes.json()) as { status?: string };
     const mpStatus = mpData.status;
 
     if (mpStatus === 'approved') {
+      // Atualizar reserva para pago
       await supabaseAdmin
-        .from('appointments')
-        .update({ status: 'confirmed', payment_status: 'paid' })
-        .eq('id', appointment.id)
-        .eq('mp_payment_id', paymentId)
-        .eq('payment_status', 'pending_payment');
-      console.log(`Agendamento ${appointment.id} confirmado via webhook MP (payment ${paymentId})`);
+        .from('reservas')
+        .update({ status: 'pago' })
+        .eq('id', reserva.id)
+        .eq('status', 'aguardando_pagamento'); // guard contra race condition
+
+      // Criar agendamento confirmado
+      const { error: agendErr } = await supabaseAdmin
+        .from('agendamentos')
+        .insert({
+          reserva_id: reserva.id,
+          barbearia_id: reserva.barbearia_id,
+          profissional_id: reserva.profissional_id,
+          servico_ids: reserva.servico_ids,
+          horario: reserva.horario,
+          horario_fim: reserva.horario_fim,
+          cliente_nome: reserva.cliente_nome,
+          cliente_whatsapp: reserva.cliente_whatsapp,
+          valor: reserva.valor,
+          mp_payment_id: paymentId,
+        })
+        .onConflict('reserva_id') // idempotência — não duplicar
+        .ignoreDuplicates();
+
+      if (agendErr) {
+        console.error(`Erro ao criar agendamento para reserva ${reserva.id}:`, agendErr);
+      } else {
+        console.log(`Reserva ${reserva.id} paga — agendamento criado (payment ${paymentId})`);
+      }
     } else if (mpStatus === 'cancelled' || mpStatus === 'rejected') {
       await supabaseAdmin
-        .from('appointments')
-        .update({ status: 'cancelled', payment_status: 'cancelled' })
-        .eq('id', appointment.id)
-        .eq('mp_payment_id', paymentId)
-        .eq('payment_status', 'pending_payment');
-      console.log(`Agendamento ${appointment.id} cancelado (status MP: ${mpStatus})`);
+        .from('reservas')
+        .update({ status: 'cancelado' })
+        .eq('id', reserva.id)
+        .eq('status', 'aguardando_pagamento');
+
+      console.log(`Reserva ${reserva.id} cancelada (status MP: ${mpStatus})`);
     }
 
     return new Response('ok', { headers: corsHeaders });

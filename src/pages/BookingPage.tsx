@@ -108,7 +108,7 @@ const PixCopyBox = styled.div`
   line-height: 1.5;
 `;
 
-const PixStatusBadge = styled.div<{ $status: 'waiting' | 'approved' | 'cancelled' }>`
+const PixStatusBadge = styled.div<{ $status: 'waiting' | 'approved' | 'cancelled' | 'expirado' }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -119,7 +119,7 @@ const PixStatusBadge = styled.div<{ $status: 'waiting' | 'approved' | 'cancelled
   ${p =>
     p.$status === 'approved'
       ? `background: #dcfce7; color: #16a34a;`
-      : p.$status === 'cancelled'
+      : p.$status === 'cancelled' || p.$status === 'expirado'
       ? `background: #fee2e2; color: #dc2626;`
       : `background: ${p.theme.colors.background.tertiary}; color: ${p.theme.colors.text.secondary};`}
 `;
@@ -176,8 +176,8 @@ const BookingPage: React.FC = () => {
   const [mpQrCodeBase64, setMpQrCodeBase64] = useState<string | null>(null);
   const [mpTicketUrl, setMpTicketUrl] = useState<string | null>(null);
   const [mpExpiresAt, setMpExpiresAt] = useState<Date | null>(null);
-  const [mpAppointmentId, setMpAppointmentId] = useState<string | null>(null);
-  const [mpPollingStatus, setMpPollingStatus] = useState<'waiting' | 'approved' | 'cancelled'>('waiting');
+  const [reservaId, setReservaId] = useState<string | null>(null);
+  const [mpPollingStatus, setMpPollingStatus] = useState<'waiting' | 'approved' | 'cancelled' | 'expirado'>('waiting');
   const [mpSecondsLeft, setMpSecondsLeft] = useState(30 * 60);
   const anonAuthHeaders = useMemo(() => {
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -209,28 +209,26 @@ const BookingPage: React.FC = () => {
     loadData();
   }, [barbershopSlug]);
 
-  // Polling: check MP payment every 3s while on step 6 (payment-first flow)
+  // Polling: check reserva status every 3s while on step 6
   useEffect(() => {
-    const isPaymentFirst = barbershop?.requirePaymentBeforeBooking;
-    if (!isPaymentFirst || step !== 6 || !mpPaymentId || !mpAppointmentId || mpPollingStatus !== 'waiting') return;
+    if (step !== 6 || !reservaId || !barbershop || mpPollingStatus !== 'waiting') return;
 
     const interval = setInterval(async () => {
       try {
-        const { data } = await supabase.functions.invoke('check-mercadopago-payment', {
+        const { data } = await supabase.functions.invoke('check-reserva-status', {
           headers: anonAuthHeaders,
-          body: {
-            payment_id: mpPaymentId,
-            barbershop_id: barbershop!.id,
-            appointment_id: mpAppointmentId,
-          },
+          body: { reserva_id: reservaId, barbearia_id: barbershop.id },
         });
         const status = (data as { status?: string })?.status;
-        if (status === 'approved') {
+        if (status === 'pago') {
           setMpPollingStatus('approved');
           clearInterval(interval);
-          setTimeout(() => setStep(7), 800); // small delay so "Pago!" badge shows briefly
-        } else if (status === 'cancelled' || status === 'rejected') {
+          setTimeout(() => setStep(7), 800);
+        } else if (status === 'cancelado') {
           setMpPollingStatus('cancelled');
+          clearInterval(interval);
+        } else if (status === 'expirado') {
+          setMpPollingStatus('expirado');
           clearInterval(interval);
         }
       } catch {
@@ -239,7 +237,7 @@ const BookingPage: React.FC = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [step, mpPaymentId, mpAppointmentId, mpPollingStatus, barbershop, anonAuthHeaders]);
+  }, [step, reservaId, mpPollingStatus, barbershop, anonAuthHeaders]);
 
   // Countdown timer for MP PIX expiration
   useEffect(() => {
@@ -274,45 +272,36 @@ const BookingPage: React.FC = () => {
     );
   };
 
-  // Generate MP PIX before confirming appointment (payment-first flow)
-  const handleGenerateMpPix = useCallback(async () => {
-    if (!barbershop || !selectedTime || professionals.length === 0) return;
+  const handlePagarComPix = useCallback(async () => {
+    if (!barbershop || !selectedTime) return;
     setSubmitting(true);
     try {
       const [hours, minutes] = selectedTime.split(':').map(Number);
-      const bookingDateTime = new Date(selectedDate);
-      bookingDateTime.setHours(hours, minutes, 0, 0);
-      const professionalToBook = selectedProfessional === 'any' ? professionals[0].id : selectedProfessional;
-
-      const appointment = await supabaseApi.createAppointment({
-        client: { name: clientName, whatsapp: clientWhatsapp },
-        barbershopId: barbershop.id,
-        professionalId: professionalToBook,
-        serviceIds: selectedServices,
-        startDateTime: bookingDateTime.toISOString(),
-        totalPrice,
-        paymentRequired: true,
-        paymentStatus: 'pending_payment',
-        paymentMethod: 'pix',
-      });
-
-      setMpAppointmentId(appointment.id);
+      const horarioInicio = new Date(selectedDate);
+      horarioInicio.setHours(hours, minutes, 0, 0);
+      const horarioFim = new Date(horarioInicio.getTime() + totalDuration * 60 * 1000);
+      const professionalId = selectedProfessional === 'any'
+        ? (professionals[0]?.id ?? null)
+        : selectedProfessional;
 
       const serviceNames = selectedServices
         .map(id => services.find(s => s.id === id)?.name)
         .filter(Boolean)
         .join(', ');
 
-      const { data: pixData, error: pixErr } = await supabase.functions.invoke('create-mercadopago-pix', {
+      const { data: pixData, error: pixErr } = await supabase.functions.invoke('create-reserva-pix', {
         headers: anonAuthHeaders,
         body: {
-          barbershop_id: barbershop.id,
-          appointment_id: appointment.id,
-          amount: totalPrice,
-          description: `${barbershop.name} — ${serviceNames || 'Serviços'} — ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })} ${selectedTime}`,
-          client_name: clientName,
-          client_email: clientEmail.trim() || undefined,
-          client_phone: clientWhatsapp,
+          barbearia_id: barbershop.id,
+          profissional_id: professionalId,
+          servico_ids: selectedServices,
+          horario: horarioInicio.toISOString(),
+          horario_fim: horarioFim.toISOString(),
+          cliente_nome: clientName,
+          cliente_whatsapp: clientWhatsapp,
+          cliente_email: clientEmail.trim() || undefined,
+          valor: totalPrice,
+          descricao: `${barbershop.name} — ${serviceNames || 'Serviços'} — ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })} ${selectedTime}`,
         },
       });
 
@@ -323,36 +312,31 @@ const BookingPage: React.FC = () => {
           try {
             const payload = await response.clone().json() as { error?: string };
             if (payload?.error) detailedFnError = payload.error;
-          } catch {
-            // ignore json parse errors
-          }
+          } catch { /* ignore */ }
         }
       }
 
-      const err = detailedFnError || pixErr || (pixData as { error?: string })?.error;
-      if (err) {
-        if (typeof err === 'string') throw new Error(err);
-        const msg =
-          (err as { message?: string; context?: unknown }).message ||
-          (pixData as { error?: string })?.error ||
-          'Erro ao gerar PIX';
-        throw new Error(msg);
+      const err = detailedFnError || (pixData as { error?: string })?.error;
+      if (err || pixErr) {
+        throw new Error(err ?? (pixErr as Error)?.message ?? 'Erro ao gerar PIX');
       }
 
       const pd = pixData as {
-        payment_id: string;
+        reserva_id: string;
+        mp_payment_id: string;
         qr_code?: string;
         qr_code_base64?: string;
         ticket_url?: string;
         expires_at?: string;
       };
 
-      setMpPaymentId(pd.payment_id);
+      setReservaId(pd.reserva_id);
+      setMpPaymentId(pd.mp_payment_id);
       setMpQrCode(pd.qr_code ?? null);
       setMpQrCodeBase64(pd.qr_code_base64 ?? null);
       setMpTicketUrl(pd.ticket_url ?? null);
-      setMpExpiresAt(pd.expires_at ? new Date(pd.expires_at) : new Date(Date.now() + 30 * 60 * 1000));
-      setMpSecondsLeft(30 * 60);
+      setMpExpiresAt(pd.expires_at ? new Date(pd.expires_at) : new Date(Date.now() + 10 * 60 * 1000));
+      setMpSecondsLeft(10 * 60);
       setMpPollingStatus('waiting');
       setStep(6);
     } catch (error) {
@@ -360,7 +344,7 @@ const BookingPage: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, ptBR, anonAuthHeaders]);
+  }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, totalDuration, ptBR, anonAuthHeaders]);
 
   const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
 
@@ -749,7 +733,7 @@ const BookingPage: React.FC = () => {
                 </Button>
                 <Button
                   $variant="primary"
-                  onClick={() => void handleGenerateMpPix()}
+                  onClick={() => void handlePagarComPix()}
                   disabled={submitting}
                   $loading={submitting}
                 >
@@ -781,17 +765,6 @@ const BookingPage: React.FC = () => {
                     </a>
                   </Text>
                 ) : null}
-
-                {/* Status badge */}
-                <PixStatusBadge $status={mpPollingStatus}>
-                  {mpPollingStatus === 'approved' ? (
-                    <>✓ PIX Pago! Confirmando agendamento...</>
-                  ) : mpPollingStatus === 'cancelled' ? (
-                    <>✗ Pagamento cancelado</>
-                  ) : (
-                    <><PixSpinnerEl /> Aguardando pagamento...</>
-                  )}
-                </PixStatusBadge>
 
                 {/* Countdown */}
                 {mpPollingStatus === 'waiting' && (
@@ -826,10 +799,26 @@ const BookingPage: React.FC = () => {
                   </>
                 )}
 
-                {/* Payment cancelled — allow going back */}
+                {/* Badge content */}
+                {mpPollingStatus === 'waiting' && (
+                  <PixStatusBadge $status="waiting">
+                    <PixSpinnerEl /> Aguardando pagamento...
+                  </PixStatusBadge>
+                )}
+                {mpPollingStatus === 'approved' && (
+                  <PixStatusBadge $status="approved">✓ PIX Pago! Confirmando agendamento...</PixStatusBadge>
+                )}
                 {mpPollingStatus === 'cancelled' && (
+                  <PixStatusBadge $status="cancelled">✗ Pagamento cancelado</PixStatusBadge>
+                )}
+                {mpPollingStatus === 'expirado' && (
+                  <PixStatusBadge $status="expirado">⏱ PIX expirado — tempo esgotado</PixStatusBadge>
+                )}
+
+                {/* Allow retry on cancelled or expired */}
+                {(mpPollingStatus === 'cancelled' || mpPollingStatus === 'expirado') && (
                   <Button $variant="secondary" onClick={() => setStep(5)}>
-                    Voltar e tentar novamente
+                    Tentar novamente
                   </Button>
                 )}
               </PixContainer>

@@ -19,3 +19,21 @@ verify_jwt = false
 
 [functions.asaas-webhook]
 verify_jwt = false
+
+[functions.create-mercadopago-pix]
+verify_jwt = false
+
+[functions.check-mercadopago-payment]
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+verify_jwt = false
+
+[functions.mercadopago-oauth-callback]
+verify_jwt = false
+
+[functions.create-reserva-pix]
+verify_jwt = false
+
+[functions.check-reserva-status]
+verify_jwt = false

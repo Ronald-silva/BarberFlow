@@ -340,20 +340,39 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-const MpTokenRow = styled.div`
+const MpConnectArea = styled.div`
   display: flex;
+  align-items: center;
   gap: ${(props) => props.theme.spacing[3]};
-  align-items: stretch;
+  padding: ${(props) => props.theme.spacing[4]};
+  border-radius: ${(props) => props.theme.radii.lg};
+  border: 1px solid ${(props) => props.theme.colors.border.secondary};
+  background: ${(props) => props.theme.colors.background.secondary};
   flex-wrap: wrap;
+`;
 
-  input {
-    flex: 1 1 200px;
-    min-width: 0;
-  }
+const MpConnectText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
 
-  button {
-    flex: 0 0 auto;
-  }
+const MpConnectBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: ${(props) => props.theme.radii.md};
+  font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  font-weight: ${(props) => props.theme.typography.fontWeights.semibold};
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+  background: #009ee3;
+  color: #fff;
+  white-space: nowrap;
+
+  &:hover { opacity: 0.88; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 const MpBadge = styled.span<{ $ok?: boolean }>`
@@ -490,9 +509,8 @@ const SettingsPage: React.FC = () => {
 
   const [workingHours, setWorkingHours] = useState<DaySchedule[]>(DEFAULT_WORKING_HOURS);
 
-  const [mpAccessToken, setMpAccessToken] = useState('');
-  const [mpShowToken, setMpShowToken] = useState(false);
   const [mpConfigured, setMpConfigured] = useState(false);
+  const [mpDisconnecting, setMpDisconnecting] = useState(false);
   const [requirePaymentBeforeBooking, setRequirePaymentBeforeBooking] = useState(false);
   const [mpSubmitting, setMpSubmitting] = useState(false);
   const [mpSuccess, setMpSuccess] = useState(false);
@@ -764,19 +782,65 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  // Detecta retorno do OAuth do Mercado Pago (?success=true|?error=true no hash)
+  useEffect(() => {
+    const hash = window.location.hash;
+    const queryStart = hash.indexOf('?');
+    if (queryStart === -1) return;
+    const params = new URLSearchParams(hash.slice(queryStart));
+    if (params.get('success') === 'true') {
+      setMpConfigured(true);
+      setMpSuccess(true);
+      setTimeout(() => setMpSuccess(false), 4000);
+    } else if (params.get('error') === 'true') {
+      const detail = params.get('detail') || 'desconhecido';
+      setMpError(`Erro ao conectar Mercado Pago: ${detail}`);
+    } else {
+      return; // nenhum parâmetro MP — não limpar a URL
+    }
+    window.history.replaceState({}, '', window.location.pathname + '#/dashboard/settings');
+  }, []);
+
+  const handleMpConnect = () => {
+    const clientId = (import.meta.env.VITE_MERCADOPAGO_CLIENT_ID as string | undefined) || '';
+    if (!clientId || !user?.barbershopId) {
+      setMpError('VITE_MERCADOPAGO_CLIENT_ID não configurado. Registre o aplicativo no MP Developers.');
+      return;
+    }
+    const redirectUri = `https://knlvbuucymqkzdxuvamy.supabase.co/functions/v1/mercadopago-oauth-callback`;
+    const state = encodeURIComponent(user.barbershopId);
+    const authUrl =
+      `https://auth.mercadopago.com.br/authorization` +
+      `?client_id=${encodeURIComponent(clientId)}` +
+      `&response_type=code` +
+      `&platform_id=mp` +
+      `&state=${state}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    window.open(authUrl, '_blank', 'width=620,height=700,noopener,noreferrer');
+  };
+
+  const handleMpDisconnect = async () => {
+    if (!user?.barbershopId) return;
+    setMpDisconnecting(true);
+    setMpError('');
+    try {
+      await supabaseApi.updateBarbershop(user.barbershopId, { mercadopagoAccessToken: null });
+      setMpConfigured(false);
+    } catch (err) {
+      setMpError(formatPostgrestError(err));
+    } finally {
+      setMpDisconnecting(false);
+    }
+  };
+
   const handleMpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setMpSubmitting(true);
     setMpError('');
     try {
-      await supabaseApi.updateBarbershop(user.barbershopId!, {
-        ...(mpAccessToken.trim() ? { mercadopagoAccessToken: mpAccessToken.trim() } : {}),
-        requirePaymentBeforeBooking,
-      });
+      await supabaseApi.updateBarbershop(user.barbershopId!, { requirePaymentBeforeBooking });
       await reloadBarbershop();
-      if (mpAccessToken.trim()) setMpConfigured(true);
-      setMpAccessToken('');
       setMpSuccess(true);
       setTimeout(() => setMpSuccess(false), 3000);
     } catch (err) {
@@ -1155,40 +1219,49 @@ const SettingsPage: React.FC = () => {
           </SectionHeader>
           <SectionContent>
             <form onSubmit={handleMpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+              {/* Conexão OAuth */}
               <FormGroup>
-                <Label htmlFor="mpToken">
-                  Access Token do Mercado Pago
-                  {mpConfigured && (
-                    <MpBadge $ok style={{ marginLeft: '0.5rem' }}>
-                      ✓ configurado
-                    </MpBadge>
+                <Label>Conta Mercado Pago</Label>
+                <MpConnectArea>
+                  <MpConnectText>
+                    {mpConfigured ? (
+                      <>
+                        <MpBadge $ok>✓ Conta conectada</MpBadge>
+                        <Text $size="xs" $color="tertiary" style={{ margin: '0.4rem 0 0' }}>
+                          O token de acesso está salvo. Clique em "Desconectar" para revogar.
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text $size="sm" $weight="medium" $color="primary" style={{ margin: 0 }}>
+                          Nenhuma conta conectada
+                        </Text>
+                        <Text $size="xs" $color="tertiary" style={{ margin: '0.25rem 0 0' }}>
+                          Clique no botão para autorizar o BarberFlow na conta MP da barbearia.
+                        </Text>
+                      </>
+                    )}
+                  </MpConnectText>
+                  {mpConfigured ? (
+                    <Button
+                      type="button"
+                      $variant="outline"
+                      $size="sm"
+                      onClick={() => void handleMpDisconnect()}
+                      disabled={mpDisconnecting}
+                    >
+                      {mpDisconnecting ? 'Desconectando...' : 'Desconectar'}
+                    </Button>
+                  ) : (
+                    <MpConnectBtn type="button" onClick={handleMpConnect}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                      </svg>
+                      Conectar com Mercado Pago
+                    </MpConnectBtn>
                   )}
-                </Label>
-                <Text $size="sm" $color="tertiary" style={{ marginBottom: '0.5rem' }}>
-                  {mpConfigured
-                    ? 'Um token já está salvo. Cole um novo para substituí-lo.'
-                    : 'Cole aqui o token obtido no painel do Mercado Pago (Credenciais → Access Token de produção ou TEST-...).'}
-                </Text>
-                <MpTokenRow>
-                  <Input
-                    id="mpToken"
-                    type={mpShowToken ? 'text' : 'password'}
-                    value={mpAccessToken}
-                    onChange={(e) => setMpAccessToken(e.target.value)}
-                    placeholder={mpConfigured ? '••••••••••••••••••••' : 'APP_USR-... ou TEST-...'}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                  <Button
-                    type="button"
-                    $variant="outline"
-                    $size="sm"
-                    onClick={() => setMpShowToken((v) => !v)}
-                    style={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
-                  >
-                    {mpShowToken ? 'Ocultar' : 'Mostrar'}
-                  </Button>
-                </MpTokenRow>
+                </MpConnectArea>
               </FormGroup>
 
               <FormGroup>
@@ -1215,14 +1288,13 @@ const SettingsPage: React.FC = () => {
               </FormGroup>
 
               <MpInfoBox>
-                <strong>Como obter o Access Token:</strong>
-                {' '}Acesse mercadopago.com.br → Seu negócio → Credenciais → Access Token.
-                Para testes, use o token <code>TEST-...</code>; em produção, use <code>APP_USR-...</code>.
-                <br />
-                <strong>Webhook:</strong> configure no Mercado Pago a URL
-                {' '}<code style={{ wordBreak: 'break-all' }}>
-                  {`${window.location.origin.replace('localhost:5173', 'SEU_REF.supabase.co')}/functions/v1/mercadopago-webhook`}
-                </code>.
+                <strong>Como conectar:</strong> clique em "Conectar com Mercado Pago" — o dono da barbearia
+                fará login na conta MP dele e autoriza o BarberFlow. O token é salvo automaticamente.
+                <br /><br />
+                <strong>Pré-requisito:</strong> é necessário que o BarberFlow esteja cadastrado como
+                aplicativo no <code>developers.mercadopago.com</code> e que{' '}
+                <code>VITE_MERCADOPAGO_CLIENT_ID</code>, <code>MERCADOPAGO_CLIENT_ID</code> e{' '}
+                <code>MERCADOPAGO_CLIENT_SECRET</code> estejam configurados.
               </MpInfoBox>
 
               <div>
@@ -1235,7 +1307,7 @@ const SettingsPage: React.FC = () => {
                   {mpSubmitting ? 'Salvando...' : 'Salvar configurações PIX'}
                 </SaveButton>
                 <SuccessMessage $show={mpSuccess}>
-                  ✓ Configurações do Mercado Pago salvas!
+                  {mpSuccess ? '✓ Mercado Pago conectado com sucesso!' : '✓ Configurações salvas!'}
                 </SuccessMessage>
                 <ErrorMessage $show={!!mpError}>✗ {mpError}</ErrorMessage>
               </div>
