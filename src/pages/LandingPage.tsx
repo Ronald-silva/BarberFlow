@@ -39,23 +39,23 @@ const Nav = styled.nav`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
-  height: 60px;
+  padding: 0 1.5rem;
+  height: 64px;
   background: rgba(18, 18, 18, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(200, 146, 42, 0.12);
 
   @media (min-width: 768px) {
-    padding: 0 2rem;
-    height: 68px;
+    padding: 0 4rem;
+    height: 80px;
   }
 `;
 
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   
   img {
     height: 32px;
@@ -88,7 +88,7 @@ const Logo = styled.div`
 const NavActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 
   @media (min-width: 480px) {
     gap: 0.75rem;

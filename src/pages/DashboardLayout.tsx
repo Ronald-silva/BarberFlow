@@ -26,8 +26,8 @@ const MobileHeader = styled.header<{ $menuOpen: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 1rem;
-  height: 60px;
+  padding: 0 1.25rem;
+  height: 64px;
   background: rgba(13, 13, 13, 0.95);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid #1A1A1A;
@@ -45,7 +45,7 @@ const MobileHeader = styled.header<{ $menuOpen: boolean }>`
 const MobileLogo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   
   img {
     height: 28px;
@@ -179,7 +179,7 @@ const Sidebar = styled.aside<{ $open: boolean; $inDialog?: boolean }>`
 const SidebarLogo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 0 0.5rem;
   margin-bottom: 2rem;
   
@@ -267,7 +267,7 @@ const NavItem = styled(NavLink)`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0.875rem;
+  padding: 0.85rem 1rem;
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 500;
@@ -569,7 +569,7 @@ const Main = styled.main<{ $menuOpen: boolean }>`
   position: relative;
 
   @media (max-width: 1023px) {
-    padding-top: 60px;
+    padding-top: 64px;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     ${p =>
       p.$menuOpen &&
