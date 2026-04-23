@@ -853,6 +853,55 @@ export const api = {
     };
   },
 
+  getPublicOccupiedTimeRanges: async (barbershopId: string, date: Date) => {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const occupied: { start: Date, end: Date, professionalId: string | null }[] = [];
+
+    try {
+      // 1. Buscar das reservas (novo fluxo PIX)
+      const { data: reservas } = await supabase
+        .from('reservas')
+        .select('horario, horario_fim, profissional_id')
+        .eq('barbearia_id', barbershopId)
+        .in('status', ['aguardando_pagamento', 'pago'])
+        .gte('horario', startOfDay.toISOString())
+        .lte('horario', endOfDay.toISOString());
+
+      if (reservas) {
+        reservas.forEach(r => occupied.push({
+          start: new Date(r.horario),
+          end: new Date(r.horario_fim),
+          professionalId: r.profissional_id
+        }));
+      }
+
+      // 2. Buscar dos agendamentos legados (se houver)
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('start_datetime, end_datetime, professional_id')
+        .eq('barbershop_id', barbershopId)
+        .in('status', ['confirmed', 'pending'])
+        .gte('start_datetime', startOfDay.toISOString())
+        .lte('start_datetime', endOfDay.toISOString());
+
+      if (appointments) {
+        appointments.forEach(a => occupied.push({
+          start: new Date(a.start_datetime),
+          end: new Date(a.end_datetime),
+          professionalId: a.professional_id
+        }));
+      }
+    } catch (e) {
+      console.error('Error fetching occupied times:', e);
+    }
+
+    return occupied;
+  },
+
   getAppointmentsForDate: async (barbershopId: string, date: Date) => {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);

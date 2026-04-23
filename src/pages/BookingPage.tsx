@@ -167,6 +167,8 @@ const BookingPage: React.FC = () => {
   const [clientWhatsapp, setClientWhatsapp] = useState('');
   const [clientEmail, setClientEmail] = useState('');
 
+  const [occupiedSlots, setOccupiedSlots] = useState<{ start: Date, end: Date, professionalId: string | null }[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -208,6 +210,15 @@ const BookingPage: React.FC = () => {
     };
     loadData();
   }, [barbershopSlug]);
+
+  // Carregar slots ocupados quando a data ou barbearia muda
+  useEffect(() => {
+    if (barbershop && selectedDate) {
+      supabaseApi.getPublicOccupiedTimeRanges(barbershop.id, selectedDate)
+        .then(setOccupiedSlots)
+        .catch(console.error);
+    }
+  }, [barbershop, selectedDate]);
 
   // Polling: check reserva status every 3s while on step 6
   useEffect(() => {
@@ -351,9 +362,36 @@ const BookingPage: React.FC = () => {
   const timeSlots = useMemo(() => {
     const slotMin = totalDuration > 0 ? totalDuration : 30;
     const dynamic = getAvailableSlots(barbershop?.workingHours, selectedDate, slotMin);
-    if (dynamic === null) return FALLBACK_SLOTS;
-    return dynamic;
-  }, [barbershop?.workingHours, selectedDate, totalDuration]);
+    const slotsToFilter = dynamic === null ? FALLBACK_SLOTS : dynamic;
+
+    if (slotsToFilter.length === 0) return slotsToFilter;
+
+    // Agenda Inteligente: Filtrar horários conflitantes
+    return slotsToFilter.filter(time => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const slotStart = new Date(selectedDate);
+      slotStart.setHours(hours, minutes, 0, 0);
+      const slotEnd = new Date(slotStart.getTime() + slotMin * 60 * 1000);
+
+      // Encontrar reservas/agendamentos que sobrepõem este horário
+      const overlaps = occupiedSlots.filter(occ => slotStart < occ.end && slotEnd > occ.start);
+      if (overlaps.length === 0) return true; // Horário 100% livre
+
+      if (selectedProfessional !== 'any') {
+        // Cliente quer um barbeiro específico. Se ele (ou a loja inteira) estiver ocupado, bloqueia.
+        const isProfBusy = overlaps.some(occ => !occ.professionalId || occ.professionalId === selectedProfessional);
+        return !isProfBusy;
+      } else {
+        // "Qualquer Profissional". Bloqueia apenas se TODOS os profissionais estiverem ocupados ao mesmo tempo.
+        const hasGlobalBlock = overlaps.some(o => !o.professionalId);
+        if (hasGlobalBlock) return false;
+        
+        const busyProfIds = new Set(overlaps.map(o => o.professionalId).filter(Boolean));
+        if (busyProfIds.size >= Math.max(1, professionals.length)) return false;
+        return true;
+      }
+    });
+  }, [barbershop?.workingHours, selectedDate, totalDuration, occupiedSlots, selectedProfessional, professionals.length]);
 
   if (loading) {
     return (

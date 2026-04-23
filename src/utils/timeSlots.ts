@@ -61,13 +61,12 @@ export function getAvailableSlots(
   return slots;
 }
 
-/** Default working hours config (Mon–Sat, single interval). */
 export const DEFAULT_WORKING_HOURS: WorkingHoursConfig = [
-  { day: 0, enabled: false, intervals: [{ start: '09:00', end: '15:00' }] },
-  { day: 1, enabled: true,  intervals: [{ start: '09:00', end: '18:00' }] },
-  { day: 2, enabled: true,  intervals: [{ start: '09:00', end: '18:00' }] },
-  { day: 3, enabled: true,  intervals: [{ start: '09:00', end: '18:00' }] },
-  { day: 4, enabled: true,  intervals: [{ start: '09:00', end: '18:00' }] },
-  { day: 5, enabled: true,  intervals: [{ start: '09:00', end: '20:00' }] },
-  { day: 6, enabled: true,  intervals: [{ start: '08:00', end: '16:00' }] },
+  { day: 0, enabled: false, intervals: [] },
+  { day: 1, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
+  { day: 2, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
+  { day: 3, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
+  { day: 4, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
+  { day: 5, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
+  { day: 6, enabled: true,  intervals: [{ start: '08:00', end: '12:00' }, { start: '14:00', end: '20:00' }] },
 ];

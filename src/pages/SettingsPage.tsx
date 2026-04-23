@@ -1307,13 +1307,10 @@ const SettingsPage: React.FC = () => {
               </FormGroup>
 
               <MpInfoBox>
-                <strong>Como conectar:</strong> clique em "Conectar com Mercado Pago" — o dono da barbearia
-                fará login na conta MP dele e autoriza o BarberFlow. O token é salvo automaticamente.
+                <strong>Como funciona:</strong> Ao clicar em "Conectar com Mercado Pago", você fará login seguro na sua própria conta. 
+                A partir desse momento, todos os pagamentos via PIX dos seus agendamentos cairão <strong>direto e instantaneamente na sua conta bancária</strong>.
                 <br /><br />
-                <strong>Pré-requisito:</strong> é necessário que o BarberFlow esteja cadastrado como
-                aplicativo no <code>developers.mercadopago.com</code> e que{' '}
-                <code>VITE_MERCADOPAGO_CLIENT_ID</code>, <code>MERCADOPAGO_CLIENT_ID</code> e{' '}
-                <code>MERCADOPAGO_CLIENT_SECRET</code> estejam configurados.
+                <strong>100% Seguro:</strong> O BarberFlow apenas gera a cobrança, não retemos o dinheiro em nenhum momento.
               </MpInfoBox>
 
               <div>
