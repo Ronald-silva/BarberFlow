@@ -13,6 +13,12 @@ SaaS multi-tenant para barbearias: agendamento, painel da barbearia, admin da pl
 - Assinaturas e billing (ver `docs/BILLING_ROLLOUT_RUNBOOK.md` e `docs/STRIPE_IMPLEMENTATION_GUIDE.md` quando aplicável)  
 - UI com React, TypeScript, styled-components e rotas com React Router (HashRouter no `App.tsx`)
 
+## Principais Funcionalidades Recentes
+
+- **Integração Mercado Pago (PIX)**: Fluxo completo de agendamento via PIX. O pagamento cai diretamente na conta do dono da barbearia (OAuth/Multi-tenant) através das nossas Edge Functions, com atualização de status via Webhooks em tempo real.
+- **Agenda Inteligente (Anti-Overbooking)**: A interface de agendamentos (`BookingPage`) consulta o banco de dados dinamicamente, ocultando horários já reservados (ou em aguardo de PIX) com base na duração do serviço escolhido e disponibilidade dos profissionais.
+- **Experiência Premium & Mobile-First**: Telas de configuração da barbearia (`SettingsPage`) com layout totalmente responsivo, adaptado para uso em smartphones pelos donos, focando em usabilidade comercial e sem jargões técnicos.
+
 ## Início rápido
 
 ### Requisitos
