@@ -567,10 +567,13 @@ const SettingsPage: React.FC = () => {
             if (barbershop.workingHours && barbershop.workingHours.length > 0) {
               let loadedHours = barbershop.workingHours;
               
-              // Auto-correção: Se os horários forem do antigo padrão (Segunda das 09:00 às 18:00), 
-              // forçamos o novo padrão (Brito Barbershop) e já salvamos no banco para limpar a cache do cliente.
-              const isOldDefault = loadedHours[1]?.intervals?.[0]?.start === '09:00' && loadedHours[1]?.intervals?.[0]?.end === '18:00';
-              if (isOldDefault) {
+              // Auto-correção: Detecta se o horário está usando a estrutura antiga/bagunçada (ex: terminando às 18:00)
+              // Se sim, força o novo padrão (Brito Barbershop) e salva no banco.
+              const hasLegacyOrBrokenHours = loadedHours.some(d => 
+                d.enabled && d.intervals.some(i => i.end === '18:00' || i.end === '16:00')
+              );
+              
+              if (hasLegacyOrBrokenHours) {
                 loadedHours = DEFAULT_WORKING_HOURS;
                 supabaseApi.updateBarbershop(user.barbershopId, { workingHours: DEFAULT_WORKING_HOURS }).catch(console.error);
               }
