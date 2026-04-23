@@ -202,13 +202,13 @@ export default function TermsOfServicePage() {
 
         <h2>2. INFORMAÇÕES DA EMPRESA</h2>
         <InfoBox>
-          <p><strong>Razão Social:</strong> [INSERIR RAZÃO SOCIAL DA EMPRESA]</p>
+          <p><strong>Razão Social:</strong> Shafar Tecnologia</p>
           <p><strong>Nome Fantasia:</strong> Shafar</p>
-          <p><strong>CNPJ:</strong> [INSERIR CNPJ]</p>
-          <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
+          <p><strong>CNPJ:</strong> (A ser preenchido)</p>
+          <p><strong>Endereço:</strong> (A ser preenchido)</p>
           <p><strong>E-mail:</strong> contato@shafar.com.br</p>
-          <p><strong>Telefone:</strong> [INSERIR TELEFONE]</p>
-          <NoMarginParagraph><strong>Website:</strong> https://shafar.com.br</NoMarginParagraph>
+          <p><strong>Telefone:</strong> (A ser preenchido)</p>
+          <NoMarginParagraph><strong>Website:</strong> https://shafar.vercel.app</NoMarginParagraph>
         </InfoBox>
 
         <hr />
@@ -305,38 +305,8 @@ export default function TermsOfServicePage() {
 
         <h3>5.1. Planos Disponíveis</h3>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Plano</th>
-              <th>Preço</th>
-              <th>Profissionais</th>
-              <th>Recursos</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Básico</strong></td>
-              <td>R$ 79,00/mês</td>
-              <td>Até 2</td>
-              <td>Agendamentos ilimitados, Notificações WhatsApp, Suporte por e-mail</td>
-            </tr>
-            <tr>
-              <td><strong>Pro</strong></td>
-              <td>R$ 149,00/mês</td>
-              <td>Até 5</td>
-              <td>Tudo do Básico + Notificações SMS, Relatórios avançados, Suporte prioritário</td>
-            </tr>
-            <tr>
-              <td><strong>Enterprise</strong></td>
-              <td>R$ 299,00/mês</td>
-              <td>Ilimitados</td>
-              <td>Tudo do Pro + Relatórios personalizados, Suporte 24/7, API dedicada</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p><strong>Obs:</strong> Preços sujeitos a alteração mediante aviso prévio de 30 dias.</p>
+        <p>A Plataforma oferece diferentes modalidades de planos de assinatura (ex: Básico, Profissional, Premium).</p>
+        <p><strong>Nota:</strong> As características, limites de profissionais e valores atualizados de cada plano estão sempre disponíveis e detalhados em nossa página oficial de preços (Landing Page).</p>
 
         <h3>5.2. Período de Teste (Trial)</h3>
         <InfoBox>
@@ -542,7 +512,7 @@ export default function TermsOfServicePage() {
 
         <h3>10.2. Foro</h3>
         <p>
-          Fica eleito o foro da comarca de <strong>[INSERIR CIDADE]</strong> para dirimir quaisquer
+          Fica eleito o foro da comarca da sede da <strong>Shafar Tecnologia</strong> para dirimir quaisquer
           questões oriundas destes Termos.
         </p>
 
@@ -553,8 +523,8 @@ export default function TermsOfServicePage() {
           <p>Para questões relacionadas a estes Termos de Uso:</p>
           <p><strong>E-mail:</strong> contato@shafar.com.br</p>
           <p><strong>E-mail jurídico:</strong> legal@shafar.com.br</p>
-          <p><strong>Telefone:</strong> [INSERIR TELEFONE]</p>
-          <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
+          <p><strong>Telefone:</strong> (A ser preenchido)</p>
+          <p><strong>Endereço:</strong> (A ser preenchido)</p>
           <NoMarginParagraph><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h</NoMarginParagraph>
         </InfoBox>
 

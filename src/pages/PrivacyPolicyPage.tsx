@@ -180,11 +180,11 @@ export default function PrivacyPolicyPage() {
 
         <h3>1.1. Controlador de Dados</h3>
         <ContactBox>
-          <p><strong>Razão Social:</strong> [INSERIR RAZÃO SOCIAL DA EMPRESA]</p>
-          <p><strong>CNPJ:</strong> [INSERIR CNPJ]</p>
-          <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
+          <p><strong>Razão Social:</strong> Shafar Tecnologia</p>
+          <p><strong>CNPJ:</strong> (A ser preenchido)</p>
+          <p><strong>Endereço:</strong> (A ser preenchido)</p>
           <p><strong>E-mail de contato:</strong> privacy@shafar.com.br</p>
-          <p><strong>DPO (Encarregado de Dados):</strong> [INSERIR NOME DO DPO]</p>
+          <p><strong>DPO (Encarregado de Dados):</strong> (A ser preenchido)</p>
           <p><strong>E-mail do DPO:</strong> dpo@shafar.com.br</p>
         </ContactBox>
 
@@ -485,8 +485,8 @@ export default function PrivacyPolicyPage() {
           <p>Para questões relacionadas a esta Política de Privacidade ou ao tratamento de dados pessoais:</p>
           <p><strong>E-mail geral:</strong> privacy@shafar.com.br</p>
           <p><strong>DPO (Encarregado de Dados):</strong> dpo@shafar.com.br</p>
-          <p><strong>Endereço:</strong> [INSERIR ENDEREÇO COMPLETO]</p>
-          <p><strong>Telefone:</strong> [INSERIR TELEFONE]</p>
+          <p><strong>Endereço:</strong> (A ser preenchido)</p>
+          <p><strong>Telefone:</strong> (A ser preenchido)</p>
           <p><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h (horário de Brasília)</p>
         </ContactBox>
 
