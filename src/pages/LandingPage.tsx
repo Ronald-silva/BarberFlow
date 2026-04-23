@@ -830,7 +830,7 @@ const LandingPage: React.FC = () => {
       name: 'Premium',
       price: 'R$ 99,90',
       desc: 'Para grandes operações',
-      features: ['Profissionais ilimitados', 'Tudo do Profissional', 'CRM completo', 'API de integração', 'Suporte VIP 24/7'],
+      features: ['Até 15 profissionais', 'Tudo do Profissional', 'CRM completo', 'API de integração', 'Suporte VIP 24/7'],
     },
   ];
 
