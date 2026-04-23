@@ -872,7 +872,7 @@ export const api = {
         .lte('horario', endOfDay.toISOString());
 
       if (reservas) {
-        reservas.forEach(r => occupied.push({
+        (reservas as any[]).forEach(r => occupied.push({
           start: new Date(r.horario),
           end: new Date(r.horario_fim),
           professionalId: r.profissional_id
