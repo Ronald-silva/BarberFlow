@@ -90,6 +90,39 @@ const WorkingHoursForm = styled.form`
   gap: ${(props) => props.theme.spacing[4]};
 `;
 
+const SlotIntervalRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${(props) => props.theme.spacing[4]};
+  padding: ${(props) => props.theme.spacing[3]} ${(props) => props.theme.spacing[4]};
+  background: ${(props) => props.theme.colors.background.secondary};
+  border: 1px solid ${(props) => props.theme.colors.border.primary};
+  border-radius: ${(props) => props.theme.radii.md};
+`;
+
+const SlotIntervalLabel = styled.label`
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: ${(props) => props.theme.colors.text.primary};
+  white-space: nowrap;
+`;
+
+const SlotIntervalSelect = styled.select`
+  background: ${(props) => props.theme.colors.background.tertiary};
+  border: 1px solid ${(props) => props.theme.colors.border.primary};
+  border-radius: ${(props) => props.theme.radii.sm};
+  color: ${(props) => props.theme.colors.text.primary};
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+  &:focus {
+    border-color: ${(props) => props.theme.colors.primary};
+  }
+`;
+
 const LinkFieldRow = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -213,6 +246,12 @@ const DayLabel = styled.div`
 
 const TimeInput = styled(Input)`
   font-size: ${(props) => props.theme.typography.fontSizes.sm};
+  color-scheme: dark;
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.7) sepia(1) saturate(3) hue-rotate(5deg) brightness(1.1);
+    cursor: pointer;
+    opacity: 0.8;
+  }
 `;
 
 const ToggleSwitch = styled.label`
@@ -527,6 +566,7 @@ const SettingsPage: React.FC = () => {
   const [brandColorHex, setBrandColorHex] = useState(DEFAULT_BRAND_MAIN_HEX);
 
   const [workingHours, setWorkingHours] = useState<DaySchedule[]>(DEFAULT_WORKING_HOURS);
+  const [slotInterval, setSlotInterval] = useState(30);
 
   const [mpConfigured, setMpConfigured] = useState(false);
   const [mpDisconnecting, setMpDisconnecting] = useState(false);
@@ -575,11 +615,12 @@ const SettingsPage: React.FC = () => {
               
               if (hasLegacyOrBrokenHours) {
                 loadedHours = DEFAULT_WORKING_HOURS;
-                supabaseApi.updateBarbershop(user.barbershopId, { workingHours: DEFAULT_WORKING_HOURS }).catch(console.error);
+                supabaseApi.updateBarbershop(user.barbershopId!, { workingHours: DEFAULT_WORKING_HOURS }).catch(console.error);
               }
-              
+
               setWorkingHours(loadedHours);
             }
+            setSlotInterval(barbershop.slotInterval ?? 30);
             const saved = normalizeBrandHex(barbershop.brandPrimaryColor ?? undefined);
             if (saved) {
               setUseCustomBrandColor(true);
@@ -679,7 +720,7 @@ const SettingsPage: React.FC = () => {
     setSubmitting(true);
     setError("");
     try {
-      await supabaseApi.updateBarbershop(user.barbershopId!, { workingHours });
+      await supabaseApi.updateBarbershop(user.barbershopId!, { workingHours, slotInterval });
       await reloadBarbershop();
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -1358,6 +1399,24 @@ const SettingsPage: React.FC = () => {
           </SectionHeader>
           <SectionContent>
             <WorkingHoursForm onSubmit={handleWorkingHoursSubmit}>
+              <SlotIntervalRow>
+                <SlotIntervalLabel htmlFor="slotInterval">
+                  Intervalo entre horários
+                </SlotIntervalLabel>
+                <SlotIntervalSelect
+                  id="slotInterval"
+                  value={slotInterval}
+                  onChange={(e) => setSlotInterval(Number(e.target.value))}
+                >
+                  <option value={15}>15 minutos</option>
+                  <option value={20}>20 minutos</option>
+                  <option value={30}>30 minutos</option>
+                  <option value={45}>45 minutos</option>
+                  <option value={60}>1 hora</option>
+                  <option value={90}>1h 30min</option>
+                </SlotIntervalSelect>
+              </SlotIntervalRow>
+
               <WorkingHoursGrid>
                 {workingHours.map((schedule) => (
                   <DayRow key={schedule.day}>
@@ -1374,7 +1433,7 @@ const SettingsPage: React.FC = () => {
                             onChange={(e) => updateInterval(schedule.day, ivIdx, 'start', e.target.value)}
                             disabled={!schedule.enabled}
                             $size="sm"
-                            style={{ width: 100 }}
+                            style={{ width: 118 }}
                           />
                           <IntervalSep>até</IntervalSep>
                           <TimeInput
@@ -1383,7 +1442,7 @@ const SettingsPage: React.FC = () => {
                             onChange={(e) => updateInterval(schedule.day, ivIdx, 'end', e.target.value)}
                             disabled={!schedule.enabled}
                             $size="sm"
-                            style={{ width: 100 }}
+                            style={{ width: 118 }}
                           />
                           {schedule.intervals.length > 1 && (
                             <RemoveIntervalBtn

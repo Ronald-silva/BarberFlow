@@ -46,6 +46,8 @@ export interface Barbershop {
   mercadopagoConfigured?: boolean;
   /** Horários de funcionamento da barbearia com suporte a múltiplos intervalos por dia. */
   workingHours?: WorkingHoursConfig;
+  /** Intervalo mínimo entre horários no painel de agendamento (minutos). Padrão: 30. */
+  slotInterval?: number;
 }
 
 export interface User {

@@ -45,6 +45,7 @@ export interface Database {
           cpf_cnpj?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
+          slot_interval_minutes?: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -60,6 +61,7 @@ export interface Database {
           cpf_cnpj?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
+          slot_interval_minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -75,6 +77,7 @@ export interface Database {
           cpf_cnpj?: string | null;
           require_payment_before_booking?: boolean | null;
           working_hours?: unknown | null;
+          slot_interval_minutes?: number | null;
           created_at?: string;
           updated_at?: string;
         };

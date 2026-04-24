@@ -360,7 +360,8 @@ const BookingPage: React.FC = () => {
   const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
 
   const timeSlots = useMemo(() => {
-    const slotMin = totalDuration > 0 ? totalDuration : 30;
+    const configuredInterval = barbershop?.slotInterval ?? 30;
+    const slotMin = Math.max(totalDuration > 0 ? totalDuration : configuredInterval, configuredInterval);
     const dynamic = getAvailableSlots(barbershop?.workingHours, selectedDate, slotMin);
     const slotsToFilter = dynamic === null ? FALLBACK_SLOTS : dynamic;
 

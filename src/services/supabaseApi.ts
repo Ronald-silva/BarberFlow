@@ -19,6 +19,7 @@ type DbBarbershopPublicRow = Pick<
   | 'brand_primary_color'
   | 'require_payment_before_booking'
   | 'working_hours'
+  | 'slot_interval_minutes'
 >;
 type DbPublicServiceRow = Database['public']['Functions']['get_public_services_by_barbershop']['Returns'][number];
 type DbPublicProfessionalRow =
@@ -48,6 +49,7 @@ export function mapDbBarbershop(row: DbBarbershopPublicRow): Barbershop {
     requirePaymentBeforeBooking: row.require_payment_before_booking ?? false,
     mercadopagoConfigured: false,
     workingHours: (row.working_hours as WorkingHoursConfig | null) ?? undefined,
+    slotInterval: row.slot_interval_minutes ?? 30,
   };
 }
 
@@ -187,7 +189,7 @@ export const api = {
     if (!id) return null;
     const { data, error } = await supabase
       .from('barbershops')
-      .select('id, name, slug, address, logo_url, phone, email, brand_primary_color, require_payment_before_booking, working_hours')
+      .select('id, name, slug, address, logo_url, phone, email, brand_primary_color, require_payment_before_booking, working_hours, slot_interval_minutes')
       .eq('id', id)
       .maybeSingle();
     if (error) {
@@ -228,6 +230,7 @@ export const api = {
       mercadopagoAccessToken?: string | null;
       requirePaymentBeforeBooking?: boolean;
       workingHours?: WorkingHoursConfig | null;
+      slotInterval?: number;
     }
   ): Promise<{ brandSaved: boolean }> => {
     const row: Database['public']['Tables']['barbershops']['Update'] = {};
@@ -239,6 +242,7 @@ export const api = {
     if (payload.logoUrl !== undefined) row.logo_url = payload.logoUrl;
     if (payload.requirePaymentBeforeBooking !== undefined) row.require_payment_before_booking = payload.requirePaymentBeforeBooking;
     if (payload.workingHours !== undefined) row.working_hours = payload.workingHours as unknown;
+    if (payload.slotInterval !== undefined) row.slot_interval_minutes = payload.slotInterval;
 
     const wantsBrand = Object.prototype.hasOwnProperty.call(payload, 'brandPrimaryColor');
     const withBrand = wantsBrand
