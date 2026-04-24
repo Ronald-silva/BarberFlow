@@ -429,6 +429,9 @@ const BookingPage: React.FC = () => {
   }
 
   const professionalForConfirmation = professionals.find(p => p.id === selectedProfessional) || professionals[0];
+  const selectedProfessionalLabel = selectedProfessional === 'any'
+    ? 'Qualquer profissional'
+    : (professionals.find(p => p.id === selectedProfessional)?.name || 'Profissional');
 
   return (
     <BookingContainer>
@@ -501,6 +504,9 @@ const BookingPage: React.FC = () => {
               <StepHeader>
                 <StepTitle>Escolha o profissional</StepTitle>
                 <StepDescription>Selecione seu profissional preferido ou deixe que escolhamos para você</StepDescription>
+                <Text $size="sm" $color="secondary" style={{ marginTop: '0.5rem' }}>
+                  Selecionado: <strong>{selectedProfessionalLabel}</strong>
+                </Text>
               </StepHeader>
 
               <ProfessionalGrid>
@@ -509,6 +515,11 @@ const BookingPage: React.FC = () => {
                   onClick={() => setSelectedProfessional('any')}
                 >
                   <ProfessionalName>⚡ Qualquer Profissional (Mais Rápido)</ProfessionalName>
+                  {selectedProfessional === 'any' ? (
+                    <Text $size="sm" $weight="bold" $color="success" style={{ margin: 0 }}>
+                      ✓ Selecionado
+                    </Text>
+                  ) : null}
                 </ProfessionalCard>
 
                 {professionals.map(professional => (
@@ -517,7 +528,17 @@ const BookingPage: React.FC = () => {
                     selected={selectedProfessional === professional.id}
                     onClick={() => setSelectedProfessional(professional.id)}
                   >
-                    <ProfessionalName>👨‍💼 {professional.name}</ProfessionalName>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', flex: 1 }}>
+                      <ProfessionalName>👨‍💼 {professional.name}</ProfessionalName>
+                      <Text $size="xs" $color="tertiary" style={{ margin: 0 }}>
+                        {professional.role === 'admin' ? 'Perfil: Administrador' : 'Perfil: Profissional'}
+                      </Text>
+                    </div>
+                    {selectedProfessional === professional.id ? (
+                      <Text $size="sm" $weight="bold" $color="success" style={{ margin: 0 }}>
+                        ✓ Selecionado
+                      </Text>
+                    ) : null}
                   </ProfessionalCard>
                 ))}
               </ProfessionalGrid>

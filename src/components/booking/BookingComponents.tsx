@@ -1,7 +1,13 @@
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { Card } from '../ui/Container';
 
 const bookingFont = `'Plus Jakarta Sans', 'Inter', system-ui, sans-serif`;
+
+const selectedSoftGlow = keyframes`
+  0%   { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.45), 0 0 0 rgba(200, 146, 42, 0); }
+  50%  { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.75), 0 0 16px rgba(200, 146, 42, 0.22); }
+  100% { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.45), 0 0 0 rgba(200, 146, 42, 0); }
+`;
 
 /** Fluxo público de agendamento — fundo com profundidade (referência: Calendly / Cal.com) */
 export const BookingContainer = styled.div`
@@ -173,6 +179,8 @@ export const ServiceCard = styled.div<{ selected?: boolean }>`
   border: 2px solid ${props => props.selected ? props.theme.colors.primary : props.theme.colors.border.primary};
   background-color: ${props => props.selected ? props.theme.colors.primary + '10' : props.theme.colors.background.secondary};
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
   transition: ${props => props.theme.transitions.base};
   
   &:hover {
@@ -185,6 +193,25 @@ export const ServiceCard = styled.div<{ selected?: boolean }>`
     transform: translateY(0);
   }
   
+  ${props => props.selected && css`
+    border-color: ${props.theme.colors.primary};
+    box-shadow: 0 0 0 1px ${props.theme.colors.primary}, ${props.theme.shadows.glow};
+    background-color: ${props.theme.colors.primary}18;
+    transform: translateY(-1px);
+    animation: ${selectedSoftGlow} 1.8s ease-in-out infinite;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 1px ${props.theme.colors.primary}, 0 10px 26px rgba(200, 146, 42, 0.22);
+    }
+  `}
+
+  ${props => !props.selected && css`
+    &:hover {
+      border-color: ${props.theme.colors.primary};
+    }
+  `}
+
   ${props => props.selected && css`
     box-shadow: ${props => props.theme.shadows.glow};
   `}
