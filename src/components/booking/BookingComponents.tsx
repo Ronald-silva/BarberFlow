@@ -1,13 +1,8 @@
-import styled, { css, keyframes } from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Card } from '../ui/Container';
 
 const bookingFont = `'Plus Jakarta Sans', 'Inter', system-ui, sans-serif`;
 
-const selectedSoftGlow = keyframes`
-  0%   { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.45), 0 0 0 rgba(200, 146, 42, 0); }
-  50%  { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.75), 0 0 16px rgba(200, 146, 42, 0.22); }
-  100% { box-shadow: 0 0 0 1px rgba(200, 146, 42, 0.45), 0 0 0 rgba(200, 146, 42, 0); }
-`;
 
 /** Fluxo público de agendamento — fundo com profundidade (referência: Calendly / Cal.com) */
 export const BookingContainer = styled.div`
@@ -176,50 +171,28 @@ export const ServiceGrid = styled.div`
 export const ServiceCard = styled.div<{ selected?: boolean }>`
   padding: ${props => props.theme.spacing[4]};
   border-radius: ${props => props.theme.radii.lg};
-  border: 2px solid ${props => props.selected ? props.theme.colors.primary : props.theme.colors.border.primary};
-  background-color: ${props => props.selected ? props.theme.colors.primary + '10' : props.theme.colors.background.secondary};
+  border: 2px solid transparent;
+  border-color: ${props => props.selected ? props.theme.colors.primary : props.theme.colors.border.primary};
+  background-color: ${props => props.selected
+    ? 'rgba(200, 146, 42, 0.10)'
+    : props.theme.colors.background.secondary};
+  box-shadow: ${props => props.selected
+    ? 'inset 0 0 0 1px rgba(200, 146, 42, 0.35), 0 6px 24px rgba(200, 146, 42, 0.18)'
+    : 'none'};
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  transition: ${props => props.theme.transitions.base};
-  
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+
   &:hover {
     border-color: ${props => props.theme.colors.primary};
-    transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadows.md};
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  ${props => props.selected && css`
-    border-color: ${props.theme.colors.primary};
-    box-shadow: 0 0 0 1px ${props.theme.colors.primary}, ${props.theme.shadows.glow};
-    background-color: ${props.theme.colors.primary}18;
-    transform: translateY(-1px);
-    animation: ${selectedSoftGlow} 1.8s ease-in-out infinite;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 0 1px ${props.theme.colors.primary}, 0 10px 26px rgba(200, 146, 42, 0.22);
-    }
-  `}
-
-  ${props => !props.selected && css`
-    &:hover {
-      border-color: ${props.theme.colors.primary};
-    }
-  `}
-
-  ${props => props.selected && css`
-    box-shadow: ${props => props.theme.shadows.glow};
-  `}
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    &:hover {
-      transform: translateY(-2px);
-    }
+    box-shadow: ${props => props.selected
+      ? 'inset 0 0 0 1px rgba(200, 146, 42, 0.45), 0 8px 28px rgba(200, 146, 42, 0.22)'
+      : '0 4px 16px rgba(200, 146, 42, 0.08)'};
   }
 `;
 
