@@ -21,13 +21,22 @@ const MobileHeader = styled.header`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: ${p => p.theme.spacing[4]};
+    padding: 0 1rem;
+    height: 56px;
     background: linear-gradient(135deg, ${p => p.theme.colors.background.elevated} 0%, ${p => p.theme.colors.background.secondary} 100%);
-    border-bottom: 1px solid ${p => p.theme.colors.border.primary};
+    border: 1px solid ${p => p.theme.colors.border.primary};
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    box-sizing: border-box;
     z-index: ${p => p.theme.zIndex.sticky};
     backdrop-filter: blur(10px);
+    border-radius: 14px;
+    
+    /* Suporte para notch/safe area */
+    margin-top: env(safe-area-inset-top);
   }
 `;
 

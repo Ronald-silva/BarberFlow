@@ -31,43 +31,44 @@ const Page = styled.div`
 
 /* ===== NAV ===== */
 const Nav = styled.nav`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  position: relative;
+  z-index: 10;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 68px;
   padding: 0 1.5rem;
-  height: 64px;
-  background: rgba(18, 18, 18, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(200, 146, 42, 0.12);
+  background: #0D0D0D;
+  border-bottom: 1px solid rgba(200, 146, 42, 0.14);
+  box-sizing: border-box;
 
   @media (min-width: 768px) {
-    padding: 0 4rem;
     height: 80px;
+    padding: 0 3rem;
+  }
+
+  @media (min-width: 1280px) {
+    padding: 0 calc((100% - 1200px) / 2);
   }
 `;
 
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  
+  gap: 0.625rem;
+  cursor: default;
+
   img {
-    height: 32px;
+    height: 34px;
     width: auto;
     border-radius: 8px;
-    
+
     @media (min-width: 768px) {
       height: 40px;
-      border-radius: 10px;
     }
   }
-  
+
   span {
     font-size: 1.25rem;
     font-weight: 900;
@@ -80,7 +81,7 @@ const Logo = styled.div`
     animation: ${gradientShift} 4s linear infinite;
 
     @media (min-width: 768px) {
-      font-size: 1.5rem;
+      font-size: 1.4375rem;
     }
   }
 `;
@@ -88,9 +89,9 @@ const Logo = styled.div`
 const NavActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 
-  @media (min-width: 480px) {
+  @media (min-width: 768px) {
     gap: 0.75rem;
   }
 `;
@@ -98,20 +99,22 @@ const NavActions = styled.div`
 const NavLink = styled.button`
   background: none;
   border: none;
-  color: #D2D2D2;
+  color: rgba(210, 210, 210, 0.85);
   font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   border-radius: 8px;
-  transition: color 150ms ease;
+  transition: color 120ms ease;
   min-height: 40px;
+  white-space: nowrap;
 
   &:hover { color: #F5F5F5; }
 
   @media (min-width: 768px) {
     font-size: 0.9375rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.125rem;
   }
 `;
 
@@ -123,12 +126,12 @@ const HeroSection = styled.section`
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 80px 1.25rem 4rem;
+  padding: 4rem 1.25rem 4rem;
   position: relative;
   overflow: hidden;
 
   @media (min-width: 768px) {
-    padding: 100px 2rem 5rem;
+    padding: 5rem 2rem 5rem;
   }
 
   /* Grid de pontos de fundo */

@@ -26,16 +26,23 @@ const MobileHeader = styled.header<{ $menuOpen: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 1.25rem;
-  height: 64px;
-  background: rgba(13, 13, 13, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid #1A1A1A;
+  padding: 0 1rem;
+  height: 56px;
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #1A1A1A;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  width: auto;
+  box-sizing: border-box;
+  border-radius: 14px;
   z-index: ${p => (p.$menuOpen ? 60 : 110)};
+  
+  /* Suporte para notch/safe area */
+  margin-top: env(safe-area-inset-top);
 
   @media (min-width: 1024px) {
     display: none;
@@ -569,7 +576,7 @@ const Main = styled.main<{ $menuOpen: boolean }>`
   position: relative;
 
   @media (max-width: 1023px) {
-    padding-top: 64px;
+    padding-top: 80px;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     ${p =>
       p.$menuOpen &&

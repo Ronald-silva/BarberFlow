@@ -23,6 +23,7 @@ const Page = styled.div`
   background: #0D0D0D;
   padding: 1.25rem;
   position: relative;
+  overflow-x: hidden; /* Evita scroll horizontal causado por pseudo-elementos ou animações */
 
   &::before {
     content: '';
