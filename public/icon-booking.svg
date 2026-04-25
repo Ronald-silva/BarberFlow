@@ -4,20 +4,25 @@
       <stop offset="0%" stop-color="#1a1a1a" />
       <stop offset="100%" stop-color="#0d0d0d" />
     </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5d78e" />
-      <stop offset="100%" stop-color="#c8922a" />
+    <linearGradient id="s-main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dce4ff" />
+      <stop offset="50%" stop-color="#97abeb" />
+      <stop offset="100%" stop-color="#647fcf" />
+    </linearGradient>
+    <linearGradient id="s-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f2f6ff" stop-opacity="0.62" />
+      <stop offset="100%" stop-color="#f2f6ff" stop-opacity="0" />
     </linearGradient>
   </defs>
 
   <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bg)" />
   <rect x="72" y="72" width="368" height="368" rx="84" fill="#131313" stroke="#2a2a2a" stroke-width="10" />
 
-  <!-- S principal da marca -->
+  <!-- S 3D da marca (idêntico em todos os perfis) -->
+  <path d="M334 162h-96c-37 0-66 24-66 58 0 33 25 48 63 57l44 10c19 5 29 11 29 22 0 14-14 22-35 22h-102"
+        fill="none" stroke="#2d3e70" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
   <path d="M332 160h-95c-36 0-64 23-64 56 0 32 24 46 61 55l43 10c19 4 28 10 28 21 0 13-13 21-34 21h-101"
-        fill="none" stroke="url(#gold)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" />
-
-  <!-- Selo sutil de agendamento (pontinho/calendário) -->
-  <circle cx="370" cy="358" r="18" fill="#e8c77f" />
-  <path d="M362 358h16M370 350v16" stroke="#0d0d0d" stroke-width="4" stroke-linecap="round" />
+        fill="none" stroke="url(#s-main)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M332 160h-95c-36 0-64 23-64 56 0 32 24 46 61 55l43 10c19 4 28 10 28 21 0 13-13 21-34 21h-101"
+        fill="none" stroke="url(#s-highlight)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
 </svg>
