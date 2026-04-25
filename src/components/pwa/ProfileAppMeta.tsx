@@ -8,7 +8,7 @@ type AppProfile = {
   shortName: string;
   description: string;
   iconPath: string;
-  startUrl: string;
+  startPath: string;
   themeColor: string;
 };
 
@@ -17,7 +17,7 @@ const PLATFORM_PROFILE: AppProfile = {
   shortName: 'Shafar Admin',
   description: 'Administração da plataforma Shafar.',
   iconPath: '/icon-platform.svg',
-  startUrl: '/#/platform',
+  startPath: '/#/platform',
   themeColor: '#c8922a',
 };
 
@@ -26,16 +26,16 @@ const DASHBOARD_PROFILE: AppProfile = {
   shortName: 'Shafar Barber',
   description: 'Gestão da operação da barbearia.',
   iconPath: '/icon-dashboard.svg',
-  startUrl: '/#/dashboard',
+  startPath: '/#/dashboard',
   themeColor: '#2ac96f',
 };
 
-const BOOKING_PROFILE = (startUrl: string): AppProfile => ({
+const BOOKING_PROFILE = (startPath: string): AppProfile => ({
   name: 'Shafar Agendamento',
   shortName: 'Shafar Agenda',
   description: 'Agendamento de clientes.',
   iconPath: '/icon-booking.svg',
-  startUrl,
+  startPath,
   themeColor: '#6f7ef7',
 });
 
@@ -65,7 +65,7 @@ const resolveProfile = (pathname: string, role?: UserRole): AppProfile => {
     shortName: 'Shafar',
     description: 'Plataforma Shafar para barbearias.',
     iconPath: '/favicon-optimized.svg',
-    startUrl: '/#/',
+    startPath: '/#/',
     themeColor: '#c09a5c',
   };
 };
@@ -96,6 +96,11 @@ export const ProfileAppMeta = () => {
   );
 
   useEffect(() => {
+    const origin = window.location.origin;
+    const absoluteStartUrl = new URL(profile.startPath, origin).toString();
+    const absoluteScopeUrl = new URL('/', origin).toString();
+    const absoluteIconUrl = new URL(profile.iconPath, origin).toString();
+
     upsertLink('icon', profile.iconPath, 'image/svg+xml');
     upsertLink('apple-touch-icon', profile.iconPath);
 
@@ -105,18 +110,18 @@ export const ProfileAppMeta = () => {
     }
 
     const manifest = {
-      id: profile.startUrl,
+      id: absoluteStartUrl,
       name: profile.name,
       short_name: profile.shortName,
       description: profile.description,
       theme_color: profile.themeColor,
       background_color: '#0d0d0d',
       display: 'standalone',
-      scope: '/',
-      start_url: profile.startUrl,
+      scope: absoluteScopeUrl,
+      start_url: absoluteStartUrl,
       icons: [
         {
-          src: profile.iconPath,
+          src: absoluteIconUrl,
           sizes: 'any',
           type: 'image/svg+xml',
           purpose: 'any maskable',
