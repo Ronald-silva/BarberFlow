@@ -8,25 +8,26 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png'],
+      includeAssets: [
+        'favicon-optimized.svg',
+        'icon-platform.svg',
+        'icon-dashboard.svg',
+        'icon-booking.svg',
+      ],
       manifest: {
         name: 'Shafar - Gestão de Barbearias',
         short_name: 'Shafar',
         description: 'Plataforma inteligente para gestão de barbearias e agendamentos.',
-        theme_color: '#121212',
-        background_color: '#121212',
+        theme_color: '#c09a5c',
+        background_color: '#0d0d0d',
         display: 'standalone',
+        start_url: '/#/',
+        scope: '/',
         icons: [
           {
-            src: 'logo.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: 'logo.png',
-            sizes: '512x512',
-            type: 'image/png',
+            src: 'favicon-optimized.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]

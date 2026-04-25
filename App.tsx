@@ -12,6 +12,7 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { queryClient } from './src/lib/queryClient';
 import { Footer } from './src/components/Footer';
 import { CookieConsent } from './src/components/CookieConsent';
+import { ProfileAppMeta } from './src/components/pwa/ProfileAppMeta';
 
 // Lazy loading das páginas para melhor performance
 const BookingPage = lazy(() => import('./src/pages/BookingPage'));
@@ -99,6 +100,7 @@ const App: React.FC = () => {
               }}
             >
               <AuthProvider>
+                <ProfileAppMeta />
                 <LazyLoad>
                   <Routes>
                     {/* Public Routes */}
