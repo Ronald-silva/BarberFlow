@@ -16,7 +16,7 @@ const PLATFORM_PROFILE: AppProfile = {
   name: 'Shafar Plataforma',
   shortName: 'Shafar Admin',
   description: 'Administração da plataforma Shafar.',
-  iconPath: '/icon-platform.svg',
+  iconPath: '/icon-platform.png',
   startPath: '/#/platform',
   themeColor: '#c8922a',
 };
@@ -25,7 +25,7 @@ const DASHBOARD_PROFILE: AppProfile = {
   name: 'Shafar Barbearia',
   shortName: 'Shafar Barber',
   description: 'Gestão da operação da barbearia.',
-  iconPath: '/icon-dashboard.svg',
+  iconPath: '/icon-dashboard.png',
   startPath: '/#/dashboard',
   themeColor: '#2ac96f',
 };
@@ -34,7 +34,7 @@ const BOOKING_PROFILE = (startPath: string): AppProfile => ({
   name: 'Shafar Agendamento',
   shortName: 'Shafar Agenda',
   description: 'Agendamento de clientes.',
-  iconPath: '/icon-booking.svg',
+  iconPath: '/icon-booking.png',
   startPath,
   themeColor: '#6f7ef7',
 });
@@ -64,7 +64,7 @@ const resolveProfile = (pathname: string, role?: UserRole): AppProfile => {
     name: 'Shafar',
     shortName: 'Shafar',
     description: 'Plataforma Shafar para barbearias.',
-    iconPath: '/favicon-optimized.svg',
+    iconPath: '/logo.png',
     startPath: '/#/',
     themeColor: '#c09a5c',
   };
@@ -101,7 +101,7 @@ export const ProfileAppMeta = () => {
     const absoluteScopeUrl = new URL('/', origin).toString();
     const absoluteIconUrl = new URL(profile.iconPath, origin).toString();
 
-    upsertLink('icon', profile.iconPath, 'image/svg+xml');
+    upsertLink('icon', profile.iconPath, 'image/png');
     upsertLink('apple-touch-icon', profile.iconPath);
 
     const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -122,8 +122,8 @@ export const ProfileAppMeta = () => {
       icons: [
         {
           src: absoluteIconUrl,
-          sizes: 'any',
-          type: 'image/svg+xml',
+          sizes: '512x512',
+          type: 'image/png',
           purpose: 'any maskable',
         },
       ],

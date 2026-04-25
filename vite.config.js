@@ -15,9 +15,10 @@ export default defineConfig({
       },
       includeAssets: [
         'favicon-optimized.svg',
-        'icon-platform.svg',
-        'icon-dashboard.svg',
-        'icon-booking.svg',
+        'icon-platform.png',
+        'icon-dashboard.png',
+        'icon-booking.png',
+        'logo.png',
       ],
       manifest: {
         name: 'Shafar - Gestão de Barbearias',
