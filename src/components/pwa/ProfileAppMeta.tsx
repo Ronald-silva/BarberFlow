@@ -6,68 +6,65 @@ import { UserRole } from '../../types';
 type AppProfile = {
   name: string;
   shortName: string;
-  description: string;
-  iconPath: string;
-  startPath: string;
   themeColor: string;
+  iconPath: string;
+  /** Caminho para o manifest estático em /public, ou null para gerar blob (booking dinâmico). */
+  staticManifest: string | null;
+  /** Usado apenas quando staticManifest === null (booking com slug dinâmico). */
+  startPath?: string;
 };
 
 const PLATFORM_PROFILE: AppProfile = {
   name: 'Shafar Plataforma',
   shortName: 'Shafar Admin',
-  description: 'Administração da plataforma Shafar.',
-  iconPath: '/icon-platform.png',
-  startPath: '/#/platform',
   themeColor: '#c8922a',
+  iconPath: '/icon-platform.png',
+  staticManifest: '/manifest-platform.json',
 };
 
 const DASHBOARD_PROFILE: AppProfile = {
   name: 'Shafar Barbearia',
   shortName: 'Shafar Barber',
-  description: 'Gestão da operação da barbearia.',
-  iconPath: '/icon-dashboard.png',
-  startPath: '/#/dashboard',
   themeColor: '#2ac96f',
+  iconPath: '/icon-dashboard.png',
+  staticManifest: '/manifest-dashboard.json',
 };
 
-const BOOKING_PROFILE = (startPath: string): AppProfile => ({
+const bookingProfile = (startPath: string): AppProfile => ({
   name: 'Shafar Agendamento',
   shortName: 'Shafar Agenda',
-  description: 'Agendamento de clientes.',
-  iconPath: '/icon-booking.png',
-  startPath,
   themeColor: '#6f7ef7',
+  iconPath: '/icon-booking.png',
+  staticManifest: null,
+  startPath,
 });
 
+const DEFAULT_PROFILE: AppProfile = {
+  name: 'Shafar',
+  shortName: 'Shafar',
+  themeColor: '#c09a5c',
+  iconPath: '/logo.png',
+  staticManifest: null,
+  startPath: '/#/',
+};
+
 const resolveProfile = (pathname: string, role?: UserRole): AppProfile => {
-  if (pathname.startsWith('/platform')) {
-    return PLATFORM_PROFILE;
-  }
+  if (pathname.startsWith('/platform')) return PLATFORM_PROFILE;
+  if (pathname.startsWith('/dashboard')) return DASHBOARD_PROFILE;
+  if (pathname.startsWith('/book/')) return bookingProfile(`/#${pathname}`);
+  if (role === UserRole.PLATFORM_ADMIN) return PLATFORM_PROFILE;
+  if (role === UserRole.ADMIN || role === UserRole.MEMBER) return DASHBOARD_PROFILE;
+  return DEFAULT_PROFILE;
+};
 
-  if (pathname.startsWith('/dashboard')) {
-    return DASHBOARD_PROFILE;
+const upsertMeta = (name: string, content: string): void => {
+  let el = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute('name', name);
+    document.head.appendChild(el);
   }
-
-  if (pathname.startsWith('/book/')) {
-    return BOOKING_PROFILE(`/#${pathname}`);
-  }
-
-  if (role === UserRole.PLATFORM_ADMIN) {
-    return PLATFORM_PROFILE;
-  }
-
-  if (role === UserRole.ADMIN || role === UserRole.MEMBER) {
-    return DASHBOARD_PROFILE;
-  }
-
-  return {
-    name: 'Shafar',
-    shortName: 'Shafar',
-    description: 'Plataforma Shafar para barbearias.',
-    iconPath: '/logo.png',
-    startPath: '/#/',
-    themeColor: '#c09a5c',
-  };
+  el.content = content;
 };
 
 const upsertLink = (rel: string, href: string, type?: string): HTMLLinkElement => {
@@ -77,10 +74,7 @@ const upsertLink = (rel: string, href: string, type?: string): HTMLLinkElement =
     link.setAttribute('rel', rel);
     document.head.appendChild(link);
   }
-
-  if (type) {
-    link.type = type;
-  }
+  if (type) link.type = type;
   link.href = href;
   return link;
 };
@@ -88,7 +82,7 @@ const upsertLink = (rel: string, href: string, type?: string): HTMLLinkElement =
 export const ProfileAppMeta = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const previousManifestUrlRef = useRef<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
 
   const profile = useMemo(
     () => resolveProfile(location.pathname, user?.role),
@@ -97,55 +91,63 @@ export const ProfileAppMeta = () => {
 
   useEffect(() => {
     const origin = window.location.origin;
-    const absoluteStartUrl = new URL(profile.startPath, origin).toString();
-    const absoluteScopeUrl = new URL('/', origin).toString();
-    const absoluteIconUrl = new URL(profile.iconPath, origin).toString();
 
+    // Ícone e cor — funcionam em iOS e Android
     upsertLink('icon', profile.iconPath, 'image/png');
     upsertLink('apple-touch-icon', profile.iconPath);
+    upsertMeta('theme-color', profile.themeColor);
+    upsertMeta('apple-mobile-web-app-title', profile.shortName);
+    upsertMeta('apple-mobile-web-app-capable', 'yes');
+    upsertMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
 
-    const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (themeMeta) {
-      themeMeta.content = profile.themeColor;
+    // Manifest
+    if (profile.staticManifest) {
+      // Arquivo estático — iOS Safari lê start_url corretamente
+      upsertLink('manifest', profile.staticManifest);
+      // Limpa blob anterior se existir
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    } else {
+      // Booking: slug dinâmico — usa blob (Android Chrome suporta; iOS usa a URL atual da página)
+      const startUrl = new URL(profile.startPath ?? '/#/', origin).toString();
+      const manifest = {
+        id: startUrl,
+        name: profile.name,
+        short_name: profile.shortName,
+        description: 'Agendamento de clientes.',
+        theme_color: profile.themeColor,
+        background_color: '#0d0d0d',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: origin + '/',
+        start_url: startUrl,
+        icons: [
+          {
+            src: new URL(profile.iconPath, origin).toString(),
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      };
+
+      const blob = new Blob([JSON.stringify(manifest)], {
+        type: 'application/manifest+json',
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      upsertLink('manifest', blobUrl);
+
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = blobUrl;
     }
-
-    const manifest = {
-      id: absoluteStartUrl,
-      name: profile.name,
-      short_name: profile.shortName,
-      description: profile.description,
-      theme_color: profile.themeColor,
-      background_color: '#0d0d0d',
-      display: 'standalone',
-      scope: absoluteScopeUrl,
-      start_url: absoluteStartUrl,
-      icons: [
-        {
-          src: absoluteIconUrl,
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable',
-        },
-      ],
-    };
-
-    const manifestBlob = new Blob([JSON.stringify(manifest)], {
-      type: 'application/manifest+json',
-    });
-    const manifestUrl = URL.createObjectURL(manifestBlob);
-    upsertLink('manifest', manifestUrl);
-
-    if (previousManifestUrlRef.current) {
-      URL.revokeObjectURL(previousManifestUrlRef.current);
-    }
-    previousManifestUrlRef.current = manifestUrl;
   }, [profile]);
 
+  // Cleanup no unmount
   useEffect(
     () => () => {
-      if (previousManifestUrlRef.current) {
-        URL.revokeObjectURL(previousManifestUrlRef.current);
-      }
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     },
     []
   );

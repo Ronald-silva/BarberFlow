@@ -19,6 +19,8 @@ export default defineConfig({
         'icon-dashboard.png',
         'icon-booking.png',
         'logo.png',
+        'manifest-platform.json',
+        'manifest-dashboard.json',
       ],
       manifest: {
         name: 'Shafar - Gestão de Barbearias',
