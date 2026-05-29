@@ -58,6 +58,14 @@ import {
   ReviewTotalValue,
   EditButton,
   InlineInfoBox,
+  PaymentOptionsGrid,
+  PaymentOptionCard,
+  PaymentOptionHeader,
+  PaymentOptionName,
+  PaymentOptionBadge,
+  PaymentOptionDescription,
+  PaymentOptionFeatures,
+  PaymentOptionFeature,
   SuccessStatusCard,
   SuccessContainer,
   SuccessIcon,
@@ -181,6 +189,7 @@ const BookingPage: React.FC = () => {
   const [reservaId, setReservaId] = useState<string | null>(null);
   const [mpPollingStatus, setMpPollingStatus] = useState<'waiting' | 'approved' | 'cancelled' | 'expirado'>('waiting');
   const [mpSecondsLeft, setMpSecondsLeft] = useState(30 * 60);
+  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState<'pix' | 'shop' | null>(null);
   const anonAuthHeaders = useMemo(() => {
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
     return anonKey ? { Authorization: `Bearer ${anonKey}` } : undefined;
@@ -275,6 +284,17 @@ const BookingPage: React.FC = () => {
     }, 0);
   }, [selectedServices, services]);
 
+  /**
+   * PIX: sempre visível se MP conectado; ou se "pagamento obrigatório" ligado (compat. Brito).
+   */
+  const showPixOption = Boolean(
+    barbershop &&
+      (barbershop.mercadopagoConfigured === true ||
+        (barbershop.requirePaymentBeforeBooking && barbershop.mercadopagoConfigured !== false))
+  );
+  /** Pagar na barbearia: quando o PIX não é obrigatório. */
+  const showPayAtShopOption = Boolean(barbershop && !barbershop.requirePaymentBeforeBooking);
+
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServices(prev =>
       prev.includes(serviceId)
@@ -349,6 +369,7 @@ const BookingPage: React.FC = () => {
       setMpExpiresAt(pd.expires_at ? new Date(pd.expires_at) : new Date(Date.now() + 10 * 60 * 1000));
       setMpSecondsLeft(10 * 60);
       setMpPollingStatus('waiting');
+      setConfirmedPaymentMethod('pix');
       setStep(6);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao gerar PIX. Tente novamente.');
@@ -356,6 +377,56 @@ const BookingPage: React.FC = () => {
       setSubmitting(false);
     }
   }, [barbershop, selectedTime, selectedDate, selectedProfessional, professionals, clientName, clientWhatsapp, clientEmail, selectedServices, services, totalPrice, totalDuration, ptBR, anonAuthHeaders]);
+
+  const handleConfirmarNaBarbearia = useCallback(async () => {
+    if (!barbershop || !selectedTime) return;
+    setSubmitting(true);
+    try {
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      const horarioInicio = new Date(selectedDate);
+      horarioInicio.setHours(hours, minutes, 0, 0);
+      const professionalId =
+        selectedProfessional === 'any'
+          ? (professionals[0]?.id ?? '')
+          : selectedProfessional;
+
+      if (!professionalId) {
+        throw new Error('Nenhum profissional disponível para este horário.');
+      }
+
+      await supabaseApi.createAppointment({
+        barbershopId: barbershop.id,
+        professionalId,
+        serviceIds: selectedServices,
+        startDateTime: horarioInicio.toISOString(),
+        client: {
+          name: clientName,
+          whatsapp: clientWhatsapp.replace(/\D/g, ''),
+        },
+        totalPrice,
+        paymentMethod: 'pay_at_shop',
+      });
+
+      setConfirmedPaymentMethod('shop');
+      setStep(7);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Erro ao confirmar agendamento. Tente novamente.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    barbershop,
+    selectedTime,
+    selectedDate,
+    selectedProfessional,
+    professionals,
+    clientName,
+    clientWhatsapp,
+    selectedServices,
+    totalPrice,
+  ]);
 
   const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
 
@@ -787,18 +858,47 @@ const BookingPage: React.FC = () => {
                 </ReviewTotalSection>
               </ReviewContainer>
 
+              {showPayAtShopOption && showPixOption && (
+                <PaymentOptionsGrid style={{ marginBottom: '1.25rem' }}>
+                  <PaymentOptionCard selected>
+                    <PaymentOptionHeader>
+                      <PaymentOptionName>Escolha como deseja pagar</PaymentOptionName>
+                    </PaymentOptionHeader>
+                    <PaymentOptionDescription>
+                      Você pode pagar agora com PIX ou diretamente na barbearia no dia do atendimento.
+                    </PaymentOptionDescription>
+                  </PaymentOptionCard>
+                </PaymentOptionsGrid>
+              )}
+
               <StepNavigation>
-                <Button $variant="secondary" onClick={() => setStep(4)}>
+                <Button $variant="secondary" onClick={() => setStep(4)} disabled={submitting}>
                   Voltar
                 </Button>
-                <Button
-                  $variant="primary"
-                  onClick={() => void handlePagarComPix()}
-                  disabled={submitting}
-                  $loading={submitting}
-                >
-                  {submitting ? 'Gerando PIX...' : 'Pagar com PIX 💚'}
-                </Button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
+                  {showPayAtShopOption && (
+                    <Button
+                      $variant={showPixOption ? 'secondary' : 'primary'}
+                      onClick={() => void handleConfirmarNaBarbearia()}
+                      disabled={submitting}
+                      $loading={submitting && !showPixOption}
+                    >
+                      {submitting && !showPixOption
+                        ? 'Confirmando...'
+                        : 'Confirmar — pagar na barbearia 💵'}
+                    </Button>
+                  )}
+                  {showPixOption && (
+                    <Button
+                      $variant="primary"
+                      onClick={() => void handlePagarComPix()}
+                      disabled={submitting}
+                      $loading={submitting && showPixOption}
+                    >
+                      {submitting && showPixOption ? 'Gerando PIX...' : 'Pagar com PIX 💚'}
+                    </Button>
+                  )}
+                </div>
               </StepNavigation>
             </div>
           )}
@@ -911,7 +1011,8 @@ const BookingPage: React.FC = () => {
                   💰 Total: {formatBRL(totalPrice)}
                 </Text>
                 <Text $color="secondary">
-                  💳 Pagamento: PIX (pago ✓)
+                  💳 Pagamento:{' '}
+                  {confirmedPaymentMethod === 'pix' ? 'PIX (pago ✓)' : 'Na barbearia (no dia do atendimento)'}
                 </Text>
                 <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
                   📱 Você receberá um lembrete no seu WhatsApp 24h antes

@@ -20,7 +20,9 @@ type DbBarbershopPublicRow = Pick<
   | 'require_payment_before_booking'
   | 'working_hours'
   | 'slot_interval_minutes'
->;
+> & {
+  mercadopago_configured?: boolean;
+};
 type DbPublicServiceRow = Database['public']['Functions']['get_public_services_by_barbershop']['Returns'][number];
 type DbPublicProfessionalRow =
   Database['public']['Functions']['get_public_professionals_by_barbershop']['Returns'][number];
@@ -47,7 +49,7 @@ export function mapDbBarbershop(row: DbBarbershopPublicRow): Barbershop {
     email: row.email ?? null,
     brandPrimaryColor: row.brand_primary_color?.trim() || null,
     requirePaymentBeforeBooking: row.require_payment_before_booking ?? false,
-    mercadopagoConfigured: false,
+    mercadopagoConfigured: row.mercadopago_configured ?? false,
     workingHours: (row.working_hours as WorkingHoursConfig | null) ?? undefined,
     slotInterval: row.slot_interval_minutes ?? 30,
   };
@@ -182,7 +184,7 @@ export const api = {
     });
 
     if (error || !Array.isArray(data) || data.length === 0) return null;
-    return mapDbBarbershop(data[0] as DbBarbershopPublicRow);
+    return mapDbBarbershop(data[0] as DbBarbershopPublicRow & { mercadopago_configured?: boolean });
   },
 
   getBarbershopById: async (id: string | null): Promise<Barbershop | null> => {
