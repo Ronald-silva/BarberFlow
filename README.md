@@ -2,30 +2,66 @@
 
 **Criação e desenvolvimento:** RonalDigital
 
-> **Status:** em produção · **Build:** `npm run build` · **Última revisão do README:** abril de 2026
+> **Status:** em produção · **Build:** `npm run build` · **Última revisão do README:** maio de 2026
 
-SaaS multi-tenant para barbearias: agendamento, painel da barbearia, admin da plataforma, integração com Supabase, pagamentos (PIX, cartão/Stripe conforme configuração) e experiência mobile-first alinhada ao design system do produto.
+SaaS multi-tenant para barbearias: agendamento público, painel da barbearia, admin da plataforma, Supabase (Postgres + Auth + Edge Functions) e pagamentos (PIX Mercado Pago na conta da barbearia; assinatura SaaS via Stripe/Asaas conforme rollout).
 
 ## Sobre o produto
 
-- Múltiplas barbearias com isolamento de dados (RLS) e URL pública de agendamento por slug  
-- Autenticação (Supabase Auth), perfis (admin da barbearia, `platform_admin`, etc.)  
-- Assinaturas e billing (ver `docs/BILLING_ROLLOUT_RUNBOOK.md` e `docs/STRIPE_IMPLEMENTATION_GUIDE.md` quando aplicável)  
-- UI com React, TypeScript, styled-components e rotas com React Router (HashRouter no `App.tsx`)
+- Múltiplas barbearias com isolamento de dados (RLS) e agendamento público em `/book/:slug`
+- Autenticação Supabase Auth — perfis `admin`, `member`, `platform_admin`
+- UI: React 19, TypeScript, styled-components, **React Router (`BrowserRouter` em `App.tsx`)**
+- Links antigos `/#/...` são redirecionados automaticamente para URLs limpas
 
-## Principais Funcionalidades Recentes
+### Rotas principais
 
-- **Integração Mercado Pago (PIX)**: Fluxo completo de agendamento via PIX. O pagamento cai diretamente na conta do dono da barbearia (OAuth/Multi-tenant) através das nossas Edge Functions, com atualização de status via Webhooks em tempo real.
-- **Agenda Inteligente (Anti-Overbooking)**: A interface de agendamentos (`BookingPage`) consulta o banco de dados dinamicamente, ocultando horários já reservados (ou em aguardo de PIX) com base na duração do serviço escolhido e disponibilidade dos profissionais.
-- **Experiência Premium & Mobile-First**: Telas de configuração da barbearia (`SettingsPage`) com layout totalmente responsivo, adaptado para uso em smartphones pelos donos, focando em usabilidade comercial e sem jargões técnicos.
+| Rota | Uso |
+|------|-----|
+| `/` | Landing |
+| `/register`, `/login` | Cadastro e acesso da barbearia |
+| `/book/:slug` | Agendamento público (cliente final) |
+| `/dashboard/*` | Operação da barbearia |
+| `/platform/*` | Administração da plataforma |
+
+## Agendamento público (`/book/:slug`)
+
+Dois modos por barbearia (configurável em **Configurações**):
+
+| Modo | Quando | Backend |
+|------|--------|---------|
+| **PIX (Mercado Pago)** | MP conectado; opcionalmente “pagamento obrigatório” | Edge Function `create-reserva-pix` → webhook `mercadopago-webhook` → polling `check-reserva-status` |
+| **Pagar na barbearia** | Padrão para novas barbearias / quando PIX não é obrigatório | Edge Function `create-pay-at-shop-booking` (preço e anti-overbooking no servidor) |
+
+**Anti-overbooking:** horários ocupados vêm da RPC `get_public_occupied_slots` (reservas + agendamentos + appointments). A UI filtra slots pela duração do serviço (+ 5 min de limpeza no servidor).
+
+**Onboarding (dashboard):** checklist “Primeiros passos”, link de agendamento copiável, horários seed no cadastro, mensagem de sucesso no login após `/register`.
+
+## Edge Functions (booking / PIX — deploy)
+
+Funções usadas pelo fluxo atual de agendamento. No Supabase Dashboard, cada uma deve ser um único arquivo `index.ts` (sem imports de `_shared`).
+
+| Função | Papel |
+|--------|--------|
+| `create-reserva-pix` | Cria reserva + PIX (valor calculado no servidor) |
+| `create-pay-at-shop-booking` | Confirma agendamento “pagar na barbearia” |
+| `check-reserva-status` | Polling do status da reserva PIX |
+| `mercadopago-webhook` | Confirma pagamento e cria `agendamentos` |
+| `mercadopago-oauth-callback` | OAuth MP → redirect `/dashboard/settings?...` |
+
+Outras funções no projeto (`stripe-webhook`, `create-checkout-session`, `asaas-*`, etc.) servem assinatura SaaS ou fluxos legados — não substituem a tabela acima no `/book`.
+
+### Migrations relevantes (SQL Editor)
+
+- `supabase/migrations/20260508180000_public_barbershop_mercadopago_flag.sql` — flag pública `mercadopago_configured`
+- `supabase/migrations/20260529120000_public_occupied_slots_rpc.sql` — RPC `get_public_occupied_slots`
 
 ## Início rápido
 
 ### Requisitos
 
-- Node.js 18+ (recomendado: a versão LTS atual)
+- Node.js 18+ (LTS recomendado)
 - npm
-- Projeto Supabase vinculado (URL + anon key)
+- Projeto Supabase (URL + anon key)
 
 ### Instalação
 
@@ -39,7 +75,9 @@ cp .env.example .env
 
 ### Banco e Supabase
 
-Execute e ajuste os scripts em `docs/sql/` e siga [docs/guides/SUPABASE_SETUP.md](docs/guides/SUPABASE_SETUP.md) e [docs/guides/ENVIRONMENT_SETUP.md](docs/guides/ENVIRONMENT_SETUP.md) conforme o ambiente.
+Execute migrations em `supabase/migrations/` e siga [docs/guides/SUPABASE_SETUP.md](docs/guides/SUPABASE_SETUP.md) e [docs/guides/ENVIRONMENT_SETUP.md](docs/guides/ENVIRONMENT_SETUP.md).
+
+**Importante:** para reduzir pausa do projeto free tier por inatividade, veja [docs/EVITAR_PAUSA_SUPABASE.md](docs/EVITAR_PAUSA_SUPABASE.md) e [docs/CONFIGURAR_GITHUB_ACTIONS.md](docs/CONFIGURAR_GITHUB_ACTIONS.md).
 
 ### Comandos
 
@@ -58,30 +96,29 @@ Scripts auxiliares: `npm run api:mock` / `npm run api:supabase` para alternar or
 | Camada | Stack |
 |--------|--------|
 | Frontend | React 19, TypeScript, Vite 6, styled-components 6 |
-| Backend / dados | Supabase (Postgres, Auth, Storage; Edge Functions em `supabase/functions/`) |
+| Backend / dados | Supabase (Postgres, Auth, Storage, Edge Functions) |
 | Estado / dados async | TanStack Query |
-
-Estrutura útil:
+| Erros (opcional) | Sentry via `VITE_SENTRY_DSN` + `VITE_ENVIRONMENT` |
 
 ```
-├── App.tsx                 # Rotas principais
-├── src/pages/              # Páginas (landing, dashboard, platform, booking…)
-├── src/components/         # UI compartilhada (Footer, tema…)
-├── src/services/           # APIs / Supabase
-├── docs/                   # Guias e SQL
-└── supabase/functions/     # Edge Functions (pagamentos, webhooks…)
+├── App.tsx                 # Rotas (BrowserRouter)
+├── src/pages/              # Landing, dashboard, platform, booking…
+├── src/services/           # supabaseApi, pagamentos…
+├── supabase/functions/     # Edge Functions
+└── supabase/migrations/    # Schema e RPCs
 ```
 
-Documentação mais ampla: [docs/README.md](docs/README.md), [docs/guides/PLATFORM_ARCHITECTURE.md](docs/guides/PLATFORM_ARCHITECTURE.md), [docs/guides/MULTI_TENANT_ARCHITECTURE.md](docs/guides/MULTI_TENANT_ARCHITECTURE.md).
+Documentação: [docs/README.md](docs/README.md), [AGENTS.md](AGENTS.md), [docs/SESSION_BOOTSTRAP.md](docs/SESSION_BOOTSTRAP.md), [docs/guides/PLATFORM_ARCHITECTURE.md](docs/guides/PLATFORM_ARCHITECTURE.md).
 
 ## Deploy e variáveis
 
-- Deploy típico na Vercel: variáveis `VITE_*` configuradas no painel do projeto (não commitar secrets).  
-- Guia: [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) e [docs/guides/VERCEL_DEPLOY_GUIDE.md](docs/guides/VERCEL_DEPLOY_GUIDE.md).
+- **Frontend:** Vercel — variáveis `VITE_*` no painel (nunca commitar secrets). Guias: [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md).
+- **Edge Functions:** redeploy no Supabase após alterar `supabase/functions/*/index.ts`.
+- **Produção (opcional):** `VITE_SENTRY_DSN`, `VITE_ENVIRONMENT=production`, `VITE_MERCADOPAGO_CLIENT_ID`.
 
 ### Erro `placeholder.supabase.co` após deploy
 
-As URLs/chaves do Supabase não foram injetadas no build. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no provedor de hospedagem para Production/Preview e faça redeploy.
+`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` não foram injetadas no build. Configure no provedor e faça redeploy.
 
 ## Licença
 
