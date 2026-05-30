@@ -7,6 +7,7 @@ import type { Database } from "../services/supabase";
 import { logMultipleConsents } from "../services/consentLogger";
 import { maskPhone, maskCPFCNPJ } from "../utils/formatters";
 import { isValidPhone, isValidCPFCNPJ } from "../utils/validators";
+import { DEFAULT_WORKING_HOURS } from "../utils/timeSlots";
 
 // ============================================================
 // SHAFAR — Registration Page v2.0
@@ -455,6 +456,8 @@ const BarbershopRegistrationPage: React.FC = () => {
         address: shop.address,
         phone: shop.phone,
         email: shop.email,
+        working_hours: DEFAULT_WORKING_HOURS as unknown,
+        slot_interval_minutes: 30,
         ...(cpfCnpjClean ? { cpf_cnpj: cpfCnpjClean } : {}),
       };
       const { data: barbershop, error: bErr } = await supabase

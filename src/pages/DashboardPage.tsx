@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabaseApi } from '../services/supabaseApi';
 import { DashboardShell, Grid, Card, CardContent, Heading, Text, Flex } from '../components/ui/Container';
 import { formatBRL } from '../utils/formatters';
+import { OnboardingChecklist } from '../components/dashboard/OnboardingChecklist';
 
 interface DashboardData {
     totalAppointments: number;
@@ -139,17 +140,22 @@ const SectionHeader = styled.div`
 `;
 
 const DashboardPage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, barbershop } = useAuth();
     const [data, setData] = useState<DashboardData | null>(null);
+    const [servicesCount, setServicesCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
-            if (user) {
+            if (user?.barbershopId) {
                 setLoading(true);
                 try {
-                    const result = await supabaseApi.getDashboardData(user.barbershopId!, new Date());
+                    const [result, services] = await Promise.all([
+                        supabaseApi.getDashboardData(user.barbershopId, new Date()),
+                        supabaseApi.getServicesByBarbershop(user.barbershopId),
+                    ]);
                     setData(result);
+                    setServicesCount(services.length);
                 } catch (error) {
                     console.error('Erro ao carregar dados do dashboard:', error);
                 } finally {
@@ -194,6 +200,18 @@ const DashboardPage: React.FC = () => {
                     </div>
                 </Flex>
             </WelcomeSection>
+
+            {barbershop && user?.barbershopId && (
+                <OnboardingChecklist
+                    barbershopId={user.barbershopId}
+                    barbershop={{
+                        slug: barbershop.slug,
+                        workingHoursConfigured: (barbershop.workingHours?.length ?? 0) > 0,
+                        mercadopagoConfigured: barbershop.mercadopagoConfigured === true,
+                        servicesCount,
+                    }}
+                />
+            )}
 
             <SectionHeader>
                 <Heading $level={2} $color="primary" style={{ marginBottom: '0.5rem' }}>

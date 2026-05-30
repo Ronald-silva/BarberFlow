@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { LEGAL_ENTITY } from '../constants/legalEntity';
 
 const Container = styled.div`
   max-width: 900px;
@@ -180,12 +181,12 @@ export default function PrivacyPolicyPage() {
 
         <h3>1.1. Controlador de Dados</h3>
         <ContactBox>
-          <p><strong>Razão Social:</strong> Shafar Tecnologia</p>
-          <p><strong>CNPJ:</strong> (A ser preenchido)</p>
-          <p><strong>Endereço:</strong> (A ser preenchido)</p>
-          <p><strong>E-mail de contato:</strong> privacy@shafar.com.br</p>
-          <p><strong>DPO (Encarregado de Dados):</strong> (A ser preenchido)</p>
-          <p><strong>E-mail do DPO:</strong> dpo@shafar.com.br</p>
+          <p><strong>Razão Social:</strong> {LEGAL_ENTITY.legalName}</p>
+          <p><strong>CNPJ:</strong> {LEGAL_ENTITY.cnpj}</p>
+          <p><strong>Endereço:</strong> {LEGAL_ENTITY.address}</p>
+          <p><strong>E-mail de contato:</strong> {LEGAL_ENTITY.privacyEmail}</p>
+          <p><strong>{LEGAL_ENTITY.dpoLabel}:</strong> {LEGAL_ENTITY.dpoEmail}</p>
+          <p><strong>E-mail do DPO:</strong> {LEGAL_ENTITY.dpoEmail}</p>
         </ContactBox>
 
         <h3>1.2. Aceitação da Política</h3>
@@ -483,10 +484,10 @@ export default function PrivacyPolicyPage() {
         <h2>8. CONTATO</h2>
         <ContactBox>
           <p>Para questões relacionadas a esta Política de Privacidade ou ao tratamento de dados pessoais:</p>
-          <p><strong>E-mail geral:</strong> privacy@shafar.com.br</p>
-          <p><strong>DPO (Encarregado de Dados):</strong> dpo@shafar.com.br</p>
-          <p><strong>Endereço:</strong> (A ser preenchido)</p>
-          <p><strong>Telefone:</strong> (A ser preenchido)</p>
+          <p><strong>E-mail geral:</strong> {LEGAL_ENTITY.privacyEmail}</p>
+          <p><strong>{LEGAL_ENTITY.dpoLabel}:</strong> {LEGAL_ENTITY.dpoEmail}</p>
+          <p><strong>Endereço:</strong> {LEGAL_ENTITY.address}</p>
+          <p><strong>Telefone:</strong> {LEGAL_ENTITY.phone}</p>
           <p><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h (horário de Brasília)</p>
         </ContactBox>
 

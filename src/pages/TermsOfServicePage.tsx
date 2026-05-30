@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { LEGAL_ENTITY } from '../constants/legalEntity';
 
 const Container = styled.div`
   max-width: 900px;
@@ -202,13 +203,13 @@ export default function TermsOfServicePage() {
 
         <h2>2. INFORMAÇÕES DA EMPRESA</h2>
         <InfoBox>
-          <p><strong>Razão Social:</strong> Shafar Tecnologia</p>
-          <p><strong>Nome Fantasia:</strong> Shafar</p>
-          <p><strong>CNPJ:</strong> (A ser preenchido)</p>
-          <p><strong>Endereço:</strong> (A ser preenchido)</p>
-          <p><strong>E-mail:</strong> contato@shafar.com.br</p>
-          <p><strong>Telefone:</strong> (A ser preenchido)</p>
-          <NoMarginParagraph><strong>Website:</strong> https://shafar.vercel.app</NoMarginParagraph>
+          <p><strong>Razão Social:</strong> {LEGAL_ENTITY.legalName}</p>
+          <p><strong>Nome Fantasia:</strong> {LEGAL_ENTITY.tradeName}</p>
+          <p><strong>CNPJ:</strong> {LEGAL_ENTITY.cnpj}</p>
+          <p><strong>Endereço:</strong> {LEGAL_ENTITY.address}</p>
+          <p><strong>E-mail:</strong> {LEGAL_ENTITY.contactEmail}</p>
+          <p><strong>Telefone:</strong> {LEGAL_ENTITY.phone}</p>
+          <NoMarginParagraph><strong>Website:</strong> {LEGAL_ENTITY.website}</NoMarginParagraph>
         </InfoBox>
 
         <hr />
@@ -521,10 +522,10 @@ export default function TermsOfServicePage() {
         <h2>11. CONTATO</h2>
         <InfoBox>
           <p>Para questões relacionadas a estes Termos de Uso:</p>
-          <p><strong>E-mail:</strong> contato@shafar.com.br</p>
+          <p><strong>E-mail:</strong> {LEGAL_ENTITY.contactEmail}</p>
           <p><strong>E-mail jurídico:</strong> legal@shafar.com.br</p>
-          <p><strong>Telefone:</strong> (A ser preenchido)</p>
-          <p><strong>Endereço:</strong> (A ser preenchido)</p>
+          <p><strong>Telefone:</strong> {LEGAL_ENTITY.phone}</p>
+          <p><strong>Endereço:</strong> {LEGAL_ENTITY.address}</p>
           <NoMarginParagraph><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h</NoMarginParagraph>
         </InfoBox>
 

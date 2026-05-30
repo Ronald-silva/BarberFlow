@@ -995,7 +995,7 @@ const LandingPage: React.FC = () => {
           <TitleAccent>transforme sua barbearia</TitleAccent>
         </FinalTitle>
         <FinalDescription>
-          Junte-se a mais de 500 barbearias que já usam o Shafar.
+          Crie sua barbearia em minutos e compartilhe o link de agendamento com seus clientes.
         </FinalDescription>
         <FinalCTAButton $size="xl" onClick={() => navigate('/register')}>
           Criar conta grátis

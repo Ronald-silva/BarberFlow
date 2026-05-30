@@ -19,6 +19,7 @@ import {
 } from "../lib/barbershopBranding";
 import type { DaySchedule, WorkInterval } from "../types";
 import { DEFAULT_WORKING_HOURS } from "../utils/timeSlots";
+import { useToastContext } from "../contexts/ToastContext";
 
 // Styled Components
 const SettingsContainer = styled.div`
@@ -575,6 +576,7 @@ const SettingsPage: React.FC = () => {
   const [mpSuccess, setMpSuccess] = useState(false);
   const [mpError, setMpError] = useState('');
 
+  const toast = useToastContext();
   const [showSuccess, setShowSuccess] = useState(false);
   const [showBrandMigrationNote, setShowBrandMigrationNote] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1258,7 +1260,10 @@ const SettingsPage: React.FC = () => {
                   $variant="secondary"
                   onClick={() => {
                     const link = `${window.location.origin}/#/book/${barbershopData.slug}`;
-                    navigator.clipboard.writeText(link);
+                    void navigator.clipboard.writeText(link).then(
+                      () => toast.success('Link de agendamento copiado!'),
+                      () => toast.error('Não foi possível copiar o link.')
+                    );
                   }}
                   style={{ flex: "0 0 auto" }}
                 >

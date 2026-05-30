@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 
 // ============================================================
@@ -263,6 +263,19 @@ const ErrorAlert = styled.div`
   line-height: 1.5;
 `;
 
+const SuccessAlert = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #22c55e;
+  line-height: 1.5;
+`;
+
 const Divider = styled.div`
   display: flex;
   align-items: center;
@@ -310,13 +323,23 @@ const CardBottom = styled.div`
   border-top: 1px solid #1A1A1A;
 `;
 
+type LoginLocationState = { message?: string; email?: string };
+
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+  const registrationState = (location.state as LoginLocationState | null) ?? null;
+  const [email, setEmail] = useState(registrationState?.email ?? '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(registrationState?.message ?? '');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (registrationState?.email) setEmail(registrationState.email);
+    if (registrationState?.message) setSuccessMessage(registrationState.message);
+  }, [registrationState?.email, registrationState?.message]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,7 +389,7 @@ const LoginPage: React.FC = () => {
       <Card>
         <CardTop>
           <LogoMark>
-            <img src="/logo.png" alt="Shafar" />
+            <img src="/favicon-optimized.svg" alt="Shafar" width={40} height={40} />
           </LogoMark>
           <LogoText>Shafar</LogoText>
           <Subtitle>Acesse seu painel de gestão</Subtitle>
@@ -407,6 +430,13 @@ const LoginPage: React.FC = () => {
               </InputWrapper>
             </Field>
           </FieldGroup>
+
+          {successMessage && (
+            <SuccessAlert>
+              <span>✓</span>
+              <span>{successMessage}</span>
+            </SuccessAlert>
+          )}
 
           {error && (
             <ErrorAlert>
