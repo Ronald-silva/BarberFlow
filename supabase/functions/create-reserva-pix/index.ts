@@ -15,12 +15,48 @@
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import {
-  hasSlotConflict,
-  horarioFimFromStart,
-  type OccupiedRange,
-  type ServiceRow,
-} from '../_shared/booking-slot.ts';
+
+// Helpers inlined para deploy pelo Dashboard (editor aceita só index.ts).
+const CLEANUP_MINUTES = 5;
+
+type ServiceRow = {
+  id: string;
+  price: number;
+  duration: number;
+  barbershop_id: string;
+};
+
+type OccupiedRange = {
+  start: Date;
+  end: Date;
+  professionalId: string | null;
+};
+
+function horarioFimFromStart(horarioInicio: Date, durationMinutes: number): Date {
+  return new Date(horarioInicio.getTime() + durationMinutes * 60 * 1000);
+}
+
+function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
+  return aStart < bEnd && aEnd > bStart;
+}
+
+function professionalConflict(slotProfId: string | null, occProfId: string | null): boolean {
+  if (!slotProfId || !occProfId) return true;
+  return slotProfId === occProfId;
+}
+
+function hasSlotConflict(
+  slotStart: Date,
+  slotEnd: Date,
+  professionalId: string | null,
+  occupied: OccupiedRange[],
+): boolean {
+  return occupied.some(
+    (occ) =>
+      rangesOverlap(slotStart, slotEnd, occ.start, occ.end) &&
+      professionalConflict(professionalId, occ.professionalId),
+  );
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -126,7 +162,7 @@ serve(async (req) => {
 
     const valorServidor = Number(services.reduce((acc, s) => acc + Number(s.price), 0).toFixed(2));
     const durationMinutes =
-      services.reduce((acc, s) => acc + Number(s.duration), 0) + 5;
+      services.reduce((acc, s) => acc + Number(s.duration), 0) + CLEANUP_MINUTES;
     const horarioFimServidor = horarioFimFromStart(horarioInicio, durationMinutes);
 
     if (typeof valor === 'number' && Math.abs(valor - valorServidor) > 0.01) {
