@@ -897,8 +897,12 @@ const SettingsPage: React.FC = () => {
     setMpDisconnecting(true);
     setMpError('');
     try {
-      await supabaseApi.updateBarbershop(user.barbershopId, { mercadopagoAccessToken: null });
+      await supabaseApi.updateBarbershop(user.barbershopId, {
+        mercadopagoAccessToken: null,
+        requirePaymentBeforeBooking: false,
+      });
       setMpConfigured(false);
+      setRequirePaymentBeforeBooking(false);
     } catch (err) {
       setMpError(formatPostgrestError(err));
     } finally {
@@ -909,6 +913,10 @@ const SettingsPage: React.FC = () => {
   const handleMpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (requirePaymentBeforeBooking && !mpConfigured) {
+      setMpError('Conecte o Mercado Pago antes de exigir pagamento PIX no agendamento.');
+      return;
+    }
     setMpSubmitting(true);
     setMpError('');
     try {
@@ -1339,13 +1347,19 @@ const SettingsPage: React.FC = () => {
 
               <FormGroup>
                 <Label>Exigir pagamento PIX antes do agendamento</Label>
-                <MpToggleRow as="label" htmlFor="requirePayment">
+                <MpToggleRow
+                  as="label"
+                  htmlFor="requirePayment"
+                  style={!mpConfigured ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
+                >
                   <MpToggleText>
                     <Text $size="sm" $weight="medium" $color="primary" style={{ margin: 0 }}>
                       Pagamento obrigatório
                     </Text>
                     <Text $size="xs" $color="tertiary" style={{ margin: '0.15rem 0 0' }}>
-                      O agendamento só é confirmado após o cliente pagar o PIX
+                      {mpConfigured
+                        ? 'O agendamento só é confirmado após o cliente pagar o PIX'
+                        : 'Conecte o Mercado Pago acima para habilitar esta opção'}
                     </Text>
                   </MpToggleText>
                   <ToggleSwitch>
@@ -1353,7 +1367,11 @@ const SettingsPage: React.FC = () => {
                       id="requirePayment"
                       type="checkbox"
                       checked={requirePaymentBeforeBooking}
-                      onChange={(e) => setRequirePaymentBeforeBooking(e.target.checked)}
+                      disabled={!mpConfigured}
+                      onChange={(e) => {
+                        if (!mpConfigured) return;
+                        setRequirePaymentBeforeBooking(e.target.checked);
+                      }}
                     />
                     <ToggleSliderSpan />
                   </ToggleSwitch>

@@ -842,7 +842,7 @@ const LandingPage: React.FC = () => {
       {/* NAV */}
       <Nav>
         <Logo>
-          <img src="/logo.png" alt="Shafar" />
+          <img src="/favicon-optimized.svg" alt="Shafar" width={32} height={32} />
           <span>Shafar</span>
         </Logo>
         <NavActions>
@@ -886,20 +886,20 @@ const LandingPage: React.FC = () => {
       <StatsSection>
         <StatsGrid>
           <StatCard>
-            <StatNumber>500+</StatNumber>
-            <StatLabel>Barbearias ativas</StatLabel>
+            <StatNumber>PIX</StatNumber>
+            <StatLabel>Pagamento na conta da barbearia</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>98%</StatNumber>
-            <StatLabel>Satisfação dos clientes</StatLabel>
+            <StatNumber>24h</StatNumber>
+            <StatLabel>Agendamento online pelo celular</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>R$2M+</StatNumber>
-            <StatLabel>Gerenciados por mês</StatLabel>
+            <StatNumber>1 link</StatNumber>
+            <StatLabel>Compartilhe com seus clientes</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>24/7</StatNumber>
-            <StatLabel>Suporte dedicado</StatLabel>
+            <StatNumber>5 min</StatNumber>
+            <StatLabel>Para criar sua barbearia</StatLabel>
           </StatCard>
         </StatsGrid>
       </StatsSection>
@@ -932,8 +932,8 @@ const LandingPage: React.FC = () => {
             <SectionLabel>Pagamentos</SectionLabel>
             <SectionTitle>PIX: o jeito mais rápido de receber</SectionTitle>
             <SubtitleSpaced>
-              78% dos brasileiros preferem pagar com PIX. Ofereça
-              esse método e aumente suas conversões em até 40%.
+              Ofereça PIX no agendamento e receba direto na sua conta
+              Mercado Pago — sem intermediário retendo o valor.
             </SubtitleSpaced>
             <PixBenefits>
               <PixBenefit><span>⚡</span>Confirmação em menos de 3 segundos</PixBenefit>

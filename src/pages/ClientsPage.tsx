@@ -279,7 +279,7 @@ const ErrorMessage = styled.div<{ $show: boolean }>`
 `;
 
 const ClientsPage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, barbershop } = useAuth();
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
     const [showInactive, setShowInactive] = useState(false);
@@ -323,7 +323,10 @@ const ClientsPage: React.FC = () => {
     };
 
     const handleRecoveryMessage = (clientName: string, clientWhatsapp: string) => {
-        const link = `${window.location.origin}/#/book/navalha-dourada`;
+        const slug = barbershop?.slug;
+        const link = slug
+            ? `${window.location.origin}/#/book/${slug}`
+            : `${window.location.origin}/#/book`;
         const message = `Olá, ${clientName}! 👋\n\nSentimos sua falta aqui na barbearia! 💈\n\nComo incentivo para você voltar, estamos oferecendo 10% de desconto no seu próximo corte. Que tal agendar?\n\n🔗 ${link}`;
         
         const whatsappUrl = `https://wa.me/${clientWhatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;

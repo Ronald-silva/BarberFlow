@@ -443,7 +443,7 @@ const BarbershopRegistrationPage: React.FC = () => {
       }
       if (!slugAvailable) {
         setError(
-          "Esta URL (slug) já está em uso — muitas vezes por um cadastro anterior que parou no meio. Altere o nome da barbearia/slug ou apague a linha órfã em public.barbershops no Supabase e tente de novo."
+          "Esta URL já está em uso. Escolha outro nome para a barbearia ou altere o endereço personalizado (slug) e tente novamente."
         );
         setLoading(false);
         return;
@@ -505,20 +505,15 @@ const BarbershopRegistrationPage: React.FC = () => {
       const msg = String(err?.message || "");
       if (msg.includes("User already registered")) setError("Este email já tem cadastro. Faça login ou use outro email.");
       else if (err.code === "23505") setError("URL ou email já cadastrado. Verifique os dados.");
-      else if (msg.includes("row-level security") && msg.includes("barbershops")) {
+      else if (msg.includes("row-level security")) {
         setError(
-          "Permissão negada ao criar a barbearia (RLS). Saia da conta no app ou execute no SQL Editor: supabase/migrations/20260419_rls_barbershops_insert_registration.sql — depois tente de novo."
+          "Não foi possível concluir o cadastro agora. Se você já tem conta, faça login; caso contrário, tente de novo em alguns minutos ou fale com o suporte."
         );
-      } else if (msg.includes("row-level security") && msg.includes("users")) {
+      } else if (msg.includes("barbershops") && msg.includes("schema cache")) {
         setError(
-          "Permissão negada ao criar seu perfil (RLS em users). No Supabase SQL Editor execute: supabase/migrations/20260418_rls_users_insert_own_profile.sql — depois tente cadastrar de novo."
+          "Cadastro temporariamente indisponível. Tente novamente em alguns minutos ou entre em contato com o suporte."
         );
-      }
-      else if (msg.includes("barbershops") && msg.includes("schema cache")) {
-        setError(
-          "O schema da tabela barbershops no Supabase está desatualizado em relação ao app. No SQL Editor, execute os arquivos: supabase/migrations/20260416_barbershops_email_column.sql e supabase/migrations/20260417_barbershops_phone_address.sql (ou o trecho equivalente em database/SETUP_COMPLETO.sql) e tente de novo."
-        );
-      } else setError(msg || "Erro ao criar barbearia. Tente novamente.");
+      } else setError("Não foi possível criar sua barbearia. Verifique os dados e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -568,7 +563,10 @@ const BarbershopRegistrationPage: React.FC = () => {
                 <Label htmlFor="shopSlug">URL da barbearia</Label>
                 <Input id="shopSlug" placeholder="navalha-dourada" value={shop.slug}
                   onChange={e => handleShopChange("slug", e.target.value)} />
-                <HelperText>🔗 shafar.com.br/{shop.slug || 'sua-barbearia'}</HelperText>
+                <HelperText>
+                  🔗 {typeof window !== 'undefined' ? window.location.origin : ''}/#/book/
+                  {shop.slug || 'sua-barbearia'}
+                </HelperText>
               </Field>
 
               <Field>

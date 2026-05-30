@@ -284,16 +284,15 @@ const BookingPage: React.FC = () => {
     }, 0);
   }, [selectedServices, services]);
 
+  /** PIX: só quando Mercado Pago está conectado na barbearia. */
+  const showPixOption = Boolean(barbershop?.mercadopagoConfigured === true);
   /**
-   * PIX: sempre visível se MP conectado; ou se "pagamento obrigatório" ligado (compat. Brito).
+   * Pagar na barbearia: padrão para prospecção; também fallback se PIX obrigatório
+   * estiver ligado sem MP (estado inválido — evita tela sem opção de pagamento).
    */
-  const showPixOption = Boolean(
-    barbershop &&
-      (barbershop.mercadopagoConfigured === true ||
-        (barbershop.requirePaymentBeforeBooking && barbershop.mercadopagoConfigured !== false))
+  const showPayAtShopOption = Boolean(
+    barbershop && (!barbershop.requirePaymentBeforeBooking || !showPixOption)
   );
-  /** Pagar na barbearia: quando o PIX não é obrigatório. */
-  const showPayAtShopOption = Boolean(barbershop && !barbershop.requirePaymentBeforeBooking);
 
   const handleServiceToggle = (serviceId: string) => {
     setSelectedServices(prev =>
@@ -1015,7 +1014,7 @@ const BookingPage: React.FC = () => {
                   {confirmedPaymentMethod === 'pix' ? 'PIX (pago ✓)' : 'Na barbearia (no dia do atendimento)'}
                 </Text>
                 <Text $size="sm" $color="tertiary" style={{ marginTop: '1rem' }}>
-                  📱 Você receberá um lembrete no seu WhatsApp 24h antes
+                  Guarde a data e o horário. Em caso de imprevisto, entre em contato com a barbearia.
                 </Text>
               </SuccessDetails>
             </SuccessContainer>
