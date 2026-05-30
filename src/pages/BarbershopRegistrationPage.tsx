@@ -8,6 +8,7 @@ import { logMultipleConsents } from "../services/consentLogger";
 import { maskPhone, maskCPFCNPJ } from "../utils/formatters";
 import { isValidPhone, isValidCPFCNPJ } from "../utils/validators";
 import { DEFAULT_WORKING_HOURS } from "../utils/timeSlots";
+import { bookPath } from "../lib/appUrl";
 
 // ============================================================
 // SHAFAR — Registration Page v2.0
@@ -567,8 +568,8 @@ const BarbershopRegistrationPage: React.FC = () => {
                 <Input id="shopSlug" placeholder="navalha-dourada" value={shop.slug}
                   onChange={e => handleShopChange("slug", e.target.value)} />
                 <HelperText>
-                  🔗 {typeof window !== 'undefined' ? window.location.origin : ''}/#/book/
-                  {shop.slug || 'sua-barbearia'}
+                  🔗 {typeof window !== 'undefined' ? window.location.origin : ''}
+                  {bookPath(shop.slug || 'sua-barbearia')}
                 </HelperText>
               </Field>
 

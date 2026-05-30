@@ -75,9 +75,11 @@ export function initSentry() {
   }
 }
 
+const sentryEnabled = isValidConfiguredDsn(SENTRY_DSN);
+
 // Helper para capturar exceções manualmente
 export function captureSentryException(error: unknown, context?: Record<string, any>) {
-  if (!SENTRY_DSN) return;
+  if (!sentryEnabled) return;
 
   Sentry.captureException(error, {
     contexts: { custom: context },
@@ -86,14 +88,14 @@ export function captureSentryException(error: unknown, context?: Record<string, 
 
 // Helper para capturar mensagens
 export function captureSentryMessage(message: string, level: Sentry.SeverityLevel = 'info') {
-  if (!SENTRY_DSN) return;
+  if (!sentryEnabled) return;
 
   Sentry.captureMessage(message, level);
 }
 
 // Helper para setar contexto do usuário
 export function setSentryUser(user: { id: string; email?: string; username?: string } | null) {
-  if (!SENTRY_DSN) return;
+  if (!sentryEnabled) return;
 
   if (user) {
     Sentry.setUser({
@@ -108,7 +110,7 @@ export function setSentryUser(user: { id: string; email?: string; username?: str
 
 // Helper para adicionar breadcrumb personalizado
 export function addSentryBreadcrumb(message: string, category: string, data?: Record<string, any>) {
-  if (!SENTRY_DSN) return;
+  if (!sentryEnabled) return;
 
   Sentry.addBreadcrumb({
     message,

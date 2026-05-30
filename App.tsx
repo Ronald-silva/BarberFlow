@@ -1,6 +1,7 @@
 
 import React, { lazy } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { migrateLegacyHashUrl } from './src/lib/appUrl';
 import { ThemeProvider } from 'styled-components';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { GlobalStyle } from './src/styles/GlobalStyle';
@@ -86,6 +87,8 @@ const PlatformAdminRoute: React.FC<{ children: React.ReactElement }> = ({ childr
   return children;
 };
 
+migrateLegacyHashUrl();
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -93,7 +96,7 @@ const App: React.FC = () => {
         <ToastProvider>
           <ThemeProvider theme={theme}>
             <GlobalStyle />
-            <HashRouter
+            <BrowserRouter
               future={{
                 v7_startTransition: true,
                 v7_relativeSplatPath: true,
@@ -151,7 +154,7 @@ const App: React.FC = () => {
                 </LazyLoad>
                 <CookieConsent />
               </AuthProvider>
-            </HashRouter>
+            </BrowserRouter>
           </ThemeProvider>
         </ToastProvider>
       </QueryClientProvider>

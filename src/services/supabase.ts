@@ -854,6 +854,18 @@ export interface Database {
         Args: { p_slug: string };
         Returns: boolean;
       };
+      get_public_occupied_slots: {
+        Args: {
+          p_barbershop_id: string;
+          p_day_start: string;
+          p_day_end: string;
+        };
+        Returns: {
+          horario_inicio: string;
+          horario_fim: string;
+          profissional_id: string | null;
+        }[];
+      };
     };
   };
 }

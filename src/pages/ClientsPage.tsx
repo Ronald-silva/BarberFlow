@@ -11,6 +11,7 @@ import { Input } from '../components/ui/Input';
 import { BackButton } from '../components/ui/BackButton';
 import { UsersIcon } from '../components/icons';
 import { formatDateBR, formatPhone } from '../utils/formatters';
+import { bookPath, bookUrl } from '../lib/appUrl';
 
 // Styled Components
 const ClientsHeader = styled.div`
@@ -324,9 +325,7 @@ const ClientsPage: React.FC = () => {
 
     const handleRecoveryMessage = (clientName: string, clientWhatsapp: string) => {
         const slug = barbershop?.slug;
-        const link = slug
-            ? `${window.location.origin}/#/book/${slug}`
-            : `${window.location.origin}/#/book`;
+        const link = slug ? bookUrl(slug) : `${window.location.origin}${bookPath('')}`;
         const message = `Olá, ${clientName}! 👋\n\nSentimos sua falta aqui na barbearia! 💈\n\nComo incentivo para você voltar, estamos oferecendo 10% de desconto no seu próximo corte. Que tal agendar?\n\n🔗 ${link}`;
         
         const whatsappUrl = `https://wa.me/${clientWhatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;

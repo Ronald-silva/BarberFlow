@@ -309,14 +309,13 @@ export default function TermsOfServicePage() {
         <p>A Plataforma oferece diferentes modalidades de planos de assinatura (ex: Básico, Profissional, Premium).</p>
         <p><strong>Nota:</strong> As características, limites de profissionais e valores atualizados de cada plano estão sempre disponíveis e detalhados em nossa página oficial de preços (Landing Page).</p>
 
-        <h3>5.2. Período de Teste (Trial)</h3>
+        <h3>5.2. Cadastro e planos pagos</h3>
         <InfoBox>
-          <p><strong>Oferecemos 14 dias de teste gratuito para novos usuários:</strong></p>
+          <p><strong>O cadastro da barbearia e o agendamento online são gratuitos.</strong></p>
           <TightList>
-            <li>Acesso completo a todas as funcionalidades</li>
-            <li>Sem necessidade de cartão de crédito</li>
-            <li>Sem compromisso de continuidade</li>
-            <li>Após 14 dias, será necessário assinar um plano para continuar</li>
+            <li>Recursos avançados e assinatura SaaS podem exigir plano pago</li>
+            <li>Quando disponível, o período de teste será informado no checkout</li>
+            <li>Sem cobrança automática sem sua confirmação explícita no provedor de pagamento</li>
           </TightList>
         </InfoBox>
 

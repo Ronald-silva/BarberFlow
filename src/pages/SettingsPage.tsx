@@ -20,6 +20,7 @@ import {
 import type { DaySchedule, WorkInterval } from "../types";
 import { DEFAULT_WORKING_HOURS } from "../utils/timeSlots";
 import { useToastContext } from "../contexts/ToastContext";
+import { bookUrl } from "../lib/appUrl";
 
 // Styled Components
 const SettingsContainer = styled.div`
@@ -857,12 +858,9 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Detecta retorno do OAuth do Mercado Pago (?success=true|?error=true no hash)
+  // Detecta retorno do OAuth do Mercado Pago (?success=true|?error=true na query)
   useEffect(() => {
-    const hash = window.location.hash;
-    const queryStart = hash.indexOf('?');
-    if (queryStart === -1) return;
-    const params = new URLSearchParams(hash.slice(queryStart));
+    const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       setMpConfigured(true);
       setMpSuccess(true);
@@ -871,9 +869,9 @@ const SettingsPage: React.FC = () => {
       const detail = params.get('detail') || 'desconhecido';
       setMpError(`Erro ao conectar Mercado Pago: ${detail}`);
     } else {
-      return; // nenhum parâmetro MP — não limpar a URL
+      return;
     }
-    window.history.replaceState({}, '', window.location.pathname + '#/dashboard/settings');
+    window.history.replaceState({}, '', '/dashboard/settings');
   }, []);
 
   const handleMpConnect = () => {
@@ -1252,14 +1250,14 @@ const SettingsPage: React.FC = () => {
               <LinkFieldRow>
                 <Input
                   type="text"
-                  value={`${window.location.origin}/#/book/${barbershopData.slug}`}
+                  value={bookUrl(barbershopData.slug)}
                   readOnly
                 />
                 <Button
                   type="button"
                   $variant="secondary"
                   onClick={() => {
-                    const link = `${window.location.origin}/#/book/${barbershopData.slug}`;
+                    const link = bookUrl(barbershopData.slug);
                     void navigator.clipboard.writeText(link).then(
                       () => toast.success('Link de agendamento copiado!'),
                       () => toast.error('Não foi possível copiar o link.')

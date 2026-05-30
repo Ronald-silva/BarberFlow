@@ -1,5 +1,5 @@
 {
-  "id": "/#/platform",
+  "id": "/platform",
   "name": "Shafar Plataforma",
   "short_name": "Shafar Admin",
   "description": "Administração da plataforma Shafar.",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/#/platform",
+  "start_url": "/platform",
   "icons": [
     {
       "src": "/icon-platform.png",

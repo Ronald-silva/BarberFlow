@@ -393,18 +393,41 @@ const BookingPage: React.FC = () => {
         throw new Error('Nenhum profissional disponível para este horário.');
       }
 
-      await supabaseApi.createAppointment({
-        barbershopId: barbershop.id,
-        professionalId,
-        serviceIds: selectedServices,
-        startDateTime: horarioInicio.toISOString(),
-        client: {
-          name: clientName,
-          whatsapp: clientWhatsapp.replace(/\D/g, ''),
-        },
-        totalPrice,
-        paymentMethod: 'pay_at_shop',
-      });
+      const { data: shopData, error: shopErr } = await supabase.functions.invoke(
+        'create-pay-at-shop-booking',
+        {
+          headers: anonAuthHeaders,
+          body: {
+            barbearia_id: barbershop.id,
+            profissional_id: professionalId,
+            servico_ids: selectedServices,
+            horario: horarioInicio.toISOString(),
+            cliente_nome: clientName,
+            cliente_whatsapp: clientWhatsapp,
+          },
+        }
+      );
+
+      let shopFnError: string | null = null;
+      if (shopErr && typeof shopErr === 'object' && 'context' in shopErr) {
+        const response = (shopErr as { context?: Response }).context;
+        if (response) {
+          try {
+            const payload = (await response.clone().json()) as { error?: string; detail?: string };
+            shopFnError = payload?.detail || payload?.error || null;
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
+      const errMsg =
+        shopFnError ||
+        (shopData as { error?: string; detail?: string })?.detail ||
+        (shopData as { error?: string })?.error;
+      if (errMsg || shopErr) {
+        throw new Error(errMsg ?? (shopErr as Error)?.message ?? 'Erro ao confirmar agendamento');
+      }
 
       setConfirmedPaymentMethod('shop');
       setStep(7);
@@ -424,7 +447,7 @@ const BookingPage: React.FC = () => {
     clientName,
     clientWhatsapp,
     selectedServices,
-    totalPrice,
+    anonAuthHeaders,
   ]);
 
   const FALLBACK_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];

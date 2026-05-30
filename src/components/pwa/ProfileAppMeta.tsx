@@ -45,13 +45,13 @@ const DEFAULT_PROFILE: AppProfile = {
   themeColor: '#c09a5c',
   iconPath: '/logo.png',
   staticManifest: null,
-  startPath: '/#/',
+  startPath: '/',
 };
 
 const resolveProfile = (pathname: string, role?: UserRole): AppProfile => {
   if (pathname.startsWith('/platform')) return PLATFORM_PROFILE;
   if (pathname.startsWith('/dashboard')) return DASHBOARD_PROFILE;
-  if (pathname.startsWith('/book/')) return bookingProfile(`/#${pathname}`);
+  if (pathname.startsWith('/book/')) return bookingProfile(pathname);
   if (role === UserRole.PLATFORM_ADMIN) return PLATFORM_PROFILE;
   if (role === UserRole.ADMIN || role === UserRole.MEMBER) return DASHBOARD_PROFILE;
   return DEFAULT_PROFILE;
@@ -111,7 +111,7 @@ export const ProfileAppMeta = () => {
       }
     } else {
       // Booking: slug dinâmico — usa blob (Android Chrome suporta; iOS usa a URL atual da página)
-      const startUrl = new URL(profile.startPath ?? '/#/', origin).toString();
+      const startUrl = new URL(profile.startPath ?? '/', origin).toString();
       const manifest = {
         id: startUrl,
         name: profile.name,

@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { User, Barbershop, Subscription } from '../types';
 import { api, mapDbBarbershop } from '../services/supabaseApi';
 import { supabase } from '../services/supabase';
+import { setSentryUser } from '../lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -114,6 +115,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             };
             
             setUser(currentUser);
+            setSentryUser({ id: currentUser.id, email: currentUser.email, username: currentUser.name });
             localStorage.setItem('shafar_user', JSON.stringify(currentUser));
             // Não bloquear o bootstrap por dados secundários.
             void fetchAndSetData(currentUser).catch((error) => {
@@ -121,6 +123,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
           } else {
             setUser(null);
+            setSentryUser(null);
             setBarbershop(null);
             setSubscription(null);
             localStorage.removeItem('shafar_user');
@@ -128,6 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           // Limpar dados se não houver sessão
           setUser(null);
+          setSentryUser(null);
           setBarbershop(null);
           setSubscription(null);
           localStorage.removeItem('shafar_user');
@@ -135,6 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (error) {
         console.error('Falha ao inicializar autenticação:', error);
         setUser(null);
+        setSentryUser(null);
         setBarbershop(null);
         setSubscription(null);
         localStorage.removeItem('shafar_user');
@@ -175,6 +180,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 };
 
                 setUser(currentUser);
+                setSentryUser({ id: currentUser.id, email: currentUser.email, username: currentUser.name });
                 localStorage.setItem('shafar_user', JSON.stringify(currentUser));
                 void fetchAndSetData(currentUser).catch((error) => {
                   console.error('Falha ao buscar dados complementares após SIGNED_IN:', error);
@@ -182,6 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               }
             } else if (event === 'SIGNED_OUT') {
               setUser(null);
+              setSentryUser(null);
               setBarbershop(null);
               setSubscription(null);
               localStorage.removeItem('shafar_user');
@@ -231,10 +238,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setSentryUser(null);
     setBarbershop(null);
     setSubscription(null);
     localStorage.removeItem('shafar_user');
-    window.location.hash = '/login';
+    window.location.assign('/login');
   };
 
   return (

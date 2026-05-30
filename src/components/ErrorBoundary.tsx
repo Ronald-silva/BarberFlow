@@ -3,6 +3,7 @@ import React from 'react';
 import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-boundary';
 import styled from 'styled-components';
 import { logError, getErrorMessage } from '../utils/errors';
+import { captureSentryException } from '../lib/sentry';
 
 // ============================================
 // COMPONENTE DE FALLBACK
@@ -42,10 +43,7 @@ export function ErrorBoundary({ children }: ErrorBoundaryProps) {
   const handleError = (error: Error, info: { componentStack: string }) => {
     logError(error, 'ErrorBoundary');
     console.error('Component Stack:', info.componentStack);
-
-    // Sentry integration available in src/lib/sentry.ts
-    // Uncomment when Sentry is configured:
-    // Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
+    captureSentryException(error, { componentStack: info.componentStack });
   };
 
   return (

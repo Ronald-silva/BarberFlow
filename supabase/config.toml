@@ -37,3 +37,6 @@ verify_jwt = false
 
 [functions.check-reserva-status]
 verify_jwt = false
+
+[functions.create-pay-at-shop-booking]
+verify_jwt = false

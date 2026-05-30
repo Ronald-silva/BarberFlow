@@ -15,6 +15,12 @@
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  hasSlotConflict,
+  horarioFimFromStart,
+  type OccupiedRange,
+  type ServiceRow,
+} from '../_shared/booking-slot.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,7 +83,13 @@ serve(async (req) => {
       descricao,
     } = body;
 
-    if (!barbearia_id || !horario || !horario_fim || !cliente_nome || !cliente_whatsapp || !valor || valor <= 0) {
+    if (
+      !barbearia_id ||
+      !horario ||
+      !cliente_nome ||
+      !cliente_whatsapp ||
+      !servico_ids?.length
+    ) {
       return new Response(JSON.stringify({ error: 'Parâmetros obrigatórios ausentes ou inválidos' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -89,46 +101,86 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // ── 1. Verificar disponibilidade ──────────────────────────────────────────
-    const slotQuery = supabase
-      .from('reservas')
-      .select('id, status, expires_at')
-      .eq('barbearia_id', barbearia_id)
-      .eq('horario', horario)
-      .in('status', ['aguardando_pagamento', 'pago']);
-
-    if (profissional_id) {
-      slotQuery.eq('profissional_id', profissional_id);
+    const horarioInicio = new Date(horario);
+    if (Number.isNaN(horarioInicio.getTime())) {
+      return new Response(JSON.stringify({ error: 'Horário inválido' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const { data: conflito } = await slotQuery.maybeSingle();
+    // ── 1. Preço e duração calculados no servidor (anti-tampering) ───────────
+    const { data: servicesRaw } = await supabase
+      .from('services')
+      .select('id, price, duration, barbershop_id')
+      .eq('barbershop_id', barbearia_id)
+      .in('id', servico_ids);
 
-    if (conflito) {
-      // Expiração lazy: se a reserva está vencida, liberamos o slot agora
-      if (
-        conflito.status === 'aguardando_pagamento' &&
-        new Date(conflito.expires_at) < new Date()
-      ) {
-        await supabase
-          .from('reservas')
-          .update({ status: 'expirado' })
-          .eq('id', conflito.id);
-      } else {
-        const minutosRestantes =
-          conflito.status === 'aguardando_pagamento'
-            ? Math.ceil((new Date(conflito.expires_at).getTime() - Date.now()) / 60000)
-            : null;
-        return new Response(
-          JSON.stringify({
-            error: 'Horário não disponível',
-            detail:
-              conflito.status === 'aguardando_pagamento'
-                ? `Horário reservado por outro cliente. Tente em ${minutosRestantes} min.`
-                : 'Horário já agendado.',
-          }),
-          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        );
-      }
+    const services = (servicesRaw ?? []) as ServiceRow[];
+    if (services.length !== servico_ids.length) {
+      return new Response(JSON.stringify({ error: 'Serviços inválidos para esta barbearia' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const valorServidor = Number(services.reduce((acc, s) => acc + Number(s.price), 0).toFixed(2));
+    const durationMinutes =
+      services.reduce((acc, s) => acc + Number(s.duration), 0) + 5;
+    const horarioFimServidor = horarioFimFromStart(horarioInicio, durationMinutes);
+
+    if (typeof valor === 'number' && Math.abs(valor - valorServidor) > 0.01) {
+      console.warn(
+        `PIX valor divergente: cliente=${valor} servidor=${valorServidor} barbearia=${barbearia_id}`,
+      );
+    }
+
+    const valorFinal = valorServidor;
+    const horario_fim_final = horarioFimServidor.toISOString();
+
+    const dayStart = new Date(horarioInicio);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(horarioInicio);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const { data: occupiedRows, error: occupiedErr } = await supabase.rpc(
+      'get_public_occupied_slots',
+      {
+        p_barbershop_id: barbearia_id,
+        p_day_start: dayStart.toISOString(),
+        p_day_end: dayEnd.toISOString(),
+      },
+    );
+
+    if (occupiedErr) {
+      console.error('get_public_occupied_slots:', occupiedErr);
+    }
+
+    const occupied: OccupiedRange[] = (occupiedRows ?? []).map((row: {
+      horario_inicio: string;
+      horario_fim: string;
+      profissional_id: string | null;
+    }) => ({
+      start: new Date(row.horario_inicio),
+      end: new Date(row.horario_fim),
+      professionalId: row.profissional_id,
+    }));
+
+    if (
+      hasSlotConflict(
+        horarioInicio,
+        horarioFimServidor,
+        profissional_id ?? null,
+        occupied,
+      )
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: 'Horário não disponível',
+          detail: 'Este horário já foi reservado ou agendado.',
+        }),
+        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     // ── 2. Buscar access_token MP da barbearia ────────────────────────────────
@@ -169,12 +221,12 @@ serve(async (req) => {
         barbearia_id,
         profissional_id: profissional_id || null,
         servico_ids,
-        horario,
-        horario_fim,
+        horario: horarioInicio.toISOString(),
+        horario_fim: horario_fim_final,
         cliente_nome: cliente_nome.trim(),
         cliente_whatsapp: cliente_whatsapp.replace(/\D/g, ''),
         cliente_email: cliente_email?.trim() || null,
-        valor: Number(valor.toFixed(2)),
+        valor: valorFinal,
         status: 'aguardando_pagamento',
         expires_at: expiresAt,
       })
@@ -204,7 +256,7 @@ serve(async (req) => {
       `${cliente_whatsapp.replace(/\D/g, '')}@shafar.app`;
 
     const mpPayload = {
-      transaction_amount: Number(valor.toFixed(2)),
+      transaction_amount: valorFinal,
       description: (descricao || `Agendamento - ${barbearia.name}`).slice(0, 200),
       payment_method_id: 'pix',
       payer: { email: payerEmail, first_name: firstName, last_name: lastName },

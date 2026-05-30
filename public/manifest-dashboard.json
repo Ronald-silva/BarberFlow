@@ -1,5 +1,5 @@
 {
-  "id": "/#/dashboard",
+  "id": "/dashboard",
   "name": "Shafar Barbearia",
   "short_name": "Shafar Barber",
   "description": "Gestão da operação da barbearia.",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/#/dashboard",
+  "start_url": "/dashboard",
   "icons": [
     {
       "src": "/icon-dashboard.png",

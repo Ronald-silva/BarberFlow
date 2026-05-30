@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Container';
 import { useToastContext } from '../../contexts/ToastContext';
+import { bookUrl } from '../../lib/appUrl';
 
 const ONBOARDING_DISMISS_KEY = 'shafar_onboarding_dismissed';
 
@@ -119,7 +120,7 @@ export const OnboardingChecklist: React.FC<Props> = ({ barbershopId, barbershop 
   const [linkCopied, setLinkCopied] = useState(false);
   const [dismissed, setDismissed] = useState(() => isOnboardingDismissed(barbershopId));
 
-  const bookingLink = `${window.location.origin}/#/book/${barbershop.slug}`;
+  const bookingLink = bookUrl(barbershop.slug);
 
   const copyLink = useCallback(async () => {
     try {

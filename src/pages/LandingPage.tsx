@@ -877,7 +877,7 @@ const LandingPage: React.FC = () => {
         </CTAGroup>
         <SocialProof>
           <ProofItem><span>✓</span> Sem cartão de crédito</ProofItem>
-          <ProofItem><span>✓</span> 14 dias grátis</ProofItem>
+          <ProofItem><span>✓</span> Cadastro gratuito</ProofItem>
           <ProofItem><span>✓</span> Cancele quando quiser</ProofItem>
         </SocialProof>
       </HeroSection>
@@ -963,7 +963,7 @@ const LandingPage: React.FC = () => {
         <SectionLabel>Planos</SectionLabel>
         <SectionTitle>Escolha o plano ideal</SectionTitle>
         <SubtitleCentered>
-          14 dias de teste grátis em todos os planos. Sem taxas escondidas.
+          Comece sem cartão. Planos pagos quando você quiser escalar.
         </SubtitleCentered>
         <PricingGrid>
           {plans.map((p, i) => (

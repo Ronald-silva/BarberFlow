@@ -157,7 +157,7 @@ const PricingPage: React.FC = () => {
         <Lead $centered={!isInDashboard}>
           {isInDashboard
             ? 'Plano ativo, gateway de cobrança e upgrade em um só lugar.'
-            : 'Comece com 14 dias grátis. Cancele quando quiser.'}
+            : 'Cadastro gratuito para agendamento. Assinatura opcional para recursos avançados.'}
         </Lead>
         <ProviderChip aria-label="Gateway de pagamento">
           Cobrança: <strong>{provider === 'asaas' ? 'Asaas' : 'Stripe'}</strong>
@@ -263,7 +263,10 @@ const PricingPage: React.FC = () => {
           </FaqItem>
           <FaqItem>
             <FaqQ>Como funciona o período de teste?</FaqQ>
-            <FaqA>14 dias grátis para validar recursos; nada é cobrado nesse intervalo.</FaqA>
+            <FaqA>
+              O agendamento online pode ser usado sem assinatura. Quando a cobrança de planos
+              estiver ativa na sua conta, o período de teste será informado no checkout.
+            </FaqA>
           </FaqItem>
           <FaqItem>
             <FaqQ>Posso mudar de plano depois?</FaqQ>

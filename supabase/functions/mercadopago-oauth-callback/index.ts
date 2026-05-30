@@ -11,7 +11,7 @@ const corsHeaders = {
 
 function redirect(path: 'success' | 'error', detail?: string): Response {
   const extra = detail ? `&detail=${encodeURIComponent(detail)}` : '';
-  const target = `${APP_ORIGIN}/#/dashboard/settings?${path}=true${extra}`;
+  const target = `${APP_ORIGIN}/dashboard/settings?${path}=true${extra}`;
   return Response.redirect(target, 302);
 }
 
